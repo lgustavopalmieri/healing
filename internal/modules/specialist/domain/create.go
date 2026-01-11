@@ -8,28 +8,35 @@ import (
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/utils"
 )
 
-func CreateSpecialist(
-	name, email, phone, specialty, licenseNumber, description string,
-	keywords []string,
-	agreedToShare bool,
-) (*Specialist, error) {
-	if err := validate(name, email, specialty, licenseNumber, agreedToShare); err != nil {
+type CreateSpecialistInput struct {
+	Name          string
+	Email         string
+	Phone         string
+	Specialty     string
+	LicenseNumber string
+	Description   string
+	Keywords      []string
+	AgreedToShare bool
+}
+
+func CreateSpecialist(input CreateSpecialistInput) (*Specialist, error) {
+	if err := validate(input.Name, input.Email, input.Specialty, input.LicenseNumber, input.AgreedToShare); err != nil {
 		return nil, err
 	}
 
-	normalizedKeywords := utils.SanitizeStringArray(keywords)
+	normalizedKeywords := utils.SanitizeStringArray(input.Keywords)
 	now := time.Now().UTC()
 
 	specialist := &Specialist{
 		ID:            uuid.New().String(),
-		Name:          strings.TrimSpace(name),
-		Email:         strings.ToLower(strings.TrimSpace(email)),
-		Phone:         strings.TrimSpace(phone),
-		Specialty:     strings.TrimSpace(specialty),
-		LicenseNumber: strings.TrimSpace(licenseNumber),
-		Description:   strings.TrimSpace(description),
+		Name:          strings.TrimSpace(input.Name),
+		Email:         strings.ToLower(strings.TrimSpace(input.Email)),
+		Phone:         strings.TrimSpace(input.Phone),
+		Specialty:     strings.TrimSpace(input.Specialty),
+		LicenseNumber: strings.TrimSpace(input.LicenseNumber),
+		Description:   strings.TrimSpace(input.Description),
 		Keywords:      normalizedKeywords,
-		AgreedToShare: agreedToShare,
+		AgreedToShare: input.AgreedToShare,
 		CreatedAt:     now,
 		UpdatedAt:     now,
 	}

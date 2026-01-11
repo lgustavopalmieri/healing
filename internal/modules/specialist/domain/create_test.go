@@ -7,32 +7,29 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func createSpecialistFactory(overrides ...func(*Specialist)) (*Specialist, error) {
-	specialist, err := CreateSpecialist(
-		"Dr. João Silva",
-		"joao@example.com",
-		"+5511999999999",
-		"Cardiologia",
-		"CRM123456",
-		"Especialista em cardiologia",
-		[]string{"coração", "arritmia"},
-		true,
-	)
-	if err != nil {
-		return nil, err
+func createSpecialistFactory(overrides ...func(*CreateSpecialistInput)) (*Specialist, error) {
+	input := &CreateSpecialistInput{
+		Name:          "Dr. João Silva",
+		Email:         "joao@example.com",
+		Phone:         "+5511999999999",
+		Specialty:     "Cardiologia",
+		LicenseNumber: "CRM123456",
+		Description:   "Especialista em cardiologia",
+		Keywords:      []string{"coração", "arritmia"},
+		AgreedToShare: true,
 	}
 
 	for _, override := range overrides {
-		override(specialist)
+		override(input)
 	}
 
-	return specialist, nil
+	return CreateSpecialist(*input)
 }
 
 func TestCreateSpecialist(t *testing.T) {
 	tests := []struct {
 		name           string
-		overrides      []func(*Specialist)
+		overrides      []func(*CreateSpecialistInput)
 		expectError    bool
 		expectedErr    error
 		validateResult func(*testing.T, *Specialist)
@@ -58,48 +55,48 @@ func TestCreateSpecialist(t *testing.T) {
 		},
 		{
 			name: "should return error when name is invalid",
-			overrides: []func(*Specialist){
-				func(s *Specialist) { s.Name = "J" },
+			overrides: []func(*CreateSpecialistInput){
+				func(s *CreateSpecialistInput) { s.Name = "J" },
 			},
 			expectError: true,
 			expectedErr: ErrInvalidName,
 		},
 		{
 			name: "should return error when email is invalid",
-			overrides: []func(*Specialist){
-				func(s *Specialist) { s.Email = "invalid-email" },
+			overrides: []func(*CreateSpecialistInput){
+				func(s *CreateSpecialistInput) { s.Email = "invalid-email" },
 			},
 			expectError: true,
 			expectedErr: ErrInvalidEmail,
 		},
 		{
 			name: "should return error when specialty is invalid",
-			overrides: []func(*Specialist){
-				func(s *Specialist) { s.Specialty = "" },
+			overrides: []func(*CreateSpecialistInput){
+				func(s *CreateSpecialistInput) { s.Specialty = "" },
 			},
 			expectError: true,
 			expectedErr: ErrInvalidSpecialty,
 		},
 		{
 			name: "should return error when license number is invalid",
-			overrides: []func(*Specialist){
-				func(s *Specialist) { s.LicenseNumber = "" },
+			overrides: []func(*CreateSpecialistInput){
+				func(s *CreateSpecialistInput) { s.LicenseNumber = "" },
 			},
 			expectError: true,
 			expectedErr: ErrInvalidLicenseNumber,
 		},
 		{
 			name: "should return error when agreed to share is false",
-			overrides: []func(*Specialist){
-				func(s *Specialist) { s.AgreedToShare = false },
+			overrides: []func(*CreateSpecialistInput){
+				func(s *CreateSpecialistInput) { s.AgreedToShare = false },
 			},
 			expectError: true,
 			expectedErr: ErrMustAgreeToShare,
 		},
 		{
 			name: "should trim whitespace from name",
-			overrides: []func(*Specialist){
-				func(s *Specialist) { s.Name = "  Dr. João Silva  " },
+			overrides: []func(*CreateSpecialistInput){
+				func(s *CreateSpecialistInput) { s.Name = "  Dr. João Silva  " },
 			},
 			expectError: false,
 			validateResult: func(t *testing.T, specialist *Specialist) {
@@ -108,8 +105,8 @@ func TestCreateSpecialist(t *testing.T) {
 		},
 		{
 			name: "should trim and lowercase email",
-			overrides: []func(*Specialist){
-				func(s *Specialist) { s.Email = "  JOAO@EXAMPLE.COM  " },
+			overrides: []func(*CreateSpecialistInput){
+				func(s *CreateSpecialistInput) { s.Email = "  JOAO@EXAMPLE.COM  " },
 			},
 			expectError: false,
 			validateResult: func(t *testing.T, specialist *Specialist) {
@@ -118,8 +115,8 @@ func TestCreateSpecialist(t *testing.T) {
 		},
 		{
 			name: "should trim whitespace from phone",
-			overrides: []func(*Specialist){
-				func(s *Specialist) { s.Phone = "  +5511999999999  " },
+			overrides: []func(*CreateSpecialistInput){
+				func(s *CreateSpecialistInput) { s.Phone = "  +5511999999999  " },
 			},
 			expectError: false,
 			validateResult: func(t *testing.T, specialist *Specialist) {
@@ -128,8 +125,8 @@ func TestCreateSpecialist(t *testing.T) {
 		},
 		{
 			name: "should trim whitespace from specialty",
-			overrides: []func(*Specialist){
-				func(s *Specialist) { s.Specialty = "  Cardiologia  " },
+			overrides: []func(*CreateSpecialistInput){
+				func(s *CreateSpecialistInput) { s.Specialty = "  Cardiologia  " },
 			},
 			expectError: false,
 			validateResult: func(t *testing.T, specialist *Specialist) {
@@ -138,8 +135,8 @@ func TestCreateSpecialist(t *testing.T) {
 		},
 		{
 			name: "should trim whitespace from license number",
-			overrides: []func(*Specialist){
-				func(s *Specialist) { s.LicenseNumber = "  CRM123456  " },
+			overrides: []func(*CreateSpecialistInput){
+				func(s *CreateSpecialistInput) { s.LicenseNumber = "  CRM123456  " },
 			},
 			expectError: false,
 			validateResult: func(t *testing.T, specialist *Specialist) {
@@ -148,8 +145,8 @@ func TestCreateSpecialist(t *testing.T) {
 		},
 		{
 			name: "should trim whitespace from description",
-			overrides: []func(*Specialist){
-				func(s *Specialist) { s.Description = "  Especialista em cardiologia  " },
+			overrides: []func(*CreateSpecialistInput){
+				func(s *CreateSpecialistInput) { s.Description = "  Especialista em cardiologia  " },
 			},
 			expectError: false,
 			validateResult: func(t *testing.T, specialist *Specialist) {
@@ -158,8 +155,8 @@ func TestCreateSpecialist(t *testing.T) {
 		},
 		{
 			name: "should sanitize keywords array",
-			overrides: []func(*Specialist){
-				func(s *Specialist) {
+			overrides: []func(*CreateSpecialistInput){
+				func(s *CreateSpecialistInput) {
 					s.Keywords = []string{"CORAÇÃO", "coração", "  Arritmia  ", "", "hipertensão", "HIPERTENSÃO"}
 				},
 			},
@@ -170,8 +167,8 @@ func TestCreateSpecialist(t *testing.T) {
 		},
 		{
 			name: "should handle empty keywords array",
-			overrides: []func(*Specialist){
-				func(s *Specialist) { s.Keywords = []string{} },
+			overrides: []func(*CreateSpecialistInput){
+				func(s *CreateSpecialistInput) { s.Keywords = []string{} },
 			},
 			expectError: false,
 			validateResult: func(t *testing.T, specialist *Specialist) {
@@ -180,8 +177,8 @@ func TestCreateSpecialist(t *testing.T) {
 		},
 		{
 			name: "should handle nil keywords array",
-			overrides: []func(*Specialist){
-				func(s *Specialist) { s.Keywords = nil },
+			overrides: []func(*CreateSpecialistInput){
+				func(s *CreateSpecialistInput) { s.Keywords = nil },
 			},
 			expectError: false,
 			validateResult: func(t *testing.T, specialist *Specialist) {
@@ -211,7 +208,7 @@ func TestCreateSpecialist(t *testing.T) {
 	t.Run("should generate unique IDs for different specialists", func(t *testing.T) {
 		specialist1, err1 := createSpecialistFactory()
 		specialist2, err2 := createSpecialistFactory(
-			func(s *Specialist) {
+			func(s *CreateSpecialistInput) {
 				s.Name = "Dr. Maria"
 				s.Email = "maria@example.com"
 				s.Specialty = "Neurologia"
