@@ -96,6 +96,98 @@ func TestCreateSpecialist(t *testing.T) {
 			expectError: true,
 			expectedErr: ErrMustAgreeToShare,
 		},
+		{
+			name: "should trim whitespace from name",
+			overrides: []func(*Specialist){
+				func(s *Specialist) { s.Name = "  Dr. João Silva  " },
+			},
+			expectError: false,
+			validateResult: func(t *testing.T, specialist *Specialist) {
+				assert.Equal(t, "Dr. João Silva", specialist.Name)
+			},
+		},
+		{
+			name: "should trim and lowercase email",
+			overrides: []func(*Specialist){
+				func(s *Specialist) { s.Email = "  JOAO@EXAMPLE.COM  " },
+			},
+			expectError: false,
+			validateResult: func(t *testing.T, specialist *Specialist) {
+				assert.Equal(t, "joao@example.com", specialist.Email)
+			},
+		},
+		{
+			name: "should trim whitespace from phone",
+			overrides: []func(*Specialist){
+				func(s *Specialist) { s.Phone = "  +5511999999999  " },
+			},
+			expectError: false,
+			validateResult: func(t *testing.T, specialist *Specialist) {
+				assert.Equal(t, "+5511999999999", specialist.Phone)
+			},
+		},
+		{
+			name: "should trim whitespace from specialty",
+			overrides: []func(*Specialist){
+				func(s *Specialist) { s.Specialty = "  Cardiologia  " },
+			},
+			expectError: false,
+			validateResult: func(t *testing.T, specialist *Specialist) {
+				assert.Equal(t, "Cardiologia", specialist.Specialty)
+			},
+		},
+		{
+			name: "should trim whitespace from license number",
+			overrides: []func(*Specialist){
+				func(s *Specialist) { s.LicenseNumber = "  CRM123456  " },
+			},
+			expectError: false,
+			validateResult: func(t *testing.T, specialist *Specialist) {
+				assert.Equal(t, "CRM123456", specialist.LicenseNumber)
+			},
+		},
+		{
+			name: "should trim whitespace from description",
+			overrides: []func(*Specialist){
+				func(s *Specialist) { s.Description = "  Especialista em cardiologia  " },
+			},
+			expectError: false,
+			validateResult: func(t *testing.T, specialist *Specialist) {
+				assert.Equal(t, "Especialista em cardiologia", specialist.Description)
+			},
+		},
+		{
+			name: "should sanitize keywords array",
+			overrides: []func(*Specialist){
+				func(s *Specialist) {
+					s.Keywords = []string{"CORAÇÃO", "coração", "  Arritmia  ", "", "hipertensão", "HIPERTENSÃO"}
+				},
+			},
+			expectError: false,
+			validateResult: func(t *testing.T, specialist *Specialist) {
+				assert.Equal(t, []string{"coração", "arritmia", "hipertensão"}, specialist.Keywords)
+			},
+		},
+		{
+			name: "should handle empty keywords array",
+			overrides: []func(*Specialist){
+				func(s *Specialist) { s.Keywords = []string{} },
+			},
+			expectError: false,
+			validateResult: func(t *testing.T, specialist *Specialist) {
+				assert.Equal(t, []string{}, specialist.Keywords)
+			},
+		},
+		{
+			name: "should handle nil keywords array",
+			overrides: []func(*Specialist){
+				func(s *Specialist) { s.Keywords = nil },
+			},
+			expectError: false,
+			validateResult: func(t *testing.T, specialist *Specialist) {
+				assert.Equal(t, []string{}, specialist.Keywords)
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -115,60 +207,6 @@ func TestCreateSpecialist(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestSanitizesWhenCreate(t *testing.T) {
-	t.Run("should trim whitespace from all string fields", func(t *testing.T) {
-		specialist, err := CreateSpecialist(
-			"  Dr. João Silva  ",
-			"  JOAO@EXAMPLE.COM  ",
-			"  +5511999999999  ",
-			"  Cardiologia  ",
-			"  CRM123456  ",
-			"  Especialista em cardiologia  ",
-			[]string{"  coração  ", "arritmia"},
-			true,
-		)
-
-		assert.NoError(t, err)
-		assert.Equal(t, "Dr. João Silva", specialist.Name)
-		assert.Equal(t, "joao@example.com", specialist.Email)
-		assert.Equal(t, "+5511999999999", specialist.Phone)
-		assert.Equal(t, "Cardiologia", specialist.Specialty)
-		assert.Equal(t, "CRM123456", specialist.LicenseNumber)
-		assert.Equal(t, "Especialista em cardiologia", specialist.Description)
-		assert.Equal(t, []string{"coração", "arritmia"}, specialist.Keywords)
-	})
-
-	t.Run("should normalize keywords using sanitize function", func(t *testing.T) {
-		specialist, err := CreateSpecialist(
-			"Dr. João",
-			"joao@example.com",
-			"",
-			"Cardiologia",
-			"CRM123",
-			"",
-			[]string{"CORAÇÃO", "coração", "  Arritmia  ", "", "hipertensão", "HIPERTENSÃO"},
-			true,
-		)
-
-		assert.NoError(t, err)
-		assert.Equal(t, []string{"coração", "arritmia", "hipertensão"}, specialist.Keywords)
-	})
-
-	t.Run("should handle empty keywords array", func(t *testing.T) {
-		specialist, err := CreateSpecialist("Dr. João", "joao@example.com", "", "Cardiologia", "CRM123", "", []string{}, true)
-
-		assert.NoError(t, err)
-		assert.Equal(t, []string{}, specialist.Keywords)
-	})
-
-	t.Run("should handle nil keywords array", func(t *testing.T) {
-		specialist, err := CreateSpecialist("Dr. João", "joao@example.com", "", "Cardiologia", "CRM123", "", nil, true)
-
-		assert.NoError(t, err)
-		assert.Equal(t, []string{}, specialist.Keywords)
-	})
 
 	t.Run("should generate unique IDs for different specialists", func(t *testing.T) {
 		specialist1, err1 := createSpecialistFactory()
