@@ -1,4 +1,4 @@
-package telemetry
+package observability
 
 import "context"
 
@@ -9,5 +9,10 @@ type Tracer interface {
 type Span interface {
 	End()
 	RecordError(err error)
-	SetAttribute(key string, value interface{})
+	SetAttribute(key string, attribute ...Attribute)
+}
+
+type Attribute struct {
+	Key   string
+	Value string
 }
