@@ -11,5 +11,9 @@ type SpecialistCreateRepositoryInterface interface {
 	ExistsByEmail(ctx context.Context, email string) (bool, error)
 	ExistsByLicenseNumber(ctx context.Context, licenseNumber string) (bool, error)
 	ExistsByID(ctx context.Context, id string) (bool, error)
-	CheckValidLicenseNumber(ctx context.Context, licenseNumber string) (bool, error)
+	ValidateUniqueness(ctx context.Context, id, email, licenseNumber string)
+}
+
+type SpecialistCreateExternalGatewayInterface interface {
+	ValidateLicenseNumber(ctx context.Context, licenseNumber string) (bool, error)
 }
