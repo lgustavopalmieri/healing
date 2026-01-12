@@ -113,7 +113,7 @@ func (c *CreateSpecialistCommand) validateLicenseWithExternalGateway(ctx context
 	}
 	if !isValidLicense {
 		c.logger.Warn(ctx, InvalidLicenseNumberMessage, observability.Field{Key: "licenseNumber", Value: licenseNumber})
-		return false, domain.ErrInvalidLicense
+		return false, ErrInvalidLicense
 	}
 	return true, nil
 }

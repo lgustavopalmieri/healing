@@ -20,6 +20,7 @@ const (
 	ErrUniquenessValidationMessage  = "Failed to validate uniqueness constraints"
 	ErrSaveSpecialistMessage        = "Failed to save specialist"
 	ErrLicenseValidationMessage     = "Failed to validate license number"
+	ErrInvalidLicenseMessage       = "Invalid license number"
 	ErrEventPublishMessage          = "Failed to publish specialist created event"
 	ErrExternalValidationTimeoutMsg = "License Number validation timeout. Try again."
 
@@ -32,6 +33,7 @@ var (
 	ErrUniquenessValidation      = errors.New(ErrUniquenessValidationMessage)
 	ErrSaveSpecialist            = errors.New(ErrSaveSpecialistMessage)
 	ErrLicenseValidation         = errors.New(ErrLicenseValidationMessage)
+	ErrInvalidLicense           = errors.New(ErrInvalidLicenseMessage)
 	ErrEventPublish              = errors.New(ErrEventPublishMessage)
 	ErrExternalValidationTimeout = errors.New(ErrExternalValidationTimeoutMsg)
 )

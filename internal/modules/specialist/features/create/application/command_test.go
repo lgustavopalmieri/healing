@@ -37,7 +37,7 @@ func TestCreateSpecialistCommand_Execute(t *testing.T) {
 		validateResult func(*testing.T, *domain.Specialist)
 	}{
 		{
-			name:"1-validate license number - success case",
+			name:           "1-validate license number - success case",
 			inputOverrides: nil,
 			setupMocks: func(mockRepo *mocks.MockSpecialistCreateRepositoryInterface, mockGateway *mocks.MockSpecialistCreateExternalGatewayInterface, mockEventPublisher *mocks.MockEventDispatcher, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan, mockApiSpan *mocks.MockSpan, input CreateSpecialistDTO) {
 				ctx := context.Background()
@@ -74,6 +74,30 @@ func TestCreateSpecialistCommand_Execute(t *testing.T) {
 				assert.False(t, specialist.CreatedAt.IsZero())
 				assert.False(t, specialist.UpdatedAt.IsZero())
 			},
+		},
+		{
+			name:"2-validate license number - fail case",
+			inputOverrides: nil,
+			setupMocks: func(mockRepo *mocks.MockSpecialistCreateRepositoryInterface, mockGateway *mocks.MockSpecialistCreateExternalGatewayInterface, mockEventPublisher *mocks.MockEventDispatcher, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan, mockApiSpan *mocks.MockSpan, input CreateSpecialistDTO) {
+				ctx := context.Background()
+
+				mockTracer.EXPECT().Start(gomock.Any(), CreateSpecialistSpanName).Return(ctx, mockSpan).Times(1)
+				mockSpan.EXPECT().End().Times(1)
+
+				mockRepo.EXPECT().ValidateUniqueness(gomock.Any(), gomock.Any(), input.Email, input.LicenseNumber).Return(nil).Times(1)
+
+				mockTracer.EXPECT().Start(gomock.Any(), "ValidateLicenseExternal").Return(ctx, mockApiSpan).Times(1)
+				mockApiSpan.EXPECT().End().Times(1)
+				mockGateway.EXPECT().ValidateLicenseNumber(gomock.Any(), input.LicenseNumber).Return(false, nil).Times(1)
+
+				mockLogger.EXPECT().Warn(gomock.Any(), InvalidLicenseNumberMessage, gomock.Any()).Times(1)
+
+				mockRepo.EXPECT().Save(gomock.Any(), gomock.Any()).Times(0)
+				mockEventPublisher.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Times(0)
+				mockLogger.EXPECT().Info(gomock.Any(), SpecialistCreatedSuccessMessage, gomock.Any(), gomock.Any()).Times(0)
+			},
+			expectError: true,
+			expectedErr: ErrInvalidLicense,
 		},
 	}
 
