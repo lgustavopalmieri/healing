@@ -27,7 +27,7 @@ go test -v -count=1 ./...
 
 **Exemplo: internal/service**
 ```bash
-go test ./internal/service
+go test ./internal/modules/specialist/features/create/application -v -timeout=30s
 ```
 
 **Com verbose:**
@@ -39,7 +39,6 @@ go test -v ./internal/service
 ```bash
 go test -v ./internal/service/...
 ```
-
 
 ## Rodar um teste específico
 ```bash
