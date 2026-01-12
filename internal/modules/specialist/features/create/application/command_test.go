@@ -38,7 +38,7 @@ func TestCreateSpecialistCommand_Execute(t *testing.T) {
 		validateResult func(*testing.T, *domain.Specialist)
 	}{
 		{
-			name:           "1-validate license number - success case",
+			name:           "creates specialist when license validation succeeds",
 			inputOverrides: nil,
 			setupMocks: func(mockRepo *mocks.MockSpecialistCreateRepositoryInterface, mockGateway *mocks.MockSpecialistCreateExternalGatewayInterface, mockEventPublisher *mocks.MockEventDispatcher, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan, mockApiSpan *mocks.MockSpan, input CreateSpecialistDTO) {
 				ctx := context.Background()
@@ -77,7 +77,7 @@ func TestCreateSpecialistCommand_Execute(t *testing.T) {
 			},
 		},
 		{
-			name:           "2-invalid license number - fail case",
+			name:           "does not persist specialist when license is invalid",
 			inputOverrides: nil,
 			setupMocks: func(mockRepo *mocks.MockSpecialistCreateRepositoryInterface, mockGateway *mocks.MockSpecialistCreateExternalGatewayInterface, mockEventPublisher *mocks.MockEventDispatcher, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan, mockApiSpan *mocks.MockSpan, input CreateSpecialistDTO) {
 				ctx := context.Background()
@@ -101,7 +101,7 @@ func TestCreateSpecialistCommand_Execute(t *testing.T) {
 			expectedErr: ErrInvalidLicense,
 		},
 		{
-			name:           "3-external gateway error - fail case",
+			name:           "propagates error when external license gateway returns error",
 			inputOverrides: nil,
 			setupMocks: func(mockRepo *mocks.MockSpecialistCreateRepositoryInterface, mockGateway *mocks.MockSpecialistCreateExternalGatewayInterface, mockEventPublisher *mocks.MockEventDispatcher, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan, mockApiSpan *mocks.MockSpan, input CreateSpecialistDTO) {
 				ctx := context.Background()
@@ -127,7 +127,7 @@ func TestCreateSpecialistCommand_Execute(t *testing.T) {
 			expectedErr: ErrLicenseValidation,
 		},
 		{
-			name:           "4-external validation timeout",
+			name:           "returns timeout error when external license validation exceeds deadline",
 			inputOverrides: nil,
 			setupMocks: func(
 				mockRepo *mocks.MockSpecialistCreateRepositoryInterface,
