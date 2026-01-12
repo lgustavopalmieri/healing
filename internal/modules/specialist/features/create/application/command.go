@@ -14,14 +14,6 @@ func (c *CreateSpecialistCommand) Execute(ctx context.Context, input CreateSpeci
 
 	c.logger.Info(ctx, StartingSpecialistCreationMessage, observability.Field{Key: "email", Value: input.Email})
 
-	if err := c.validateEmailUniqueness(ctx, span, input.Email); err != nil {
-		return nil, err
-	}
-
-	if err := c.validateLicenseUniqueness(ctx, span, input.LicenseNumber); err != nil {
-		return nil, err
-	}
-
 	if err := c.validateLicenseWithExternalGateway(ctx, span, input.LicenseNumber); err != nil {
 		return nil, err
 	}
@@ -42,7 +34,7 @@ func (c *CreateSpecialistCommand) Execute(ctx context.Context, input CreateSpeci
 		return nil, err
 	}
 
-	if err := c.validateIDUniqueness(ctx, span, specialist.ID); err != nil {
+	if err := c.validateUniquenessConstraints(ctx, span, specialist.ID, specialist.Email, specialist.LicenseNumber); err != nil {
 		return nil, err
 	}
 
@@ -64,34 +56,16 @@ func (c *CreateSpecialistCommand) Execute(ctx context.Context, input CreateSpeci
 	return savedSpecialist, nil
 }
 
-func (c *CreateSpecialistCommand) validateEmailUniqueness(ctx context.Context, span observability.Span, email string) error {
-	emailExists, err := c.repository.ExistsByEmail(ctx, email)
+func (c *CreateSpecialistCommand) validateUniquenessConstraints(ctx context.Context, span observability.Span, id, email, licenseNumber string) error {
+	err := c.repository.ValidateUniqueness(ctx, id, email, licenseNumber)
 	if err != nil {
 		span.RecordError(err)
-		c.logger.Error(ctx, ErrEmailCheckMessage,
+		c.logger.Error(ctx, ErrUniquenessValidationMessage,
+			observability.Field{Key: "id", Value: id},
 			observability.Field{Key: "email", Value: email},
-			observability.Field{Key: "error", Value: err.Error()})
-		return ErrEmailCheck
-	}
-	if emailExists {
-		c.logger.Warn(ctx, EmailAlreadyExistsMessage, observability.Field{Key: "email", Value: email})
-		return domain.ErrDuplicateEmail
-	}
-	return nil
-}
-
-func (c *CreateSpecialistCommand) validateLicenseUniqueness(ctx context.Context, span observability.Span, licenseNumber string) error {
-	licenseExists, err := c.repository.ExistsByLicenseNumber(ctx, licenseNumber)
-	if err != nil {
-		span.RecordError(err)
-		c.logger.Error(ctx, ErrLicenseCheckMessage,
 			observability.Field{Key: "licenseNumber", Value: licenseNumber},
 			observability.Field{Key: "error", Value: err.Error()})
-		return ErrLicenseCheck
-	}
-	if licenseExists {
-		c.logger.Warn(ctx, LicenseAlreadyExistsMessage, observability.Field{Key: "licenseNumber", Value: licenseNumber})
-		return domain.ErrDuplicateLicense
+		return err
 	}
 	return nil
 }
@@ -108,22 +82,6 @@ func (c *CreateSpecialistCommand) validateLicenseWithExternalGateway(ctx context
 	if !isValidLicense {
 		c.logger.Warn(ctx, InvalidLicenseNumberMessage, observability.Field{Key: "licenseNumber", Value: licenseNumber})
 		return domain.ErrInvalidLicense
-	}
-	return nil
-}
-
-func (c *CreateSpecialistCommand) validateIDUniqueness(ctx context.Context, span observability.Span, id string) error {
-	idExists, err := c.repository.ExistsByID(ctx, id)
-	if err != nil {
-		span.RecordError(err)
-		c.logger.Error(ctx, ErrIDCheckMessage,
-			observability.Field{Key: "id", Value: id},
-			observability.Field{Key: "error", Value: err.Error()})
-		return ErrIDCheck
-	}
-	if idExists {
-		c.logger.Error(ctx, IDAlreadyExistsMessage, observability.Field{Key: "id", Value: id})
-		return domain.ErrDuplicateID
 	}
 	return nil
 }

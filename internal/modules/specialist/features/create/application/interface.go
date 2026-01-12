@@ -8,10 +8,7 @@ import (
 
 type SpecialistCreateRepositoryInterface interface {
 	Save(ctx context.Context, specialist *domain.Specialist) (*domain.Specialist, error)
-	ExistsByEmail(ctx context.Context, email string) (bool, error)
-	ExistsByLicenseNumber(ctx context.Context, licenseNumber string) (bool, error)
-	ExistsByID(ctx context.Context, id string) (bool, error)
-	ValidateUniqueness(ctx context.Context, id, email, licenseNumber string)
+	ValidateUniqueness(ctx context.Context, id, email, licenseNumber string) error
 }
 
 type SpecialistCreateExternalGatewayInterface interface {
