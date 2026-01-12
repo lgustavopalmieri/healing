@@ -164,7 +164,7 @@ func TestCreateSpecialistCommand_Execute(t *testing.T) {
 				mockGateway.EXPECT().
 					ValidateLicenseNumber(gomock.Any(), input.LicenseNumber).
 					DoAndReturn(func(ctx context.Context, _ string) (bool, error) {
-						<-ctx.Done() 
+						<-ctx.Done()
 						return false, ctx.Err()
 					}).
 					Times(1)
