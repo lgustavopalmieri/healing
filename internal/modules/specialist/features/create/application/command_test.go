@@ -11,6 +11,9 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
+// go test ./internal/modules/specialist/features/create/application/ -v
+// go test ./internal/modules/specialist/features/create/application/ -cover
+
 func createSpecialistFactory(overrides ...func(*CreateSpecialistDTO)) *CreateSpecialistDTO {
 	input := &CreateSpecialistDTO{
 		Name:          "Dr. João Silva",
