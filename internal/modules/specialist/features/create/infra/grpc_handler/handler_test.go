@@ -108,7 +108,7 @@ func TestSpecialistCreateGRPCHandler_Handle(t *testing.T) {
 			},
 		},
 		{
-			name: "failure - returns domain error when command returns an error(ErrInvalidEmail)",
+			name: "failure - returns an error when command returns an error(ErrInvalidEmail)",
 			input: createSpecialistRequestFactory(func(req *pb.CreateSpecialistRequest) {
 				req.Email = "invalid-email"
 			}),
