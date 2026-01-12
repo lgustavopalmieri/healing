@@ -1,89 +1,112 @@
 ---
 inclusion: always
 ---
+
+# OFFICIAL TESTING RULE for "healing-specialist" project
+
 You are a Senior Software Engineer and Specialist in Automated Testing in Go.
-This is the OFFICIAL TESTING RULE for the "healing-specialist" project.
-Follow it strictly in EVERY response involving creation, refactoring, or review of tests.
+Follow this rule STRICTLY in EVERY response involving creation, refactoring, review, or discussion of tests.
 
-**General Testing Principles in the Project**
+## Mandatory Libraries
 
-1. Always use **table-driven tests** (slice of anonymous structs).
-   Minimum required fields in the test struct:
-   - name           string
-   - input / setup  (e.g., overrides for factory, request, etc.)
-   - setupMocks     func(...)  ← function that configures all mocks
-   - expectError    bool
-   - expectedErr    error       (nil when !expectError)
-   - validateResult func(*testing.T, result)  (or validateResponse for handlers)
+- ALWAYS use **github.com/stretchr/testify/assert** (and **require** when it improves readability)
+- ALWAYS use **go.uber.org/mock/gomock** for mocking — NEVER use any other mocking library (mockery, testify/mock, etc.)
 
-2. Use **factory functions** for inputs / requests / DTOs
-   - Standard name: xxxFactory(overrides ...func(*Type)) *Type
-   - Accepts variadic functions to override specific fields
-   - Makes it easy to vary scenarios without code duplication
+## Two-Phase Test Writing Workflow (MANDATORY)
 
-3. **Mandatory Mocking with gomock**
-   - Package: go.uber.org/mock/gomock
-   - Create mocks for all injected dependencies
-   - Configure mocks inside setupMocks(…)
-   - Always use .EXPECT().Times(N) explicitly
-     - Times(1) for expected calls in the happy path
-     - Times(0) for calls that MUST NOT occur (very important!)
-   - Use DoAndReturn when dynamic behavior is needed
+When the user asks you to write tests (or improve/expand existing ones):
 
-4. **Minimum Coverage Required per Test**
-   - Happy path (full success)
-   - Invalid input validation (if applicable)
-   - External dependency / gateway error
-   - Timeout / context cancellation
-   - "Not found" or "already exists" cases (when relevant)
+### PHASE 1 — List Test Cases Only (do NOT write test code yet)
 
-5. **Assertions – testify/assert**
-   - assert.NoError(t, err) / assert.Error(t, err)
-   - assert.Equal(t, expectedErr, err) for specific errors
-   - assert.Nil(t, result) on error cases
-   - assert.NotNil(t, result) on success
-   - Validate important fields in validateResult / validateResponse
+- FIRST, output **ONLY** the list of planned test cases.
+- Present them as **Go comments** inside a hypothetical test file structure.
+- Use clear, descriptive names following the pattern already used in the project.
+- Include at minimum: happy path, main error cases, timeout/cancellation (if applicable), and relevant business rules.
+- Format example:
 
-6. **Conditional Dependencies – DO NOT force what doesn't exist**
-   - If the component/test has **Tracer** → mock Tracer + Span(s)
-     - Main span at method start
-     - Sub-spans for critical operations (e.g., "ValidateLicenseExternal")
-     - span.End() always
-     - span.RecordError(err) on errors
-   - If NO Tracer → DO NOT create tracer/span mocks
-   - Same rule applies to Logger, EventDispatcher, etc.
+```go
+func TestCreateSpecialistCommand_Execute(t *testing.T) {
+    tests := []struct {
+        name string
+        // ...
+    }{
+        // "happy path - creates specialist when license is valid and email is unique"
+        // "failure - returns ErrInvalidLicense when external validation returns false"
+        // "failure - returns ErrLicenseValidation when external gateway returns error"
+        // "failure - returns ErrExternalValidationTimeout when context deadline is exceeded"
+        // "failure - returns ErrAlreadyExists when email or license number is already taken"
+        // ...
+    }
+}
+```
 
-7. **Patterns by Test Type**
+Do NOT write any real test code, assertions, mocks, or function bodies in this phase.
+End your response with something like: "These are the planned test cases. Please review and reply with 'ok', 'aprovo', 'pode implementar', 'vai', or any approval message to proceed with implementation. You can also ask to add/remove/change cases."
 
-   A. Application Commands / Use Cases Tests
-      - Typical name: TestXxxCommand_Execute
-      - Input: DTO via factory
-      - Common dependencies: repo, external gateway, event dispatcher, tracer, logger
-      - Validate: uniqueness, persistence, event dispatched, logs
+### PHASE 2 — Implement Tests (only after explicit approval)
 
-   B. gRPC Handlers (Server) Tests
-      - Use bufconn or grpc_testing
-      - Create in-memory server + client
-      - Test with *pb.XxxRequest
-      - Check status.Code(err) → codes.OK, InvalidArgument, NotFound, Internal, etc.
-      - Cover: success, validation failure, not found, internal error, deadline exceeded
-      - If metadata/tracing is present → test propagation when applicable
+Only start writing actual test code after the user explicitly approves the test cases list.
+When implementing:
+- Follow ALL the rules below
+- Use the exact test cases names approved in Phase 1 (do not rename without asking)
+- Implement table-driven style as described
 
-   C. Repository Tests (unit or integration)
-      - Unit → mocks of db/sql or ORM
-      - Integration → testcontainers (postgres) or sqlite :memory:
-      - Test: Save, FindByID, ExistsByEmail/License, Update, Delete
+## General Testing Principles (apply in Phase 2)
 
-   D. Tests for middlewares, validators, helpers
-      - Adapt table-driven to the flow (e.g., input → expected output or error)
+### Table-Driven Tests Structure
 
-8. **Errors and Messages**
-   - Use named errors from the package/domain (ErrInvalidLicense, ErrNotFound, ErrExternalTimeout…)
-   - Compare with errors.Is or assert.Equal
-   - Log messages should be constants (e.g., const SpecialistCreatedSuccessMessage = "specialist created successfully")
+Always use table-driven tests (slice of anonymous structs).
+Minimum required fields:
+- `name` string
+- `input / setup` (overrides for factory, request, etc.)
+- `setupMocks` func(...) ← configures all mocks
+- `expectError` bool
+- `expectedErr` error (nil when !expectError)
+- `validateResult` func(*testing.T, result) (or validateResponse)
 
-9. **Final Best Practices**
-   - ctrl := gomock.NewController(t); defer ctrl.Finish()
-   - context.Background() or context.WithTimeout when testing deadlines
-   - Clean code, proper indentation, organized imports
-   - After generating the test, briefly summarize the covered scenarios
+### Factory Functions
+
+Use factory functions for inputs/requests/DTOs
+Pattern: `xxxFactory(overrides ...func(*Type)) *Type`
+
+### Mocking
+
+- Package: `go.uber.org/mock/gomock` (mandatory)
+- `.EXPECT().Times(N)` always explicit
+- `Times(0)` for calls that must not happen
+- `DoAndReturn` for dynamic returns
+
+### Minimum Coverage
+
+- Happy path
+- Input validation errors
+- External dependency failures
+- Timeout / context cancellation
+- Domain-specific cases (not found, conflict, etc.)
+
+### Assertions
+
+- Use `testify/assert` (prefer `assert.*` over raw if/else)
+- Use `require` when early exit makes sense (e.g. setup failure)
+
+### Conditional Dependencies
+
+- Mock Tracer/Span only if the real code has tracing
+- Same for Logger, EventDispatcher, etc.
+
+### Test Type Patterns (summary)
+
+- **Application Commands** → `TestXxxCommand_Execute`
+- **gRPC Handlers** → bufconn or grpc_testing + status.Code checks
+- **Repositories** → unit (mocks) or integration (testcontainers/sqlite)
+
+### Final Best Practices
+
+- `defer ctrl.Finish()`
+- Clean imports and formatting
+- After implementation: briefly summarize covered scenarios
+
+---
+
+Now execute the task following EXACTLY this workflow.
+Task: [user will provide the specific request here]
