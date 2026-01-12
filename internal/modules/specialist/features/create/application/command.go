@@ -17,24 +17,6 @@ func (c *CreateSpecialistCommand) Execute(contx context.Context, input CreateSpe
 	ctx, span := c.tracer.Start(ctx, CreateSpecialistSpanName)
 	defer span.End()
 
-	apiCtx, apiCancel := context.WithTimeout(ctx, 800*time.Millisecond)
-	defer apiCancel()
-
-	type apiResult struct {
-		result bool
-		err    error
-	}
-
-	apiCh := make(chan apiResult, 1)
-
-	go func() {
-		apiCtx, apiSpan := c.tracer.Start(apiCtx, "ValidateLicenseExternal")
-		defer apiSpan.End()
-
-		res, err := c.validateLicenseWithExternalGateway(apiCtx, apiSpan, input.LicenseNumber)
-		apiCh <- apiResult{result: res, err: err}
-	}()
-
 	specialist, err := domain.CreateSpecialist(domain.CreateSpecialistInput{
 		Name:          input.Name,
 		Email:         input.Email,
@@ -49,6 +31,27 @@ func (c *CreateSpecialistCommand) Execute(contx context.Context, input CreateSpe
 		span.RecordError(err)
 		c.logger.Error(ctx, err.Error(), observability.Field{Key: "error", Value: err.Error()})
 		return nil, err
+	}
+
+	apiCtx, apiCancel := context.WithTimeout(ctx, 800*time.Millisecond)
+	defer apiCancel()
+
+	type apiResult struct {
+		result bool
+		err    error
+	}
+
+	var apiCh chan apiResult
+
+	if specialist.LicenseNumber != nil {
+		apiCh = make(chan apiResult, 1)
+		go func() {
+			apiCtx, apiSpan := c.tracer.Start(apiCtx, "ValidateLicenseExternal")
+			defer apiSpan.End()
+
+			res, err := c.validateLicenseWithExternalGateway(apiCtx, apiSpan, specialist.LicenseNumber)
+			apiCh <- apiResult{result: res, err: err}
+		}()
 	}
 
 	if err := c.validateUniquenessConstraints(ctx, span, specialist.ID, specialist.Email, specialist.LicenseNumber); err != nil {

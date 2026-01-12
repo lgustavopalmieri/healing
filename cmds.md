@@ -1,3 +1,12 @@
+## Gerar mocks
+```bash
+mockgen -source=internal/modules/specialist/features/create/application/interface.go -destination=internal/modules/specialist/features/create/application/mocks/repository_mock.go -package=mocks
+```
+
+```bash
+mockgen -source=internal/commom/event/dipstacher.go -destination=internal/modules/specialist/features/create/application/mocks/event_dispatcher_mock.go -package=mocks
+```
+
 ## Rodar todos os testes do projeto
 ```bash
 go test ./...
