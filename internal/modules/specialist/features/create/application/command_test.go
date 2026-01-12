@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
@@ -76,7 +77,7 @@ func TestCreateSpecialistCommand_Execute(t *testing.T) {
 			},
 		},
 		{
-			name:"2-validate license number - fail case",
+			name:           "2-invalid license number - fail case",
 			inputOverrides: nil,
 			setupMocks: func(mockRepo *mocks.MockSpecialistCreateRepositoryInterface, mockGateway *mocks.MockSpecialistCreateExternalGatewayInterface, mockEventPublisher *mocks.MockEventDispatcher, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan, mockApiSpan *mocks.MockSpan, input CreateSpecialistDTO) {
 				ctx := context.Background()
@@ -98,6 +99,82 @@ func TestCreateSpecialistCommand_Execute(t *testing.T) {
 			},
 			expectError: true,
 			expectedErr: ErrInvalidLicense,
+		},
+		{
+			name:           "3-external gateway error - fail case",
+			inputOverrides: nil,
+			setupMocks: func(mockRepo *mocks.MockSpecialistCreateRepositoryInterface, mockGateway *mocks.MockSpecialistCreateExternalGatewayInterface, mockEventPublisher *mocks.MockEventDispatcher, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan, mockApiSpan *mocks.MockSpan, input CreateSpecialistDTO) {
+				ctx := context.Background()
+				gatewayError := errors.New("server is down")
+
+				mockTracer.EXPECT().Start(gomock.Any(), CreateSpecialistSpanName).Return(ctx, mockSpan).Times(1)
+				mockSpan.EXPECT().End().Times(1)
+
+				mockRepo.EXPECT().ValidateUniqueness(gomock.Any(), gomock.Any(), input.Email, input.LicenseNumber).Return(nil).Times(1)
+
+				mockTracer.EXPECT().Start(gomock.Any(), "ValidateLicenseExternal").Return(ctx, mockApiSpan).Times(1)
+				mockApiSpan.EXPECT().End().Times(1)
+				mockApiSpan.EXPECT().RecordError(gatewayError).Times(1)
+				mockGateway.EXPECT().ValidateLicenseNumber(gomock.Any(), input.LicenseNumber).Return(false, gatewayError).Times(1)
+
+				mockLogger.EXPECT().Error(gomock.Any(), ErrLicenseValidationMessage, gomock.Any(), gomock.Any()).Times(1)
+
+				mockRepo.EXPECT().Save(gomock.Any(), gomock.Any()).Times(0)
+				mockEventPublisher.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Times(0)
+				mockLogger.EXPECT().Info(gomock.Any(), SpecialistCreatedSuccessMessage, gomock.Any(), gomock.Any()).Times(0)
+			},
+			expectError: true,
+			expectedErr: ErrLicenseValidation,
+		},
+		{
+			name:           "4-external validation timeout",
+			inputOverrides: nil,
+			setupMocks: func(
+				mockRepo *mocks.MockSpecialistCreateRepositoryInterface,
+				mockGateway *mocks.MockSpecialistCreateExternalGatewayInterface,
+				mockEventPublisher *mocks.MockEventDispatcher,
+				mockTracer *mocks.MockTracer,
+				mockLogger *mocks.MockLogger,
+				mockSpan *mocks.MockSpan,
+				mockApiSpan *mocks.MockSpan,
+				input CreateSpecialistDTO,
+			) {
+				ctx := context.Background()
+
+				mockTracer.EXPECT().
+					Start(gomock.Any(), CreateSpecialistSpanName).
+					Return(ctx, mockSpan).
+					Times(1)
+
+				mockSpan.EXPECT().End().Times(1)
+
+				mockRepo.EXPECT().
+					ValidateUniqueness(gomock.Any(), gomock.Any(), input.Email, input.LicenseNumber).
+					Return(nil).
+					Times(1)
+
+				mockTracer.EXPECT().
+					Start(gomock.Any(), "ValidateLicenseExternal").
+					Return(ctx, mockApiSpan).
+					AnyTimes()
+
+				mockApiSpan.EXPECT().End().
+					AnyTimes()
+
+				mockGateway.EXPECT().
+					ValidateLicenseNumber(gomock.Any(), input.LicenseNumber).
+					DoAndReturn(func(ctx context.Context, _ string) (bool, error) {
+						<-ctx.Done() 
+						return false, ctx.Err()
+					}).
+					Times(1)
+
+				mockRepo.EXPECT().Save(gomock.Any(), gomock.Any()).Times(0)
+				mockEventPublisher.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Times(0)
+				mockLogger.EXPECT().Info(gomock.Any(), SpecialistCreatedSuccessMessage, gomock.Any(), gomock.Any()).Times(0)
+			},
+			expectError: true,
+			expectedErr: ErrExternalValidationTimeout,
 		},
 	}
 

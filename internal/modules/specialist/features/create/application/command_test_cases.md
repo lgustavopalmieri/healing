@@ -14,7 +14,7 @@
 - o evento não deve ser publicado
 - o commando deve retornar o erro correto deste caso
 
-### 3-validate license number
+### 3- invalid license number
 - o repository c.repository.ValidateUniqueness(ctx, id, email, licenseNumber) retorna true
 - o método c.externalGateway.ValidateLicenseNumber(ctx, licenseNumber) retorna um erro
 - o c.repository.Save(ctx, specialist) NÃO é chamado nem salvo
