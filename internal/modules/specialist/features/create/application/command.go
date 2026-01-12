@@ -41,39 +41,32 @@ func (c *CreateSpecialistCommand) Execute(contx context.Context, input CreateSpe
 		err    error
 	}
 
-	var apiCh chan apiResult
+	apiCh := make(chan apiResult, 1)
+	go func() {
+		apiCtx, apiSpan := c.tracer.Start(apiCtx, "ValidateLicenseExternal")
+		defer apiSpan.End()
 
-	if specialist.LicenseNumber != nil {
-		apiCh = make(chan apiResult, 1)
-		go func() {
-			apiCtx, apiSpan := c.tracer.Start(apiCtx, "ValidateLicenseExternal")
-			defer apiSpan.End()
-
-			res, err := c.validateLicenseWithExternalGateway(apiCtx, apiSpan, specialist.LicenseNumber)
-			apiCh <- apiResult{result: res, err: err}
-		}()
-	}
+		res, err := c.validateLicenseWithExternalGateway(apiCtx, apiSpan, specialist.LicenseNumber)
+		apiCh <- apiResult{result: res, err: err}
+	}()
 
 	if err := c.validateUniquenessConstraints(ctx, span, specialist.ID, specialist.Email, specialist.LicenseNumber); err != nil {
-		cancel()
 		return nil, err
 	}
 
-	if apiCh != nil {
-		select {
-		case <-apiCtx.Done():
-			return nil, ErrExternalValidationTimeout
+	select {
+	case <-apiCtx.Done():
+		return nil, ErrExternalValidationTimeout
 
-		case res := <-apiCh:
-			if res.err != nil {
-				if errors.Is(res.err, context.DeadlineExceeded) {
-					return nil, ErrExternalValidationTimeout
-				}
-				return nil, res.err
+	case res := <-apiCh:
+		if res.err != nil {
+			if errors.Is(res.err, context.DeadlineExceeded) {
+				return nil, ErrExternalValidationTimeout
 			}
-			if !res.result {
-				return nil, domain.ErrInvalidLicense
-			}
+			return nil, res.err
+		}
+		if !res.result {
+			return nil, domain.ErrInvalidLicense
 		}
 	}
 
