@@ -59,21 +59,21 @@ func (c *CreateSpecialistCommand) Execute(contx context.Context, input CreateSpe
 		return nil, err
 	}
 
-	select {
-	case <-ctx.Done():
-		return nil, ctx.Err()
+	if apiCh != nil {
+		select {
+		case <-apiCtx.Done():
+			return nil, ErrExternalValidationTimeout
 
-	case res := <-apiCh:
-		if res.err != nil {
-			if errors.Is(res.err, context.DeadlineExceeded) {
-				cancel()
-				return nil, ErrExternalValidationTimeout
+		case res := <-apiCh:
+			if res.err != nil {
+				if errors.Is(res.err, context.DeadlineExceeded) {
+					return nil, ErrExternalValidationTimeout
+				}
+				return nil, res.err
 			}
-			cancel()
-			return nil, res.err
-		}
-		if !res.result {
-			return nil, errors.New(InvalidLicenseNumberMessage)
+			if !res.result {
+				return nil, domain.ErrInvalidLicense
+			}
 		}
 	}
 
