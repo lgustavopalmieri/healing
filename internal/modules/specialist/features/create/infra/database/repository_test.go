@@ -228,7 +228,7 @@ func TestSpecialistCreateRepository_ValidateUniqueness(t *testing.T) {
 			id, email, licenseNumber := tt.setupMocks(repo)
 
 			err := repo.ValidateUniqueness(context.Background(), id, email, licenseNumber)
-
+			
 			if tt.expectError {
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), tt.expectedErr)
