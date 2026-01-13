@@ -18,7 +18,6 @@ import (
 
 // go test ./internal/modules/specialist/features/create/infra/grpc_handler/ -v
 // go test ./internal/modules/specialist/features/create/infra/grpc_handler/ -cover
-
 func createSpecialistRequestFactory(overrides ...func(*pb.CreateSpecialistRequest)) *pb.CreateSpecialistRequest {
 	req := &pb.CreateSpecialistRequest{
 		Name:          "Dr. João Silva",
@@ -65,6 +64,7 @@ func TestSpecialistCreateGRPCHandler_Handle(t *testing.T) {
 	tests := []struct {
 		name             string
 		input            *pb.CreateSpecialistRequest
+		setupContext     func() context.Context
 		setupMocks       func(*mocks.MockSpecialistCreateCommandInterface)
 		expectError      bool
 		expectedErr      error
@@ -73,6 +73,9 @@ func TestSpecialistCreateGRPCHandler_Handle(t *testing.T) {
 		{
 			name:  "success - creates specialist successfully with all valid data",
 			input: createSpecialistRequestFactory(),
+			setupContext: func() context.Context {
+				return context.Background()
+			},
 			setupMocks: func(mockCommand *mocks.MockSpecialistCreateCommandInterface) {
 				expectedDTO := application.CreateSpecialistDTO{
 					Name:          "Dr. João Silva",
@@ -108,14 +111,17 @@ func TestSpecialistCreateGRPCHandler_Handle(t *testing.T) {
 			},
 		},
 		{
-			name: "failure - returns an error when command returns an error(ErrInvalidEmail)",
+			name: "failure - propagates ErrInvalidName from command to handler",
 			input: createSpecialistRequestFactory(func(req *pb.CreateSpecialistRequest) {
-				req.Email = "invalid-email"
+				req.Name = ""
 			}),
+			setupContext: func() context.Context {
+				return context.Background()
+			},
 			setupMocks: func(mockCommand *mocks.MockSpecialistCreateCommandInterface) {
 				expectedDTO := application.CreateSpecialistDTO{
-					Name:          "Dr. João Silva",
-					Email:         "invalid-email",
+					Name:          "",
+					Email:         "joao@exemplo.com",
 					Phone:         "+5511999999999",
 					Specialty:     "Cardiology",
 					LicenseNumber: "CRM-123456",
@@ -125,11 +131,115 @@ func TestSpecialistCreateGRPCHandler_Handle(t *testing.T) {
 				}
 				mockCommand.EXPECT().
 					Execute(gomock.Any(), expectedDTO).
-					Return(nil, domain.ErrInvalidEmail).
+					Return(nil, domain.ErrInvalidName).
 					Times(1)
 			},
 			expectError: true,
-			expectedErr: domain.ErrInvalidEmail,
+			expectedErr: domain.ErrInvalidName,
+			validateResponse: func(t *testing.T, response *pb.CreateSpecialistResponse) {
+				assert.Nil(t, response)
+			},
+		},
+		{
+			name:  "failure - propagates ErrDuplicateEmail from command to handler",
+			input: createSpecialistRequestFactory(),
+			setupContext: func() context.Context {
+				return context.Background()
+			},
+			setupMocks: func(mockCommand *mocks.MockSpecialistCreateCommandInterface) {
+				expectedDTO := application.CreateSpecialistDTO{
+					Name:          "Dr. João Silva",
+					Email:         "joao@exemplo.com",
+					Phone:         "+5511999999999",
+					Specialty:     "Cardiology",
+					LicenseNumber: "CRM-123456",
+					Description:   "Especialista em cardiologia clínica",
+					Keywords:      []string{"heart", "cardiology"},
+					AgreedToShare: true,
+				}
+				mockCommand.EXPECT().
+					Execute(gomock.Any(), expectedDTO).
+					Return(nil, domain.ErrDuplicateEmail).
+					Times(1)
+			},
+			expectError: true,
+			expectedErr: domain.ErrDuplicateEmail,
+			validateResponse: func(t *testing.T, response *pb.CreateSpecialistResponse) {
+				assert.Nil(t, response)
+			},
+		},
+		{
+			name:  "failure - propagates ErrExternalValidationTimeout from command to handler",
+			input: createSpecialistRequestFactory(),
+			setupContext: func() context.Context {
+				return context.Background()
+			},
+			setupMocks: func(mockCommand *mocks.MockSpecialistCreateCommandInterface) {
+				expectedDTO := application.CreateSpecialistDTO{
+					Name:          "Dr. João Silva",
+					Email:         "joao@exemplo.com",
+					Phone:         "+5511999999999",
+					Specialty:     "Cardiology",
+					LicenseNumber: "CRM-123456",
+					Description:   "Especialista em cardiologia clínica",
+					Keywords:      []string{"heart", "cardiology"},
+					AgreedToShare: true,
+				}
+				mockCommand.EXPECT().
+					Execute(gomock.Any(), expectedDTO).
+					Return(nil, application.ErrExternalValidationTimeout).
+					Times(1)
+			},
+			expectError: true,
+			expectedErr: application.ErrExternalValidationTimeout,
+			validateResponse: func(t *testing.T, response *pb.CreateSpecialistResponse) {
+				assert.Nil(t, response)
+			},
+		},
+		{
+			name:  "failure - handles context cancellation gracefully",
+			input: createSpecialistRequestFactory(),
+			setupContext: func() context.Context {
+				ctx, cancel := context.WithCancel(context.Background())
+				cancel()
+				return ctx
+			},
+			setupMocks: func(mockCommand *mocks.MockSpecialistCreateCommandInterface) {
+				mockCommand.EXPECT().
+					Execute(gomock.Any(), gomock.Any()).
+					Return(nil, context.Canceled).
+					Times(1)
+			},
+			expectError: true,
+			expectedErr: context.Canceled,
+			validateResponse: func(t *testing.T, response *pb.CreateSpecialistResponse) {
+				assert.Nil(t, response)
+			},
+		},
+		{
+			name:  "failure - handles nil request by converting to empty DTO and letting command validate",
+			input: nil,
+			setupContext: func() context.Context {
+				return context.Background()
+			},
+			setupMocks: func(mockCommand *mocks.MockSpecialistCreateCommandInterface) {
+				mockCommand.EXPECT().
+					Execute(gomock.Any(), gomock.Any()).
+					DoAndReturn(func(ctx context.Context, dto application.CreateSpecialistDTO) (*domain.Specialist, error) {
+						assert.Empty(t, dto.Name)
+						assert.Empty(t, dto.Email)
+						assert.Empty(t, dto.Phone)
+						assert.Empty(t, dto.Specialty)
+						assert.Empty(t, dto.LicenseNumber)
+						assert.Empty(t, dto.Description)
+						assert.Empty(t, dto.Keywords)
+						assert.False(t, dto.AgreedToShare)
+						return nil, domain.ErrInvalidName
+					}).
+					Times(1)
+			},
+			expectError: true,
+			expectedErr: domain.ErrInvalidName,
 			validateResponse: func(t *testing.T, response *pb.CreateSpecialistResponse) {
 				assert.Nil(t, response)
 			},
@@ -145,7 +255,7 @@ func TestSpecialistCreateGRPCHandler_Handle(t *testing.T) {
 			tt.setupMocks(mockCommand)
 
 			handler := NewSpecialistCreateGRPCHandler(mockCommand)
-			ctx := context.Background()
+			ctx := tt.setupContext()
 
 			response, err := handler.Handle(ctx, tt.input)
 
@@ -159,63 +269,4 @@ func TestSpecialistCreateGRPCHandler_Handle(t *testing.T) {
 			tt.validateResponse(t, response)
 		})
 	}
-}
-
-func TestSpecialistCreateGRPCHandler_Handle_ContextCancellation(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockCommand := mocks.NewMockSpecialistCreateCommandInterface(ctrl)
-
-	// Setup mock to expect context cancellation
-	mockCommand.EXPECT().
-		Execute(gomock.Any(), gomock.Any()).
-		Return(nil, context.Canceled).
-		Times(1)
-
-	handler := NewSpecialistCreateGRPCHandler(mockCommand)
-
-	// Create a cancelled context
-	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
-
-	request := createSpecialistRequestFactory()
-	response, err := handler.Handle(ctx, request)
-
-	assert.Error(t, err)
-	assert.Equal(t, context.Canceled, err)
-	assert.Nil(t, response)
-}
-
-func TestSpecialistCreateGRPCHandler_Handle_NilRequest(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockCommand := mocks.NewMockSpecialistCreateCommandInterface(ctrl)
-
-	// Mock should be called with empty DTO when request is nil
-	mockCommand.EXPECT().
-		Execute(gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, dto application.CreateSpecialistDTO) (*domain.Specialist, error) {
-			// Validate the DTO is empty when request is nil
-			assert.Empty(t, dto.Name)
-			assert.Empty(t, dto.Email)
-			assert.Empty(t, dto.Phone)
-			assert.Empty(t, dto.Specialty)
-			assert.Empty(t, dto.LicenseNumber)
-			assert.Empty(t, dto.Description)
-			assert.Empty(t, dto.Keywords)
-			assert.False(t, dto.AgreedToShare)
-			return nil, domain.ErrInvalidName
-		}).
-		Times(1)
-
-	handler := NewSpecialistCreateGRPCHandler(mockCommand)
-	ctx := context.Background()
-
-	response, err := handler.Handle(ctx, nil)
-
-	assert.Error(t, err)
-	assert.Equal(t, domain.ErrInvalidName, err)
-	assert.Nil(t, response)
 }
