@@ -3,8 +3,6 @@ package database
 import (
 	"context"
 	"database/sql"
-	"fmt"
-	"os"
 	"testing"
 	"time"
 
@@ -19,32 +17,14 @@ import (
 
 // go test ./internal/modules/specialist/features/create/infra/database/... -v
 
-var (
-	sharedContainer *postgresql.PostgreSQLContainer
-)
+var testHelper = postgresql.NewTestHelper()
 
 func TestMain(m *testing.M) {
-	sharedContainer = postgresql.SetupPostgreSQLContainer(&testing.T{})
-
-	code := m.Run()
-
-	if sharedContainer != nil {
-		sharedContainer.Terminate(&testing.T{})
-	}
-
-	os.Exit(code)
+	testHelper.RunTestMain(m)
 }
 
 func setupTestDB(t *testing.T) (*sql.DB, func()) {
-	// Create a unique database name for this test
-	dbName := fmt.Sprintf("test_%s_%d",
-		t.Name(),
-		time.Now().UnixNano())
-
-	// Clean the database name (remove invalid characters)
-	dbName = "test_" + uuid.New().String()[:8]
-
-	return sharedContainer.CreateCleanDatabase(t, dbName)
+	return testHelper.SetupTestDB(t)
 }
 
 func specialistFactory(overrides ...func(*domain.Specialist)) *domain.Specialist {

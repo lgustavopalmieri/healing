@@ -4,9 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
@@ -115,4 +117,38 @@ func (c *PostgreSQLContainer) Terminate(t *testing.T) {
 	ctx := context.Background()
 	err := c.Container.Terminate(ctx)
 	require.NoError(t, err)
+}
+
+// TestHelper provides a reusable test setup pattern
+type TestHelper struct {
+	sharedContainer *PostgreSQLContainer
+}
+
+// NewTestHelper creates a new test helper instance
+func NewTestHelper() *TestHelper {
+	return &TestHelper{}
+}
+
+// RunTestMain provides a reusable TestMain implementation
+func (h *TestHelper) RunTestMain(m *testing.M) {
+	// Setup shared container once for all tests
+	h.sharedContainer = SetupPostgreSQLContainer(&testing.T{})
+
+	// Run tests
+	code := m.Run()
+
+	// Cleanup
+	if h.sharedContainer != nil {
+		h.sharedContainer.Terminate(&testing.T{})
+	}
+
+	// Exit with the test result code
+	os.Exit(code)
+}
+
+// SetupTestDB creates a clean database for a single test
+func (h *TestHelper) SetupTestDB(t *testing.T) (*sql.DB, func()) {
+	// Create a unique database name for this test
+	dbName := "test_" + uuid.New().String()[:8]
+	return h.sharedContainer.CreateCleanDatabase(t, dbName)
 }
