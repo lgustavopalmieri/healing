@@ -27,7 +27,6 @@ type DatabaseConfig struct {
 	User     string
 	Password string
 	Database string
-	URL      string
 }
 
 type KafkaConfig struct {
@@ -44,18 +43,11 @@ type ObservabilityConfig struct {
 }
 
 func Load() (*Config, error) {
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath(".")
-	viper.AddConfigPath("./configs")
+	viper.SetConfigFile(".env")
 	viper.AutomaticEnv()
 
-	setDefaults()
-
 	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-			return nil, fmt.Errorf("failed to read config file: %w", err)
-		}
+		return nil, fmt.Errorf("failed to read .env file: %w", err)
 	}
 
 	cfg := &Config{
@@ -71,7 +63,6 @@ func Load() (*Config, error) {
 			User:     viper.GetString("POSTGRES_USER"),
 			Password: viper.GetString("POSTGRES_PASSWORD"),
 			Database: viper.GetString("POSTGRES_DB"),
-			URL:      viper.GetString("DATABASE_URL"),
 		},
 		Kafka: KafkaConfig{
 			BootstrapServers: viper.GetString("KAFKA_BOOTSTRAP_SERVERS"),
@@ -86,16 +77,6 @@ func Load() (*Config, error) {
 		},
 	}
 
-	if cfg.Database.URL == "" {
-		cfg.Database.URL = fmt.Sprintf("postgresql://%s:%s@%s:%d/%s",
-			cfg.Database.User,
-			cfg.Database.Password,
-			cfg.Database.Host,
-			cfg.Database.Port,
-			cfg.Database.Database,
-		)
-	}
-
 	if cfg.Kafka.Broker == "" {
 		cfg.Kafka.Broker = cfg.Kafka.BootstrapServers
 	}
@@ -105,27 +86,6 @@ func Load() (*Config, error) {
 	}
 
 	return cfg, nil
-}
-
-func setDefaults() {
-	viper.SetDefault("SERVER_GRPC_PORT", 50051)
-	viper.SetDefault("SERVER_SHUTDOWN_TIMEOUT", 30*time.Second)
-	viper.SetDefault("SERVER_MAX_CONNECTIONS", 1000)
-	viper.SetDefault("SERVER_CONNECTION_TIMEOUT", 10*time.Second)
-
-	viper.SetDefault("POSTGRES_HOST", "localhost")
-	viper.SetDefault("POSTGRES_PORT", 5432)
-	viper.SetDefault("POSTGRES_USER", "dev_user")
-	viper.SetDefault("POSTGRES_PASSWORD", "dev_password")
-	viper.SetDefault("POSTGRES_DB", "healing_specialist_db")
-
-	viper.SetDefault("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
-
-	viper.SetDefault("OTEL_SERVICE_NAME", "healing-specialist")
-	viper.SetDefault("OTEL_SERVICE_VERSION", "1.0.0")
-	viper.SetDefault("OTEL_ENVIRONMENT", "development")
-	viper.SetDefault("OTEL_EXPORTER_OTLP_GRPC_ENDPOINT", "localhost:4317")
-	viper.SetDefault("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc")
 }
 
 func (c *Config) Validate() error {

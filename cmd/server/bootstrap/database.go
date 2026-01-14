@@ -6,31 +6,34 @@ import (
 	"time"
 
 	"github.com/lgustavopalmieri/healing-specialist/cmd/server/config"
-	_ "github.com/lib/pq"
+	"github.com/lgustavopalmieri/healing-specialist/internal/platform/database/postgresql"
 )
 
 const (
-	maxOpenConns    = 25
-	maxIdleConns    = 5
-	connMaxLifetime = 5 * time.Minute
-	connMaxIdleTime = 10 * time.Minute
+	defaultSSLMode         = "require"
+	defaultMaxOpenConns    = 25
+	defaultMaxIdleConns    = 5
+	defaultConnMaxLifetime = 5 * time.Minute
+	defaultConnMaxIdleTime = 10 * time.Minute
 )
 
 func InitDatabase(cfg *config.Config) (*sql.DB, error) {
-	db, err := sql.Open("postgres", cfg.Database.URL)
+	db, err := postgresql.NewConnection(postgresql.Config{
+		Host:            cfg.Database.Host,
+		Port:            cfg.Database.Port,
+		User:            cfg.Database.User,
+		Password:        cfg.Database.Password,
+		Database:        cfg.Database.Database,
+		SSLMode:         defaultSSLMode,
+		MaxOpenConns:    defaultMaxOpenConns,
+		MaxIdleConns:    defaultMaxIdleConns,
+		ConnMaxLifetime: defaultConnMaxLifetime,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to open database connection: %w", err)
+		return nil, fmt.Errorf("failed to initialize database: %w", err)
 	}
 
-	db.SetMaxOpenConns(maxOpenConns)
-	db.SetMaxIdleConns(maxIdleConns)
-	db.SetConnMaxLifetime(connMaxLifetime)
-	db.SetConnMaxIdleTime(connMaxIdleTime)
-
-	if err := db.Ping(); err != nil {
-		db.Close()
-		return nil, fmt.Errorf("failed to ping database: %w", err)
-	}
+	db.SetConnMaxIdleTime(defaultConnMaxIdleTime)
 
 	return db, nil
 }
