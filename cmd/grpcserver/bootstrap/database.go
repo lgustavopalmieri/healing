@@ -18,13 +18,18 @@ const (
 )
 
 func InitDatabase(cfg *config.Config) (*sql.DB, error) {
+	sslMode := "require"
+	if cfg.Observability.Environment == "development" {
+		sslMode = "disable"
+	}
+
 	db, err := postgresql.NewConnection(postgresql.Config{
 		Host:            cfg.Database.Host,
 		Port:            cfg.Database.Port,
 		User:            cfg.Database.User,
 		Password:        cfg.Database.Password,
 		Database:        cfg.Database.Database,
-		SSLMode:         defaultSSLMode,
+		SSLMode:         sslMode,
 		MaxOpenConns:    defaultMaxOpenConns,
 		MaxIdleConns:    defaultMaxIdleConns,
 		ConnMaxLifetime: defaultConnMaxLifetime,
