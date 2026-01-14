@@ -31,7 +31,7 @@ type DatabaseConfig struct {
 
 type KafkaConfig struct {
 	BootstrapServers string
-	Broker           string
+	AutoOffsetReset  string
 }
 
 type ObservabilityConfig struct {
@@ -66,7 +66,7 @@ func Load() (*Config, error) {
 		},
 		Kafka: KafkaConfig{
 			BootstrapServers: viper.GetString("KAFKA_BOOTSTRAP_SERVERS"),
-			Broker:           viper.GetString("KAFKA_BROKER"),
+			AutoOffsetReset:  viper.GetString("KAFKA_AUTO_OFFSET_RESET"),
 		},
 		Observability: ObservabilityConfig{
 			ServiceName:    viper.GetString("OTEL_SERVICE_NAME"),
@@ -75,10 +75,6 @@ func Load() (*Config, error) {
 			OTLPEndpoint:   viper.GetString("OTEL_EXPORTER_OTLP_GRPC_ENDPOINT"),
 			OTLPProtocol:   viper.GetString("OTEL_EXPORTER_OTLP_PROTOCOL"),
 		},
-	}
-
-	if cfg.Kafka.Broker == "" {
-		cfg.Kafka.Broker = cfg.Kafka.BootstrapServers
 	}
 
 	if err := cfg.Validate(); err != nil {

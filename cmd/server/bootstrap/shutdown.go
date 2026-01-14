@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/lgustavopalmieri/healing-specialist/internal/platform/kafka"
 	"github.com/lgustavopalmieri/healing-specialist/internal/platform/opentelemetry"
 	"github.com/lgustavopalmieri/healing-specialist/internal/platform/server"
 )
@@ -41,12 +42,13 @@ func (sm *ShutdownManager) Shutdown(
 	grpcServer *server.GRPCServer,
 	db *sql.DB,
 	otelProvider *opentelemetry.GrafanaProvider,
+	kafkaProducer *kafka.KafkaProducer,
 ) error {
 	ctx, cancel := context.WithTimeout(context.Background(), sm.timeout)
 	defer cancel()
 
 	var wg sync.WaitGroup
-	errChan := make(chan error, 3)
+	errChan := make(chan error, 4)
 
 	wg.Add(1)
 	go func() {
@@ -80,6 +82,16 @@ func (sm *ShutdownManager) Shutdown(
 		}
 		log.Println("Observability provider stopped")
 	}()
+
+	if kafkaProducer != nil {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			log.Println("Closing Kafka producer...")
+			kafkaProducer.Close()
+			log.Println("Kafka producer closed")
+		}()
+	}
 
 	doneChan := make(chan struct{})
 	go func() {

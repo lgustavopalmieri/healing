@@ -34,6 +34,11 @@ func run() error {
 		return err
 	}
 
+	kafkaProducer, err := bootstrap.InitKafkaProducer(cfg)
+	if err != nil {
+		return err
+	}
+
 	grpcServer, err := server.NewGRPCServer(server.Config{
 		Port:              cfg.Server.GRPCPort,
 		MaxConnections:    cfg.Server.MaxConnections,
@@ -47,7 +52,7 @@ func run() error {
 
 	go func() {
 		shutdownManager.Wait()
-		if err := shutdownManager.Shutdown(grpcServer, db, otelProvider); err != nil {
+		if err := shutdownManager.Shutdown(grpcServer, db, otelProvider, kafkaProducer); err != nil {
 			log.Printf("Shutdown error: %v", err)
 			os.Exit(1)
 		}
