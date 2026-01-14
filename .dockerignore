@@ -1,0 +1,11 @@
+.git
+.gitignore
+.env
+.env.*
+*.md
+Dockerfile
+docker-compose*.yml
+.kiro
+bin/
+coverage.out
+*.test

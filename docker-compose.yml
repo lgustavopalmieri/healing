@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  healing-specialist:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: healing-specialist
+    ports:
+      - "50051:50051"
+    env_file:
+      - .env.docker
+    networks:
+      - healing-network
+    restart: unless-stopped
+
+networks:
+  healing-network:
+    external: true
