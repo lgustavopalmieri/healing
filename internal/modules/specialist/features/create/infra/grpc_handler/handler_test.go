@@ -60,7 +60,7 @@ func specialistFactory(overrides ...func(*domain.Specialist)) *domain.Specialist
 	return specialist
 }
 
-func TestSpecialistCreateGRPCHandler_Handle(t *testing.T) {
+func TestSpecialistCreateGRPCHandler_CreateSpecialist(t *testing.T) {
 	tests := []struct {
 		name             string
 		input            *pb.CreateSpecialistRequest
@@ -257,7 +257,7 @@ func TestSpecialistCreateGRPCHandler_Handle(t *testing.T) {
 			handler := NewSpecialistCreateGRPCHandler(mockCommand)
 			ctx := tt.setupContext()
 
-			response, err := handler.Handle(ctx, tt.input)
+			response, err := handler.CreateSpecialist(ctx, tt.input)
 
 			if tt.expectError {
 				assert.Error(t, err)

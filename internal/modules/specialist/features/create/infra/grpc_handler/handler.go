@@ -23,7 +23,7 @@ func NewSpecialistCreateGRPCHandler(command SpecialistCreateCommandInterface) *S
 	}
 }
 
-func (s *SpecialistCreateGRPCHandler) Handle(ctx context.Context, input *pb.CreateSpecialistRequest) (*pb.CreateSpecialistResponse, error) {
+func (s *SpecialistCreateGRPCHandler) CreateSpecialist(ctx context.Context, input *pb.CreateSpecialistRequest) (*pb.CreateSpecialistResponse, error) {
 	dto := ToCreateSpecialistInputDTO(input)
 	specialist, err := s.command.Execute(ctx, dto)
 	if err != nil {
