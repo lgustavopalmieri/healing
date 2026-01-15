@@ -1,29 +1,29 @@
-package grpchandler
+package grpcservice
 
 import (
 	"context"
 
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/application"
-	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/infra/grpc_handler/pb"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/infra/grpc_service/pb"
 )
 
 type SpecialistCreateCommandInterface interface {
 	Execute(ctx context.Context, input application.CreateSpecialistDTO) (*domain.Specialist, error)
 }
 
-type SpecialistCreateGRPCHandler struct {
+type SpecialistCreateGRPCService struct {
 	pb.UnimplementedSpecialistServiceServer
 	command SpecialistCreateCommandInterface
 }
 
-func NewSpecialistCreateGRPCHandler(command SpecialistCreateCommandInterface) *SpecialistCreateGRPCHandler {
-	return &SpecialistCreateGRPCHandler{
+func NewSpecialistCreateGRPCService(command SpecialistCreateCommandInterface) *SpecialistCreateGRPCService {
+	return &SpecialistCreateGRPCService{
 		command: command,
 	}
 }
 
-func (s *SpecialistCreateGRPCHandler) CreateSpecialist(ctx context.Context, input *pb.CreateSpecialistRequest) (*pb.CreateSpecialistResponse, error) {
+func (s *SpecialistCreateGRPCService) CreateSpecialist(ctx context.Context, input *pb.CreateSpecialistRequest) (*pb.CreateSpecialistResponse, error) {
 	dto := ToCreateSpecialistInputDTO(input)
 	specialist, err := s.command.Execute(ctx, dto)
 	if err != nil {

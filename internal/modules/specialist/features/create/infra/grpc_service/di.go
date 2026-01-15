@@ -1,4 +1,4 @@
-package grpchandler
+package grpcservice
 
 import (
 	"database/sql"
@@ -17,7 +17,7 @@ type Dependencies struct {
 	Logger         observability.Logger
 }
 
-func NewSpecialistCreateService(deps Dependencies) *SpecialistCreateGRPCHandler {
+func NewSpecialistCreateService(deps Dependencies) *SpecialistCreateGRPCService {
 	repository := database.NewSpecialistCreateRepository(deps.DB)
 
 	externalGateway := external.NewLicenseValidationGateway()
@@ -30,7 +30,7 @@ func NewSpecialistCreateService(deps Dependencies) *SpecialistCreateGRPCHandler 
 		deps.Logger,
 	)
 
-	handler := NewSpecialistCreateGRPCHandler(command)
+	service := NewSpecialistCreateGRPCService(command)
 
-	return handler
+	return service
 }

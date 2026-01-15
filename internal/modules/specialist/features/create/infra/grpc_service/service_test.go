@@ -1,4 +1,4 @@
-package grpchandler
+package grpcservice
 
 import (
 	"context"
@@ -10,14 +10,14 @@ import (
 
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/application"
-	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/infra/grpc_handler/mocks"
-	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/infra/grpc_handler/pb"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/infra/grpc_service/mocks"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/infra/grpc_service/pb"
 )
 
-//go:generate mockgen -source=handler.go -destination=mocks/command_mock.go -package=mocks
+//go:generate mockgen -source=service.go -destination=mocks/command_mock.go -package=mocks
 
-// go test ./internal/modules/specialist/features/create/infra/grpc_handler/ -v
-// go test ./internal/modules/specialist/features/create/infra/grpc_handler/ -cover
+// go test ./internal/modules/specialist/features/create/infra/grpc_service/ -v
+// go test ./internal/modules/specialist/features/create/infra/grpc_service/ -cover
 func createSpecialistRequestFactory(overrides ...func(*pb.CreateSpecialistRequest)) *pb.CreateSpecialistRequest {
 	req := &pb.CreateSpecialistRequest{
 		Name:          "Dr. João Silva",
@@ -60,7 +60,7 @@ func specialistFactory(overrides ...func(*domain.Specialist)) *domain.Specialist
 	return specialist
 }
 
-func TestSpecialistCreateGRPCHandler_CreateSpecialist(t *testing.T) {
+func TestSpecialistCreateGRPCService_CreateSpecialist(t *testing.T) {
 	tests := []struct {
 		name             string
 		input            *pb.CreateSpecialistRequest
@@ -254,10 +254,10 @@ func TestSpecialistCreateGRPCHandler_CreateSpecialist(t *testing.T) {
 			mockCommand := mocks.NewMockSpecialistCreateCommandInterface(ctrl)
 			tt.setupMocks(mockCommand)
 
-			handler := NewSpecialistCreateGRPCHandler(mockCommand)
+			service := NewSpecialistCreateGRPCService(mockCommand)
 			ctx := tt.setupContext()
 
-			response, err := handler.CreateSpecialist(ctx, tt.input)
+			response, err := service.CreateSpecialist(ctx, tt.input)
 
 			if tt.expectError {
 				assert.Error(t, err)
