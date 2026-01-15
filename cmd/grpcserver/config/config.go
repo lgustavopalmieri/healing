@@ -2,9 +2,9 @@ package config
 
 import (
 	"fmt"
+	"os"
+	"strconv"
 	"time"
-
-	"github.com/spf13/viper"
 )
 
 type Config struct {
@@ -43,37 +43,30 @@ type ObservabilityConfig struct {
 }
 
 func Load() (*Config, error) {
-	viper.SetConfigFile(".env")
-	viper.AutomaticEnv()
-
-	if err := viper.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("failed to read .env file: %w", err)
-	}
-
 	cfg := &Config{
 		Server: ServerConfig{
-			GRPCPort:          viper.GetInt("SERVER_GRPC_PORT"),
-			ShutdownTimeout:   viper.GetDuration("SERVER_SHUTDOWN_TIMEOUT"),
-			MaxConnections:    viper.GetInt("SERVER_MAX_CONNECTIONS"),
-			ConnectionTimeout: viper.GetDuration("SERVER_CONNECTION_TIMEOUT"),
+			GRPCPort:          getEnvAsInt("SERVER_GRPC_PORT", 50051),
+			ShutdownTimeout:   getEnvAsDuration("SERVER_SHUTDOWN_TIMEOUT", 30*time.Second),
+			MaxConnections:    getEnvAsInt("SERVER_MAX_CONNECTIONS", 1000),
+			ConnectionTimeout: getEnvAsDuration("SERVER_CONNECTION_TIMEOUT", 10*time.Second),
 		},
 		Database: DatabaseConfig{
-			Host:     viper.GetString("POSTGRES_HOST"),
-			Port:     viper.GetInt("POSTGRES_PORT"),
-			User:     viper.GetString("POSTGRES_USER"),
-			Password: viper.GetString("POSTGRES_PASSWORD"),
-			Database: viper.GetString("POSTGRES_DB"),
+			Host:     getEnv("POSTGRES_HOST", "localhost"),
+			Port:     getEnvAsInt("POSTGRES_PORT", 5432),
+			User:     getEnv("POSTGRES_USER", ""),
+			Password: getEnv("POSTGRES_PASSWORD", ""),
+			Database: getEnv("POSTGRES_DB", ""),
 		},
 		Kafka: KafkaConfig{
-			BootstrapServers: viper.GetString("KAFKA_BOOTSTRAP_SERVERS"),
-			AutoOffsetReset:  viper.GetString("KAFKA_AUTO_OFFSET_RESET"),
+			BootstrapServers: getEnv("KAFKA_BOOTSTRAP_SERVERS", ""),
+			AutoOffsetReset:  getEnv("KAFKA_AUTO_OFFSET_RESET", "earliest"),
 		},
 		Observability: ObservabilityConfig{
-			ServiceName:    viper.GetString("OTEL_SERVICE_NAME"),
-			ServiceVersion: viper.GetString("OTEL_SERVICE_VERSION"),
-			Environment:    viper.GetString("OTEL_ENVIRONMENT"),
-			OTLPEndpoint:   viper.GetString("OTEL_EXPORTER_OTLP_GRPC_ENDPOINT"),
-			OTLPProtocol:   viper.GetString("OTEL_EXPORTER_OTLP_PROTOCOL"),
+			ServiceName:    getEnv("OTEL_SERVICE_NAME", ""),
+			ServiceVersion: getEnv("OTEL_SERVICE_VERSION", "1.0.0"),
+			Environment:    getEnv("OTEL_ENVIRONMENT", "development"),
+			OTLPEndpoint:   getEnv("OTEL_EXPORTER_OTLP_GRPC_ENDPOINT", ""),
+			OTLPProtocol:   getEnv("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc"),
 		},
 	}
 
@@ -114,4 +107,41 @@ func (c *Config) Validate() error {
 	}
 
 	return nil
+}
+
+// Helper functions to read environment variables
+
+func getEnv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
+}
+
+func getEnvAsInt(key string, defaultValue int) int {
+	valueStr := os.Getenv(key)
+	if valueStr == "" {
+		return defaultValue
+	}
+
+	value, err := strconv.Atoi(valueStr)
+	if err != nil {
+		return defaultValue
+	}
+
+	return value
+}
+
+func getEnvAsDuration(key string, defaultValue time.Duration) time.Duration {
+	valueStr := os.Getenv(key)
+	if valueStr == "" {
+		return defaultValue
+	}
+
+	value, err := time.ParseDuration(valueStr)
+	if err != nil {
+		return defaultValue
+	}
+
+	return value
 }

@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/lgustavopalmieri/healing-specialist/cmd/grpcserver/config"
@@ -39,6 +40,18 @@ func InitDatabase(cfg *config.Config) (*sql.DB, error) {
 	}
 
 	db.SetConnMaxIdleTime(defaultConnMaxIdleTime)
+
+	// Test database connection
+	if err := db.Ping(); err != nil {
+		return nil, fmt.Errorf("failed to ping database: %w", err)
+	}
+
+	// Run database migrations
+	log.Println("🔄 Running database migrations...")
+	if err := postgresql.RunMigrations(db); err != nil {
+		return nil, fmt.Errorf("failed to run migrations: %w", err)
+	}
+	log.Println("✅ Migrations completed successfully")
 
 	return db, nil
 }
