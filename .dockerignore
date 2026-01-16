@@ -9,3 +9,6 @@ docker-compose*.yml
 bin/
 coverage.out
 *.test
+e2e/
+.@guides/
+Makefile
