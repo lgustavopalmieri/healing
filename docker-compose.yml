@@ -9,6 +9,7 @@ services:
     ports:
       - "50051:50051"
     environment:
+      - APP_ENV=${APP_ENV:-development}
       - SERVER_GRPC_PORT=${SERVER_GRPC_PORT}
       - SERVER_SHUTDOWN_TIMEOUT=${SERVER_SHUTDOWN_TIMEOUT}
       - SERVER_MAX_CONNECTIONS=${SERVER_MAX_CONNECTIONS}
@@ -25,6 +26,8 @@ services:
       - OTEL_ENVIRONMENT=${OTEL_ENVIRONMENT}
       - OTEL_EXPORTER_OTLP_GRPC_ENDPOINT=${OTEL_EXPORTER_OTLP_GRPC_ENDPOINT}
       - OTEL_EXPORTER_OTLP_PROTOCOL=${OTEL_EXPORTER_OTLP_PROTOCOL}
+    env_file:
+      - ${ENV_FILE:-.env}
     networks:
       - healing-network
     restart: unless-stopped
