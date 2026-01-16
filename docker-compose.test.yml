@@ -5,13 +5,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: healing-specialist
+    container_name: healing-specialist-test
     ports:
       - "50051:50051"
     env_file:
-      - ${ENV_FILE:-.env}
+      - .env.test
     environment:
-      - APP_ENV=${APP_ENV:-development}
+      - APP_ENV=test
     networks:
       - healing-network
     restart: unless-stopped

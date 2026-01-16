@@ -12,3 +12,4 @@ coverage.out
 e2e/
 .@guides/
 Makefile
+test

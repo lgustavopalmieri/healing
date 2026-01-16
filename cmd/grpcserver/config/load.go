@@ -13,10 +13,8 @@ func Load() (*Config, error) {
 	// Determine environment (default: development)
 	env := getEnv("APP_ENV", "development")
 
-	// Load environment-specific .env file
-	if err := loadEnvFile(env); err != nil {
-		return nil, fmt.Errorf("failed to load environment file: %w", err)
-	}
+	// Load environment-specific .env file (ignora erro se não encontrar)
+	_ = loadEnvFile(env)
 
 	cfg := &Config{
 		Server: ServerConfig{
@@ -31,6 +29,7 @@ func Load() (*Config, error) {
 			User:     getEnv("POSTGRES_USER", ""),
 			Password: getEnv("POSTGRES_PASSWORD", ""),
 			Database: getEnv("POSTGRES_DB", ""),
+			SSLMode:  getEnv("POSTGRES_SSLMODE", "require"),
 		},
 		Kafka: KafkaConfig{
 			BootstrapServers: getEnv("KAFKA_BOOTSTRAP_SERVERS", ""),

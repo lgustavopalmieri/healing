@@ -19,9 +19,13 @@ const (
 )
 
 func InitDatabase(cfg *config.Config) (*sql.DB, error) {
-	sslMode := "require"
-	if cfg.Observability.Environment == "development" {
-		sslMode = "disable"
+	sslMode := cfg.Database.SSLMode
+	if sslMode == "" {
+		if cfg.Observability.Environment == "development" || cfg.Observability.Environment == "test" {
+			sslMode = "disable"
+		} else {
+			sslMode = "require"
+		}
 	}
 
 	db, err := postgresql.NewConnection(postgresql.Config{
