@@ -3,6 +3,7 @@ package external
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/application"
 )
@@ -19,6 +20,8 @@ func (g *LicenseValidationGateway) ValidateLicenseNumber(ctx context.Context, li
 		return false, fmt.Errorf("license number cannot be empty")
 	}
 
+	time.Sleep(500 * time.Millisecond)
+	
 	// TODO: Implement real external API call
 	// For now, accept all non-empty license numbers
 	return true, nil
