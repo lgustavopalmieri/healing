@@ -1,4 +1,4 @@
-.PHONY: server-run server-run-test server-build server-up server-up-test server-down server-logs stress-test stress-test-full help
+.PHONY: server-run server-run-test server-build server-up server-up-test server-down server-logs k6-setup k6-stress k6-simple k6-clean help
 
 help:
 	@echo "📋 Available commands:"
@@ -14,7 +14,13 @@ help:
 	@echo "    make server-down             - Stop server"
 	@echo "    make server-logs             - Show server logs"
 	@echo ""
-	@echo "  Stress Testing:"
+	@echo "  K6 Load Testing (Modular):"
+	@echo "    make k6-setup                - Setup K6 proto files"
+	@echo "    make k6-stress               - Run modular stress test"
+	@echo "    make k6-simple               - Run simple validation test"
+	@echo "    make k6-clean                - Clean K6 temporary files"
+	@echo ""
+	@echo "  Legacy Stress Testing:"
 	@echo "    make stress-test             - Run simple stress test (5 VUs, 30s)"
 	@echo "    make stress-test-full        - Run full stress test (ramp up to 50 VUs)"
 	@echo ""
@@ -57,7 +63,24 @@ server-logs:
 	@echo "📋 Showing server logs..."
 	docker-compose logs -f healing-specialist
 
-# Stress Testing
+# K6 Load Testing (Modular Architecture)
+k6-setup:
+	@echo "📦 Setting up K6 tests..."
+	@$(MAKE) -C tests/k6 setup
+
+k6-stress:
+	@echo "🔥 Running K6 modular stress test..."
+	@$(MAKE) -C tests/k6 run-stress
+
+k6-simple:
+	@echo "🧪 Running K6 simple validation test..."
+	@$(MAKE) -C tests/k6 run-simple
+
+k6-clean:
+	@echo "🧹 Cleaning K6 temporary files..."
+	@$(MAKE) -C tests/k6 clean
+
+# Legacy Stress Testing
 stress-test:
 	@echo "🔥 Running simple stress test (5 VUs, 30s)..."
 	@echo "📊 Target: healing-specialist:50051"
