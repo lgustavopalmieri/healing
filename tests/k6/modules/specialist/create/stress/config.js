@@ -1,5 +1,4 @@
-// Configuração do teste de stress
-export const stressOptions = {
+export const stressTestConfig = {
   stages: [
     { duration: '30s', target: 10 },
     { duration: '1m', target: 10 },

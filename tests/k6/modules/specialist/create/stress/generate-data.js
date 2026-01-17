@@ -1,7 +1,4 @@
-/**
- * Gera dados de requisição para criar um specialist
- */
-export function requestData() {
+export function generateSpecialistData() {
   const timestamp = Date.now();
   const randomId = Math.floor(Math.random() * 1000000);
   

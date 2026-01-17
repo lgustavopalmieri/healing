@@ -12,13 +12,13 @@ help:
 # Executa teste de stress completo
 run-stress: setup
 	@echo "🔥 Running stress test (CreateSpecialist)..."
-	@docker-compose -f docker-compose.k6.yml run --rm k6 run /scripts/modules/specialist/create/stress/create-specialist.js
+	@docker-compose -f docker-compose.k6.yml run --rm k6 run /scripts/modules/specialist/create/stress/create-specialist-test.js
 	@echo "✅ Stress test completed!"
 
 # Executa teste simples (para validação rápida)
 run-simple: setup
 	@echo "🧪 Running simple test..."
-	@docker-compose -f docker-compose.k6.yml run --rm k6 run --vus 5 --duration 30s /scripts/modules/specialist/create/stress/create-specialist.js
+	@docker-compose -f docker-compose.k6.yml run --rm k6 run --vus 5 --duration 30s /scripts/modules/specialist/create/stress/create-specialist-test.js
 	@echo "✅ Simple test completed!"
 
 # Limpa arquivos temporários
