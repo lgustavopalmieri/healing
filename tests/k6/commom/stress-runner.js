@@ -8,11 +8,9 @@ export function stressTestRunner(grpcClient, requestData, serviceName, validateR
     
     validateResponse(response, requestData);
     
-    if (response.status === grpc.StatusOK) {
-        console.log(`✓ Successfully created: ${response.message?.specialist?.id || 'resource'}`);
-    } else {
-        console.error(`✗ Error: ${response.status} - ${response.error ? response.error.message : 'Unknown error'}`);
-    }
+    if (response.status !== grpc.StatusOK) {
+       console.error(`✗ Error: ${response.status} - ${response.error ? response.error.message : 'Unknown error'}`);
+    } 
     
     grpcClient.close();
     sleep(0.5);

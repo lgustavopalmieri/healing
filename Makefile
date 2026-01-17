@@ -62,33 +62,3 @@ server-down:
 server-logs:
 	@echo "📋 Showing server logs..."
 	docker-compose logs -f healing-specialist
-
-# K6 Load Testing (Modular Architecture)
-k6-setup:
-	@echo "📦 Setting up K6 tests..."
-	@$(MAKE) -C tests/k6 setup
-
-k6-stress:
-	@echo "🔥 Running K6 modular stress test..."
-	@$(MAKE) -C tests/k6 run-stress
-
-k6-simple:
-	@echo "🧪 Running K6 simple validation test..."
-	@$(MAKE) -C tests/k6 run-simple
-
-k6-clean:
-	@echo "🧹 Cleaning K6 temporary files..."
-	@$(MAKE) -C tests/k6 clean
-
-# Legacy Stress Testing
-stress-test:
-	@echo "🔥 Running simple stress test (5 VUs, 30s)..."
-	@echo "📊 Target: healing-specialist:50051"
-	cd tests/stress && docker-compose -f docker-compose.k6.yml run --rm k6 run /scripts/simple-test.js
-	@echo "✅ Stress test completed!"
-
-stress-test-full:
-	@echo "🔥 Running full stress test (ramp up to 50 VUs)..."
-	@echo "📊 Target: healing-specialist:50051"
-	cd tests/stress && docker-compose -f docker-compose.k6.yml run --rm k6 run /scripts/create-specialist.js
-	@echo "✅ Full stress test completed!"
