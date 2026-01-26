@@ -44,6 +44,8 @@ func (sm *ShutdownManager) Shutdown(
 	otelProvider *opentelemetry.GrafanaProvider,
 	kafkaProducer *kafka.KafkaProducer,
 ) error {
+	log.Println("🛑 Shutdown signal received, gracefully shutting down...")
+
 	ctx, cancel := context.WithTimeout(context.Background(), sm.timeout)
 	defer cancel()
 
@@ -109,7 +111,7 @@ func (sm *ShutdownManager) Shutdown(
 		if len(errs) > 0 {
 			return fmt.Errorf("shutdown errors: %v", errs)
 		}
-		log.Println("Graceful shutdown completed successfully")
+		log.Println("👋 Graceful shutdown completed successfully")
 		return nil
 
 	case <-ctx.Done():

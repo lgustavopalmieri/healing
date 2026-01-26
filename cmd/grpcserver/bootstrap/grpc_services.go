@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"database/sql"
+	"log"
 
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
@@ -18,6 +19,7 @@ type ServiceDependencies struct {
 }
 
 func RegisterServices(grpcServer *server.GRPCServer, deps ServiceDependencies) {
+	log.Println("🔧 Registering gRPC services...")
 	specialistCreateService := grpcservice.NewSpecialistCreateService(grpcservice.Dependencies{
 		DB:             deps.DB,
 		EventPublisher: deps.EventPublisher,
@@ -26,4 +28,5 @@ func RegisterServices(grpcServer *server.GRPCServer, deps ServiceDependencies) {
 	})
 
 	pb.RegisterSpecialistServiceServer(grpcServer.GetServer(), specialistCreateService)
+	log.Println("✅ Services registered successfully")
 }

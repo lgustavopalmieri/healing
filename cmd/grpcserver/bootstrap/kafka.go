@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"fmt"
+	"log"
 
 	kafkalib "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/lgustavopalmieri/healing-specialist/cmd/grpcserver/config"
@@ -9,6 +10,8 @@ import (
 )
 
 func InitKafkaProducer(cfg *config.Config) (*kafka.KafkaProducer, error) {
+	log.Printf("📨 Connecting to Kafka broker (%s)...", cfg.Kafka.BootstrapServers)
+	
 	kafkaConfig := &kafkalib.ConfigMap{
 		"bootstrap.servers": cfg.Kafka.BootstrapServers,
 	}
@@ -21,6 +24,8 @@ func InitKafkaProducer(cfg *config.Config) (*kafka.KafkaProducer, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize kafka producer: %w", err)
 	}
+
+	log.Println("✅ Kafka producer initialized successfully")
 
 	return producer, nil
 }

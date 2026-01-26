@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"time"
@@ -47,6 +48,8 @@ func Load() (*Config, error) {
 	if err := cfg.Validate(); err != nil {
 		return nil, fmt.Errorf("invalid configuration: %w", err)
 	}
+
+	log.Printf("✅ Configuration loaded successfully (Environment: %s)", cfg.Observability.Environment)
 
 	return cfg, nil
 }

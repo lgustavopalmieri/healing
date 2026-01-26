@@ -64,6 +64,8 @@ func NewGRPCServer(cfg Config) (*GRPCServer, error) {
 
 	reflection.Register(server)
 
+	log.Printf("🌐 Initializing gRPC server (Port: %d)...", cfg.Port)
+
 	return &GRPCServer{
 		server:   server,
 		listener: listener,
@@ -80,6 +82,11 @@ func (s *GRPCServer) Start() error {
 	if err := s.server.Serve(s.listener); err != nil {
 		return fmt.Errorf("failed to serve: %w", err)
 	}
+
+	log.Println("✨ Application started successfully!")
+	log.Printf("🎯 gRPC Server listening on port %d", s.port)
+	log.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
 	return nil
 }
 

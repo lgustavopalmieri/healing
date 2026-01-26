@@ -19,6 +19,8 @@ const (
 )
 
 func InitDatabase(cfg *config.Config) (*sql.DB, error) {
+	log.Printf("🗄️  Connecting to PostgreSQL database (%s:%d)...", cfg.Database.Host, cfg.Database.Port)
+
 	sslMode := cfg.Database.SSLMode
 	if sslMode == "" {
 		if cfg.Observability.Environment == "development" || cfg.Observability.Environment == "test" {
@@ -56,6 +58,8 @@ func InitDatabase(cfg *config.Config) (*sql.DB, error) {
 		return nil, fmt.Errorf("failed to run migrations: %w", err)
 	}
 	log.Println("✅ Migrations completed successfully")
+
+	log.Printf("✅ Database connected successfully (Database: %s)", cfg.Database.Database)
 
 	return db, nil
 }
