@@ -2,9 +2,9 @@ package telemetry
 
 import (
 	"context"
-	"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
 	"sync"
 
+	"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )

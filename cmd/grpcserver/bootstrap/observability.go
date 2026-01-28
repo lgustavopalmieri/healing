@@ -6,23 +6,57 @@ import (
 	"log"
 
 	"github.com/lgustavopalmieri/healing-specialist/cmd/grpcserver/config"
-	"github.com/lgustavopalmieri/healing-specialist/internal/platform/opentelemetry"
+	"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
+	"github.com/lgustavopalmieri/healing-specialist/internal/platform/telemetry"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
-func InitObservability(ctx context.Context, cfg *config.Config) (*opentelemetry.GrafanaProvider, error) {
-	log.Println("📊 Initializing observability (OpenTelemetry + Grafana Stack)...")
+// ObservabilityComponents holds all observability-related components
+type ObservabilityComponents struct {
+	TracerProvider *sdktrace.TracerProvider
+	Tracer         observability.Tracer
+	Logger         observability.Logger
+	Metrics        observability.Metrics
+	GRPCMetrics    *telemetry.GRPCMetrics
+}
 
-	provider, err := opentelemetry.NewGrafanaProvider(ctx, opentelemetry.GrafanaConfig{
-		ServiceName:       cfg.Observability.ServiceName,
-		ServiceVersion:    cfg.Observability.ServiceVersion,
-		Environment:       cfg.Observability.Environment,
-		CollectorEndpoint: cfg.Observability.OTLPEndpoint,
-	})
+// InitObservability initializes all observability components (tracing, logging, metrics)
+func InitObservability(ctx context.Context, cfg *config.Config) (*ObservabilityComponents, error) {
+	log.Println("📊 Initializing observability (Tracing, Logging, Metrics)...")
+
+	// Initialize Tracer Provider (OpenTelemetry -> Tempo)
+	tracerProvider, err := telemetry.NewTracerProvider(
+		ctx,
+		cfg.Observability.ServiceName,
+		cfg.Observability.OTLPEndpoint,
+	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize observability: %w", err)
+		return nil, fmt.Errorf("failed to initialize tracer provider: %w", err)
 	}
 
-	log.Printf("✅ Observability initialized (Endpoint: %s)", cfg.Observability.OTLPEndpoint)
+	// Create Tracer wrapper
+	otelTracer := telemetry.GetTracer(cfg.Observability.ServiceName)
+	tracer := telemetry.NewOtelTracer(otelTracer)
 
-	return provider, nil
+	// Initialize Logger (slog with JSON output)
+	logger := telemetry.NewSlogLogger(cfg.Observability.ServiceName)
+
+	// Initialize Prometheus Metrics
+	prometheusMetrics := telemetry.NewPrometheusMetrics()
+
+	// Initialize gRPC-specific metrics
+	grpcMetrics := telemetry.NewGRPCMetrics(prometheusMetrics.Registry())
+
+	log.Printf("✅ Observability initialized (Service: %s, Endpoint: %s)",
+		cfg.Observability.ServiceName,
+		cfg.Observability.OTLPEndpoint,
+	)
+
+	return &ObservabilityComponents{
+		TracerProvider: tracerProvider,
+		Tracer:         tracer,
+		Logger:         logger,
+		Metrics:        prometheusMetrics,
+		GRPCMetrics:    grpcMetrics,
+	}, nil
 }

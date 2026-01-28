@@ -7,8 +7,9 @@ import (
 
 	"github.com/lgustavopalmieri/healing-specialist/cmd/grpcserver/bootstrap"
 	"github.com/lgustavopalmieri/healing-specialist/cmd/grpcserver/config"
-	"github.com/lgustavopalmieri/healing-specialist/internal/platform/opentelemetry"
 	"github.com/lgustavopalmieri/healing-specialist/internal/platform/server"
+	"github.com/lgustavopalmieri/healing-specialist/internal/platform/telemetry"
+	"google.golang.org/grpc"
 )
 
 func main() {
@@ -28,7 +29,7 @@ func run() error {
 		return err
 	}
 
-	otelProvider, err := bootstrap.InitObservability(ctx, cfg)
+	observability, err := bootstrap.InitObservability(ctx, cfg)
 	if err != nil {
 		return err
 	}
@@ -47,35 +48,52 @@ func run() error {
 		Port:              cfg.Server.GRPCPort,
 		MaxConnections:    cfg.Server.MaxConnections,
 		ConnectionTimeout: cfg.Server.ConnectionTimeout,
+		Interceptors:      []grpc.UnaryServerInterceptor{observability.GRPCMetrics.UnaryServerInterceptor()},
 	})
 	if err != nil {
 		return err
 	}
 
-	logger := opentelemetry.NewLogger(cfg.Observability.ServiceName)
-	tracer := opentelemetry.NewTracer(cfg.Observability.ServiceName)
+	// Initialize metrics server
+	metricsServer := server.NewMetricsServer(server.MetricsConfig{
+		Port:     9090, // Prometheus default port
+		Registry: observability.Metrics.(*telemetry.PrometheusMetrics).Registry(),
+	})
+
+	// Start metrics server in background
+	go func() {
+		if err := metricsServer.Start(); err != nil {
+			log.Printf("❌ Metrics server error: %v", err)
+		}
+	}()
 
 	bootstrap.RegisterServices(grpcServer, bootstrap.ServiceDependencies{
 		DB:             db,
 		EventPublisher: kafkaProducer,
-		Tracer:         tracer,
-		Logger:         logger,
+		Tracer:         observability.Tracer,
+		Logger:         observability.Logger,
 	})
 
 	shutdownManager := bootstrap.NewShutdownManager(cfg.Server.ShutdownTimeout)
 
 	go func() {
 		shutdownManager.Wait()
-		if err := shutdownManager.Shutdown(grpcServer, db, otelProvider, kafkaProducer); err != nil {
+		// Mark application as unhealthy during shutdown
+		observability.GRPCMetrics.SetUnhealthy()
+
+		// Shutdown metrics server first
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), cfg.Server.ShutdownTimeout)
+		defer cancel()
+		if err := metricsServer.Shutdown(shutdownCtx); err != nil {
+			log.Printf("⚠️ Metrics server shutdown error: %v", err)
+		}
+
+		if err := shutdownManager.Shutdown(grpcServer, db, observability.TracerProvider, kafkaProducer); err != nil {
 			log.Printf("❌ Shutdown error: %v", err)
 			os.Exit(1)
 		}
 		os.Exit(0)
 	}()
 
-
 	return grpcServer.Start()
 }
-
-
-substituir observabilidade e incluir apenas métricas do microserviço no prometheus para p's

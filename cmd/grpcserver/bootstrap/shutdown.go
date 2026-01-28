@@ -12,8 +12,9 @@ import (
 	"time"
 
 	"github.com/lgustavopalmieri/healing-specialist/internal/platform/kafka"
-	"github.com/lgustavopalmieri/healing-specialist/internal/platform/opentelemetry"
 	"github.com/lgustavopalmieri/healing-specialist/internal/platform/server"
+	"github.com/lgustavopalmieri/healing-specialist/internal/platform/telemetry"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
 type ShutdownManager struct {
@@ -41,7 +42,7 @@ func (sm *ShutdownManager) Wait() {
 func (sm *ShutdownManager) Shutdown(
 	grpcServer *server.GRPCServer,
 	db *sql.DB,
-	otelProvider *opentelemetry.GrafanaProvider,
+	tracerProvider *sdktrace.TracerProvider,
 	kafkaProducer *kafka.KafkaProducer,
 ) error {
 	log.Println("🛑 Shutdown signal received, gracefully shutting down...")
@@ -77,12 +78,9 @@ func (sm *ShutdownManager) Shutdown(
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		log.Println("Shutting down observability provider...")
-		if err := otelProvider.Shutdown(ctx); err != nil {
-			errChan <- fmt.Errorf("observability shutdown: %w", err)
-			return
-		}
-		log.Println("Observability provider stopped")
+		log.Println("Shutting down tracer provider...")
+		telemetry.ShutdownTracer(ctx, tracerProvider)
+		log.Println("Tracer provider stopped")
 	}()
 
 	if kafkaProducer != nil {

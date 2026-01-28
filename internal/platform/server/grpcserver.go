@@ -23,15 +23,17 @@ const (
 )
 
 type GRPCServer struct {
-	server   *grpc.Server
-	listener net.Listener
-	port     int
+	server       *grpc.Server
+	listener     net.Listener
+	port         int
+	interceptors []grpc.UnaryServerInterceptor
 }
 
 type Config struct {
 	Port              int
 	MaxConnections    int
 	ConnectionTimeout time.Duration
+	Interceptors      []grpc.UnaryServerInterceptor
 }
 
 func NewGRPCServer(cfg Config) (*GRPCServer, error) {
@@ -56,6 +58,11 @@ func NewGRPCServer(cfg Config) (*GRPCServer, error) {
 		}),
 	}
 
+	// Add interceptors if provided
+	if len(cfg.Interceptors) > 0 {
+		opts = append(opts, grpc.ChainUnaryInterceptor(cfg.Interceptors...))
+	}
+
 	server := grpc.NewServer(opts...)
 
 	healthServer := health.NewServer()
@@ -67,9 +74,10 @@ func NewGRPCServer(cfg Config) (*GRPCServer, error) {
 	log.Printf("🌐 Initializing gRPC server (Port: %d)...", cfg.Port)
 
 	return &GRPCServer{
-		server:   server,
-		listener: listener,
-		port:     cfg.Port,
+		server:       server,
+		listener:     listener,
+		port:         cfg.Port,
+		interceptors: cfg.Interceptors,
 	}, nil
 }
 
