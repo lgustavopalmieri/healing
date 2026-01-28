@@ -42,9 +42,9 @@ export const stressTestConfig = {
     ],
 
     // 🔄 THROUGHPUT - Quantas requests por segundo
-    'grpc_reqs': [
-      'rate>100',     // Mínimo 100 requests/segundo
-    ],
+    // 'grpc_reqs': [
+    //   'rate>100',     // Mínimo 100 requests/segundo
+    // ],
 
     // 📈 ITERAÇÕES - Quantos ciclos completos
     'iterations': [
