@@ -76,3 +76,6 @@ func run() error {
 
 	return grpcServer.Start()
 }
+
+
+substituir observabilidade e incluir apenas métricas do microserviço no prometheus para p's
