@@ -12,10 +12,7 @@ import (
 )
 
 func (c *CreateSpecialistCommand) Execute(contx context.Context, input CreateSpecialistDTO) (*domain.Specialist, error) {
-	ctx, cancel := context.WithCancel(contx)
-	defer cancel()
-
-	ctx, span := c.tracer.Start(ctx, CreateSpecialistSpanName)
+	ctx, span := c.tracer.Start(contx, CreateSpecialistSpanName)
 	defer span.End()
 
 	specialist, err := create.CreateSpecialist(create.CreateSpecialistInput{
@@ -52,10 +49,14 @@ func (c *CreateSpecialistCommand) Execute(contx context.Context, input CreateSpe
 	}()
 
 	if err := c.validateUniquenessConstraints(ctx, span, specialist.ID, specialist.Email, specialist.LicenseNumber); err != nil {
+		apiCancel()
 		return nil, err
 	}
 
 	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+
 	case <-apiCtx.Done():
 		return nil, ErrExternalValidationTimeout
 
