@@ -8,6 +8,7 @@ import (
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/create"
 )
 
 func (c *CreateSpecialistCommand) Execute(contx context.Context, input CreateSpecialistDTO) (*domain.Specialist, error) {
@@ -17,7 +18,7 @@ func (c *CreateSpecialistCommand) Execute(contx context.Context, input CreateSpe
 	ctx, span := c.tracer.Start(ctx, CreateSpecialistSpanName)
 	defer span.End()
 
-	specialist, err := domain.CreateSpecialist(domain.CreateSpecialistInput{
+	specialist, err := create.CreateSpecialist(create.CreateSpecialistInput{
 		Name:          input.Name,
 		Email:         input.Email,
 		Phone:         input.Phone,
@@ -66,7 +67,7 @@ func (c *CreateSpecialistCommand) Execute(contx context.Context, input CreateSpe
 			return nil, res.err
 		}
 		if !res.result {
-			return nil, domain.ErrInvalidLicense
+			return nil, create.ErrInvalidLicense
 		}
 	}
 

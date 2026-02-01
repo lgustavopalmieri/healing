@@ -1,4 +1,4 @@
-package domain
+package create
 
 import (
 	"strings"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/utils"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
 )
 
 type CreateSpecialistInput struct {
@@ -19,7 +20,7 @@ type CreateSpecialistInput struct {
 	AgreedToShare bool
 }
 
-func CreateSpecialist(input CreateSpecialistInput) (*Specialist, error) {
+func CreateSpecialist(input CreateSpecialistInput) (*domain.Specialist, error) {
 	if err := validate(input.Name, input.Email, input.Specialty, input.LicenseNumber, input.AgreedToShare); err != nil {
 		return nil, err
 	}
@@ -27,7 +28,7 @@ func CreateSpecialist(input CreateSpecialistInput) (*Specialist, error) {
 	normalizedKeywords := utils.SanitizeStringArray(input.Keywords)
 	now := time.Now().UTC()
 
-	specialist := &Specialist{
+	specialist := &domain.Specialist{
 		ID:            uuid.New().String(),
 		Name:          strings.TrimSpace(input.Name),
 		Email:         strings.ToLower(strings.TrimSpace(input.Email)),

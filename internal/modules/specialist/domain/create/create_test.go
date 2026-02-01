@@ -1,13 +1,14 @@
-package domain
+package create
 
 import (
 	"testing"
 	"time"
 
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
 	"github.com/stretchr/testify/assert"
 )
 
-func createSpecialistFactory(overrides ...func(*CreateSpecialistInput)) (*Specialist, error) {
+func createSpecialistFactory(overrides ...func(*CreateSpecialistInput)) (*domain.Specialist, error) {
 	input := &CreateSpecialistInput{
 		Name:          "Dr. João Silva",
 		Email:         "joao@example.com",
@@ -32,13 +33,13 @@ func TestCreateSpecialist(t *testing.T) {
 		overrides      []func(*CreateSpecialistInput)
 		expectError    bool
 		expectedErr    error
-		validateResult func(*testing.T, *Specialist)
+		validateResult func(*testing.T, *domain.Specialist)
 	}{
 		{
 			name:        "should create specialist successfully with valid data",
 			overrides:   nil,
 			expectError: false,
-			validateResult: func(t *testing.T, specialist *Specialist) {
+			validateResult: func(t *testing.T, specialist *domain.Specialist) {
 				assert.NotEmpty(t, specialist.ID)
 				assert.Equal(t, "Dr. João Silva", specialist.Name)
 				assert.Equal(t, "joao@example.com", specialist.Email)
@@ -99,7 +100,7 @@ func TestCreateSpecialist(t *testing.T) {
 				func(s *CreateSpecialistInput) { s.Name = "  Dr. João Silva  " },
 			},
 			expectError: false,
-			validateResult: func(t *testing.T, specialist *Specialist) {
+			validateResult: func(t *testing.T, specialist *domain.Specialist) {
 				assert.Equal(t, "Dr. João Silva", specialist.Name)
 			},
 		},
@@ -109,7 +110,7 @@ func TestCreateSpecialist(t *testing.T) {
 				func(s *CreateSpecialistInput) { s.Email = "  JOAO@EXAMPLE.COM  " },
 			},
 			expectError: false,
-			validateResult: func(t *testing.T, specialist *Specialist) {
+			validateResult: func(t *testing.T, specialist *domain.Specialist) {
 				assert.Equal(t, "joao@example.com", specialist.Email)
 			},
 		},
@@ -119,7 +120,7 @@ func TestCreateSpecialist(t *testing.T) {
 				func(s *CreateSpecialistInput) { s.Phone = "  +5511999999999  " },
 			},
 			expectError: false,
-			validateResult: func(t *testing.T, specialist *Specialist) {
+			validateResult: func(t *testing.T, specialist *domain.Specialist) {
 				assert.Equal(t, "+5511999999999", specialist.Phone)
 			},
 		},
@@ -129,7 +130,7 @@ func TestCreateSpecialist(t *testing.T) {
 				func(s *CreateSpecialistInput) { s.Specialty = "  Cardiologia  " },
 			},
 			expectError: false,
-			validateResult: func(t *testing.T, specialist *Specialist) {
+			validateResult: func(t *testing.T, specialist *domain.Specialist) {
 				assert.Equal(t, "Cardiologia", specialist.Specialty)
 			},
 		},
@@ -139,7 +140,7 @@ func TestCreateSpecialist(t *testing.T) {
 				func(s *CreateSpecialistInput) { s.LicenseNumber = "  CRM123456  " },
 			},
 			expectError: false,
-			validateResult: func(t *testing.T, specialist *Specialist) {
+			validateResult: func(t *testing.T, specialist *domain.Specialist) {
 				assert.Equal(t, "CRM123456", specialist.LicenseNumber)
 			},
 		},
@@ -149,7 +150,7 @@ func TestCreateSpecialist(t *testing.T) {
 				func(s *CreateSpecialistInput) { s.Description = "  Especialista em cardiologia  " },
 			},
 			expectError: false,
-			validateResult: func(t *testing.T, specialist *Specialist) {
+			validateResult: func(t *testing.T, specialist *domain.Specialist) {
 				assert.Equal(t, "Especialista em cardiologia", specialist.Description)
 			},
 		},
@@ -161,7 +162,7 @@ func TestCreateSpecialist(t *testing.T) {
 				},
 			},
 			expectError: false,
-			validateResult: func(t *testing.T, specialist *Specialist) {
+			validateResult: func(t *testing.T, specialist *domain.Specialist) {
 				assert.Equal(t, []string{"coração", "arritmia", "hipertensão"}, specialist.Keywords)
 			},
 		},
@@ -171,7 +172,7 @@ func TestCreateSpecialist(t *testing.T) {
 				func(s *CreateSpecialistInput) { s.Keywords = []string{} },
 			},
 			expectError: false,
-			validateResult: func(t *testing.T, specialist *Specialist) {
+			validateResult: func(t *testing.T, specialist *domain.Specialist) {
 				assert.Equal(t, []string{}, specialist.Keywords)
 			},
 		},
@@ -181,7 +182,7 @@ func TestCreateSpecialist(t *testing.T) {
 				func(s *CreateSpecialistInput) { s.Keywords = nil },
 			},
 			expectError: false,
-			validateResult: func(t *testing.T, specialist *Specialist) {
+			validateResult: func(t *testing.T, specialist *domain.Specialist) {
 				assert.Equal(t, []string{}, specialist.Keywords)
 			},
 		},

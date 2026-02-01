@@ -9,6 +9,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/create"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/application"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/infra/grpc_service/mocks"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/infra/grpc_service/pb"
@@ -131,11 +132,11 @@ func TestSpecialistCreateGRPCService_CreateSpecialist(t *testing.T) {
 				}
 				mockCommand.EXPECT().
 					Execute(gomock.Any(), expectedDTO).
-					Return(nil, domain.ErrInvalidName).
+					Return(nil, create.ErrInvalidName).
 					Times(1)
 			},
 			expectError: true,
-			expectedErr: domain.ErrInvalidName,
+			expectedErr: create.ErrInvalidName,
 			validateResponse: func(t *testing.T, response *pb.CreateSpecialistResponse) {
 				assert.Nil(t, response)
 			},
@@ -159,11 +160,11 @@ func TestSpecialistCreateGRPCService_CreateSpecialist(t *testing.T) {
 				}
 				mockCommand.EXPECT().
 					Execute(gomock.Any(), expectedDTO).
-					Return(nil, domain.ErrDuplicateEmail).
+					Return(nil, create.ErrDuplicateEmail).
 					Times(1)
 			},
 			expectError: true,
-			expectedErr: domain.ErrDuplicateEmail,
+			expectedErr: create.ErrDuplicateEmail,
 			validateResponse: func(t *testing.T, response *pb.CreateSpecialistResponse) {
 				assert.Nil(t, response)
 			},
@@ -234,12 +235,12 @@ func TestSpecialistCreateGRPCService_CreateSpecialist(t *testing.T) {
 						assert.Empty(t, dto.Description)
 						assert.Empty(t, dto.Keywords)
 						assert.False(t, dto.AgreedToShare)
-						return nil, domain.ErrInvalidName
+						return nil, create.ErrInvalidName
 					}).
 					Times(1)
 			},
 			expectError: true,
-			expectedErr: domain.ErrInvalidName,
+			expectedErr: create.ErrInvalidName,
 			validateResponse: func(t *testing.T, response *pb.CreateSpecialistResponse) {
 				assert.Nil(t, response)
 			},
