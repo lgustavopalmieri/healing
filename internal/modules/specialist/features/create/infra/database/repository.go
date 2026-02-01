@@ -62,8 +62,6 @@ func (r *SpecialistCreateRepository) Save(ctx context.Context, specialist *domai
 	return &savedSpecialist, nil
 }
 
-// ValidateUniqueness checks if the provided id, email, and license number are unique.
-// Returns an error if any of the values already exist in the database.
 func (r *SpecialistCreateRepository) ValidateUniqueness(ctx context.Context, id, email, licenseNumber string) error {
 	var idExists bool
 	err := r.db.QueryRowContext(
