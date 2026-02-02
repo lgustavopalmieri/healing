@@ -3,7 +3,7 @@ package searchinput
 import (
 	"strings"
 
-	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/list"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/search"
 )
 
 type SearchableField string
@@ -31,19 +31,19 @@ func (l *ListSearchInput) validateFilters() error {
 
 	for _, filter := range l.Filters {
 		if !filter.Field.IsValid() {
-			return list.NewErrInvalidSearchField(string(filter.Field))
+			return search.NewErrInvalidSearchField(string(filter.Field))
 		}
 
 		if !filter.Field.IsFilterable() {
-			return list.NewErrFieldNotFilterable(string(filter.Field))
+			return search.NewErrFieldNotFilterable(string(filter.Field))
 		}
 
 		if strings.TrimSpace(filter.Value) == "" {
-			return list.NewErrEmptyFilterValue(string(filter.Field))
+			return search.NewErrEmptyFilterValue(string(filter.Field))
 		}
 
 		if seenFields[filter.Field] {
-			return list.NewErrDuplicateFilter(string(filter.Field))
+			return search.NewErrDuplicateFilter(string(filter.Field))
 		}
 		seenFields[filter.Field] = true
 	}

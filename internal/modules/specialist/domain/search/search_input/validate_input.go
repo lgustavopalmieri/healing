@@ -3,7 +3,7 @@ package searchinput
 import (
 	"strings"
 
-	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/list"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/search"
 )
 
 func (l *ListSearchInput) validate() error {
@@ -39,7 +39,7 @@ func (l *ListSearchInput) validateHasSearchCriteria() error {
 	hasFilters := len(l.Filters) > 0
 
 	if !hasSearchTerm && !hasFilters {
-		return list.ErrEmptySearchCriteria
+		return search.ErrEmptySearchCriteria
 	}
 
 	return nil
@@ -47,7 +47,7 @@ func (l *ListSearchInput) validateHasSearchCriteria() error {
 
 func (l *ListSearchInput) validatePagination() error {
 	if l.Pagination == nil {
-		return list.ErrMissingPagination
+		return search.ErrMissingPagination
 	}
 	return nil
 }
@@ -59,17 +59,17 @@ func (l *ListSearchInput) validateSearchTerm() error {
 
 	trimmed := strings.TrimSpace(*l.SearchTerm)
 	if trimmed == "" {
-		return list.ErrEmptySearchTerm
+		return search.ErrEmptySearchTerm
 	}
 
 	const minSearchTermLength = 2
 	if len(trimmed) < minSearchTermLength {
-		return list.ErrSearchTermTooShort
+		return search.ErrSearchTermTooShort
 	}
 
 	const maxSearchTermLength = 100
 	if len(trimmed) > maxSearchTermLength {
-		return list.ErrSearchTermTooLong
+		return search.ErrSearchTermTooLong
 	}
 
 	return nil

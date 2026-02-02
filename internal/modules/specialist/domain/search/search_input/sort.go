@@ -1,6 +1,6 @@
 package searchinput
 
-import "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/list"
+import "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/search"
 
 type Sort struct {
 	Field SearchableField
@@ -23,19 +23,19 @@ func (l *ListSearchInput) validateSort() error {
 
 	for _, sort := range l.Sort {
 		if !sort.Field.IsValid() {
-			return list.NewErrInvalidSearchField(string(sort.Field))
+			return search.NewErrInvalidSearchField(string(sort.Field))
 		}
 
 		if !sort.Field.IsSortable() {
-			return list.NewErrFieldNotSortable(string(sort.Field))
+			return search.NewErrFieldNotSortable(string(sort.Field))
 		}
 
 		if !sort.Order.IsValid() {
-			return list.NewErrInvalidSortOrder(string(sort.Order))
+			return search.NewErrInvalidSortOrder(string(sort.Order))
 		}
 
 		if seenFields[sort.Field] {
-			return list.NewErrDuplicateSortCriteria(string(sort.Field))
+			return search.NewErrDuplicateSortCriteria(string(sort.Field))
 		}
 		seenFields[sort.Field] = true
 	}
@@ -50,7 +50,7 @@ func (l *ListSearchInput) validateSortConsistency() error {
 
 	firstSort := l.Sort[0]
 	if !firstSort.Field.SupportsCursorPagination() {
-		return list.NewErrFieldNotSupportsCursor(string(firstSort.Field))
+		return search.NewErrFieldNotSupportsCursor(string(firstSort.Field))
 	}
 
 	return nil
