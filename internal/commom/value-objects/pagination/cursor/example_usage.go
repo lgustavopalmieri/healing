@@ -39,8 +39,8 @@ func ExampleScenario1_FirstPageRequest() {
 
 	fmt.Printf("Input criado com sucesso:\n")
 	fmt.Printf("  - É primeira página? %v\n", input.IsFirstPage())
-	fmt.Printf("  - Page size: %d\n", input.PageSize())
-	fmt.Printf("  - Direção: %s\n", input.Direction())
+	fmt.Printf("  - Page size: %d\n", input.PageSize)
+	fmt.Printf("  - Direção: %s\n", input.Direction)
 
 	// Agora você usaria este input no seu repository/service:
 	// items, output := repository.FindItems(ctx, input)
@@ -68,7 +68,7 @@ func ExampleScenario2_NextPageRequest() {
 
 	fmt.Printf("Input criado com sucesso:\n")
 	fmt.Printf("  - É primeira página? %v\n", input.IsFirstPage())
-	fmt.Printf("  - Tem cursor? %v\n", input.EncodedCursor() != nil)
+	fmt.Printf("  - Tem cursor? %v\n", input.EncodedCursor != nil)
 	fmt.Printf("  - Navegando para frente? %v\n", input.IsNavigatingForward())
 
 	// Decodifica o cursor para usar na query
@@ -171,34 +171,15 @@ func ExampleScenario4_BuildingOutput() {
 	)
 
 	fmt.Printf("Output construído:\n")
-	fmt.Printf("  - Total de itens: %d\n", output.TotalItemsInPage())
-	fmt.Printf("  - Tem próxima página? %v\n", output.HasNextPage())
-	fmt.Printf("  - Tem página anterior? %v\n", output.HasPreviousPage())
+	fmt.Printf("  - Total de itens: %d\n", output.TotalItemsInPage)
+	fmt.Printf("  - Tem próxima página? %v\n", output.HasNextPage)
+	fmt.Printf("  - Tem página anterior? %v\n", output.HasPreviousPage)
 	fmt.Printf("  - É página vazia? %v\n", output.IsEmpty())
 	fmt.Printf("  - É página parcial? %v\n", output.IsPartialPage(pageSize))
 
-	if output.HasNextPage() {
-		fmt.Printf("  - Próximo cursor disponível: %v\n", output.NextCursor() != nil)
+	if output.HasNextPage {
+		fmt.Printf("  - Próximo cursor disponível: %v\n", output.NextCursor != nil)
 	}
-}
-
-// ExampleScenario5_UsingBuilder demonstra o uso do Builder para criar output.
-func ExampleScenario5_UsingBuilder() {
-	fmt.Println("\n=== Cenário 5: Usando Builder (Mais Legível) ===")
-
-	nextCursor := EncodeCursor("50", 1632489500, "created_at")
-
-	output := NewCursorBuilder().
-		WithNextCursor(&nextCursor).
-		WithPreviousCursor(nil).
-		WithHasNextPage(true).
-		WithHasPreviousPage(false).
-		WithTotalItems(20).
-		Build()
-
-	fmt.Printf("Output construído com builder:\n")
-	fmt.Printf("  - Total de itens: %d\n", output.TotalItemsInPage())
-	fmt.Printf("  - Tem próxima página? %v\n", output.HasNextPage())
 }
 
 // ExampleScenario6_ErrorHandling demonstra tratamento de erros de validação.
@@ -245,7 +226,7 @@ func ExampleScenario7_CompleteFlow() {
 	nextCursor1 := EncodeCursor("10", 1632489000, "created_at")
 	output1 := NewCursorPaginationOutput(&nextCursor1, nil, true, false, 10)
 	fmt.Printf("   - Retornou 10 itens\n")
-	fmt.Printf("   - Tem próxima página? %v\n", output1.HasNextPage())
+	fmt.Printf("   - Tem próxima página? %v\n", output1.HasNextPage)
 
 	// 3. Cliente usa o cursor para buscar próxima página
 	fmt.Println("\n2. Segunda requisição (usando cursor):")
@@ -257,19 +238,19 @@ func ExampleScenario7_CompleteFlow() {
 	prevCursor2 := EncodeCursor("11", 1632488900, "created_at")
 	output2 := NewCursorPaginationOutput(&nextCursor2, &prevCursor2, true, true, 10)
 	fmt.Printf("   - Retornou 10 itens\n")
-	fmt.Printf("   - Tem próxima página? %v\n", output2.HasNextPage())
-	fmt.Printf("   - Tem página anterior? %v\n", output2.HasPreviousPage())
+	fmt.Printf("   - Tem próxima página? %v\n", output2.HasNextPage)
+	fmt.Printf("   - Tem página anterior? %v\n", output2.HasPreviousPage)
 
 	// 5. Cliente decide voltar para página anterior
 	fmt.Println("\n3. Terceira requisição (voltando):")
-	input3, _ := NewCursorPaginationInput(output2.PreviousCursor(), 10, DirectionPrevious)
+	input3, _ := NewCursorPaginationInput(output2.PreviousCursor, 10, DirectionPrevious)
 	fmt.Printf("   - Voltando para página anterior\n")
-	fmt.Printf("   - Direção: %s\n", input3.Direction())
+	fmt.Printf("   - Direção: %s\n", input3.Direction)
 
 	// 6. Sistema retorna página anterior (mesma que output1)
 	output3 := NewCursorPaginationOutput(&nextCursor1, nil, true, false, 10)
 	fmt.Printf("   - Retornou à primeira página\n")
-	fmt.Printf("   - Tem página anterior? %v\n", output3.HasPreviousPage())
+	fmt.Printf("   - Tem página anterior? %v\n", output3.HasPreviousPage)
 }
 
 // ExampleScenario8_DifferentSortFields demonstra paginação com diferentes campos de ordenação.
