@@ -34,10 +34,6 @@ func (l *ListSearchInput) validateFilters() error {
 			return search.NewErrInvalidSearchField(string(filter.Field))
 		}
 
-		if !filter.Field.IsFilterable() {
-			return search.NewErrFieldNotFilterable(string(filter.Field))
-		}
-
 		if strings.TrimSpace(filter.Value) == "" {
 			return search.NewErrEmptyFilterValue(string(filter.Field))
 		}
@@ -56,19 +52,6 @@ func (s SearchableField) IsValid() bool {
 	case FieldName, FieldSpecialty, FieldDescription,
 		FieldKeywords, FieldCreatedAt, FieldUpdatedAt:
 		return true
-	default:
-		return false
-	}
-}
-
-func (s SearchableField) IsFilterable() bool {
-	switch s {
-	case FieldName, FieldSpecialty:
-		return true
-	case FieldDescription, FieldKeywords:
-		return false
-	case FieldCreatedAt, FieldUpdatedAt:
-		return false
 	default:
 		return false
 	}
