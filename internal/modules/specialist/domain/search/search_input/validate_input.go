@@ -97,39 +97,3 @@ func (l *ListSearchInput) HasFilters() bool {
 func (l *ListSearchInput) HasSort() bool {
 	return len(l.Sort) > 0
 }
-
-func (l *ListSearchInput) GetFilterByField(field SearchableField) (*Filter, bool) {
-	for _, filter := range l.Filters {
-		if filter.Field == field {
-			return &filter, true
-		}
-	}
-	return nil, false
-}
-
-func (l *ListSearchInput) GetPrimarySortField() *SearchableField {
-	if len(l.Sort) == 0 {
-		return nil
-	}
-	return &l.Sort[0].Field
-}
-
-func (l *ListSearchInput) GetPrimarySortOrder() *SortOrder {
-	if len(l.Sort) == 0 {
-		return nil
-	}
-	return &l.Sort[0].Order
-}
-
-func (s SearchableField) SupportsCursorPagination() bool {
-	switch s {
-	case FieldCreatedAt, FieldUpdatedAt:
-		return true
-	case FieldName, FieldSpecialty:
-		return false
-	case FieldDescription, FieldKeywords:
-		return false
-	default:
-		return false
-	}
-}

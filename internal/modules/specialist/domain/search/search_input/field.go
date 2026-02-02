@@ -56,3 +56,16 @@ func (s SearchableField) IsValid() bool {
 		return false
 	}
 }
+
+func (s SearchableField) SupportsCursorPagination() bool {
+	switch s {
+	case FieldCreatedAt, FieldUpdatedAt:
+		return true
+	case FieldName, FieldSpecialty:
+		return false
+	case FieldDescription, FieldKeywords:
+		return false
+	default:
+		return false
+	}
+}
