@@ -20,15 +20,56 @@ func (r *Repository) buildBoolQuery(input *searchinput.ListSearchInput) map[stri
 	must := make([]interface{}, 0)
 
 	if input.HasSearchTerm() {
-		must = append(must, map[string]interface{}{
-			"multi_match": map[string]interface{}{
-				"query":     *input.SearchTerm,
-				"fields":    []string{"name^3", "description^2", "specialty^2", "keywords"},
-				"type":      "best_fields",
-				"operator":  "or",
-				"fuzziness": "AUTO",
-			},
-		})
+		searchTerm := *input.SearchTerm
+
+		if len(searchTerm) <= 3 {
+			must = append(must, map[string]interface{}{
+				"bool": map[string]interface{}{
+					"should": []interface{}{
+						map[string]interface{}{
+							"wildcard": map[string]interface{}{
+								"name": map[string]interface{}{
+									"value":            searchTerm + "*",
+									"case_insensitive": true,
+								},
+							},
+						},
+						map[string]interface{}{
+							"wildcard": map[string]interface{}{
+								"description": map[string]interface{}{
+									"value":            "*" + searchTerm + "*",
+									"case_insensitive": true,
+								},
+							},
+						},
+						map[string]interface{}{
+							"wildcard": map[string]interface{}{
+								"specialty": map[string]interface{}{
+									"value":            "*" + searchTerm + "*",
+									"case_insensitive": true,
+								},
+							},
+						},
+						map[string]interface{}{
+							"term": map[string]interface{}{
+								"keywords": searchTerm,
+							},
+						},
+					},
+					"minimum_should_match": 1,
+				},
+			})
+		} else {
+			must = append(must, map[string]interface{}{
+				"multi_match": map[string]interface{}{
+					"query":     searchTerm,
+					"fields":    []string{"name^3", "description^2", "specialty^2", "keywords"},
+					"type":      "best_fields",
+					"operator":  "or",
+					"fuzziness": "AUTO",
+				},
+			})
+		}
 	}
 
 	if input.HasFilters() {

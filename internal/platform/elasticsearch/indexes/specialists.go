@@ -20,6 +20,14 @@ func CreateSpecialistsIndex(ctx context.Context, client *elasticsearch.Client, i
 						"type":      "standard",
 						"stopwords": "_english_",
 					},
+					"name_analyzer": map[string]interface{}{
+						"type":      "custom",
+						"tokenizer": "standard",
+						"filter": []string{
+							"lowercase",
+							"asciifolding",
+						},
+					},
 				},
 			},
 		},
@@ -30,7 +38,7 @@ func CreateSpecialistsIndex(ctx context.Context, client *elasticsearch.Client, i
 				},
 				"name": map[string]interface{}{
 					"type":     "text",
-					"analyzer": "standard_analyzer",
+					"analyzer": "name_analyzer",
 					"fields": map[string]interface{}{
 						"keyword": map[string]interface{}{
 							"type": "keyword",
