@@ -40,3 +40,12 @@ func getEnvAsDuration(key string, defaultValue time.Duration) time.Duration {
 
 	return value
 }
+
+func getEnvAsSlice(key string, defaultValue []string) []string {
+	valueStr := os.Getenv(key)
+	if valueStr == "" {
+		return defaultValue
+	}
+
+	return []string{valueStr}
+}

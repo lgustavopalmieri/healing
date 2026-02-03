@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 
+	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
 	grpcservice "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/infra/grpc_service"
@@ -12,10 +13,12 @@ import (
 )
 
 type ServiceDependencies struct {
-	DB             *sql.DB
-	EventPublisher event.EventDispatcher
-	Tracer         observability.Tracer
-	Logger         observability.Logger
+	DB                 *sql.DB
+	ESClient           *elasticsearch.Client
+	EventPublisher     event.EventDispatcher
+	Tracer             observability.Tracer
+	Logger             observability.Logger
+	ESIndexSpecialists string
 }
 
 func RegisterServices(grpcServer *server.GRPCServer, deps ServiceDependencies) {

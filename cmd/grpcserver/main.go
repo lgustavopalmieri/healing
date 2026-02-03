@@ -39,6 +39,11 @@ func run() error {
 		return err
 	}
 
+	esClient, err := bootstrap.InitElasticsearch(cfg)
+	if err != nil {
+		return err
+	}
+
 	kafkaProducer, err := bootstrap.InitKafkaProducer(cfg)
 	if err != nil {
 		return err
@@ -68,10 +73,12 @@ func run() error {
 	}()
 
 	bootstrap.RegisterServices(grpcServer, bootstrap.ServiceDependencies{
-		DB:             db,
-		EventPublisher: kafkaProducer,
-		Tracer:         observability.Tracer,
-		Logger:         observability.Logger,
+		DB:                 db,
+		ESClient:           esClient,
+		EventPublisher:     kafkaProducer,
+		Tracer:             observability.Tracer,
+		Logger:             observability.Logger,
+		ESIndexSpecialists: cfg.Elasticsearch.IndexSpecialists,
 	})
 
 	shutdownManager := bootstrap.NewShutdownManager(cfg.Server.ShutdownTimeout)

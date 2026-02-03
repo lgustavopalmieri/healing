@@ -9,6 +9,7 @@ type Config struct {
 	Database      DatabaseConfig
 	Kafka         KafkaConfig
 	Observability ObservabilityConfig
+	Elasticsearch ElasticsearchConfig
 }
 
 type ServerConfig struct {
@@ -38,4 +39,11 @@ type ObservabilityConfig struct {
 	Environment    string
 	OTLPEndpoint   string
 	OTLPProtocol   string
+}
+
+type ElasticsearchConfig struct {
+	Addresses        []string
+	IndexSpecialists string
+	MaxRetries       int
+	RetryBackoff     time.Duration
 }

@@ -31,5 +31,13 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("OTLP endpoint is required")
 	}
 
+	if len(c.Elasticsearch.Addresses) == 0 {
+		return fmt.Errorf("elasticsearch addresses is required")
+	}
+
+	if c.Elasticsearch.IndexSpecialists == "" {
+		return fmt.Errorf("elasticsearch index for specialists is required")
+	}
+
 	return nil
 }

@@ -43,6 +43,12 @@ func Load() (*Config, error) {
 			OTLPEndpoint:   getEnv("OTEL_EXPORTER_OTLP_GRPC_ENDPOINT", ""),
 			OTLPProtocol:   getEnv("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc"),
 		},
+		Elasticsearch: ElasticsearchConfig{
+			Addresses:        getEnvAsSlice("ELASTICSEARCH_ADDRESSES", []string{"http://localhost:9200"}),
+			IndexSpecialists: getEnv("ELASTICSEARCH_INDEX_SPECIALISTS", "specialists"),
+			MaxRetries:       getEnvAsInt("ELASTICSEARCH_MAX_RETRIES", 3),
+			RetryBackoff:     getEnvAsDuration("ELASTICSEARCH_RETRY_BACKOFF", 1*time.Second),
+		},
 	}
 
 	if err := cfg.Validate(); err != nil {

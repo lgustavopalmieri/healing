@@ -1,0 +1,112 @@
+package indexes
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+
+	"github.com/elastic/go-elasticsearch/v8"
+)
+
+func CreateSpecialistsIndex(ctx context.Context, client *elasticsearch.Client, indexName string) error {
+	mapping := map[string]interface{}{
+		"settings": map[string]interface{}{
+			"number_of_shards":   1,
+			"number_of_replicas": 0,
+			"analysis": map[string]interface{}{
+				"analyzer": map[string]interface{}{
+					"standard_analyzer": map[string]interface{}{
+						"type":      "standard",
+						"stopwords": "_english_",
+					},
+				},
+			},
+		},
+		"mappings": map[string]interface{}{
+			"properties": map[string]interface{}{
+				"id": map[string]interface{}{
+					"type": "keyword",
+				},
+				"name": map[string]interface{}{
+					"type":     "text",
+					"analyzer": "standard_analyzer",
+					"fields": map[string]interface{}{
+						"keyword": map[string]interface{}{
+							"type": "keyword",
+						},
+					},
+				},
+				"email": map[string]interface{}{
+					"type": "keyword",
+				},
+				"phone": map[string]interface{}{
+					"type": "keyword",
+				},
+				"specialty": map[string]interface{}{
+					"type":     "text",
+					"analyzer": "standard_analyzer",
+					"fields": map[string]interface{}{
+						"keyword": map[string]interface{}{
+							"type": "keyword",
+						},
+					},
+				},
+				"license_number": map[string]interface{}{
+					"type": "keyword",
+				},
+				"description": map[string]interface{}{
+					"type":     "text",
+					"analyzer": "standard_analyzer",
+				},
+				"keywords": map[string]interface{}{
+					"type": "keyword",
+				},
+				"agreed_to_share": map[string]interface{}{
+					"type": "boolean",
+				},
+				"created_at": map[string]interface{}{
+					"type": "date",
+				},
+				"updated_at": map[string]interface{}{
+					"type": "date",
+				},
+			},
+		},
+	}
+
+	return createIndex(ctx, client, indexName, mapping)
+}
+
+func createIndex(ctx context.Context, client *elasticsearch.Client, indexName string, mapping map[string]interface{}) error {
+	res, err := client.Indices.Exists([]string{indexName}, client.Indices.Exists.WithContext(ctx))
+	if err != nil {
+		return fmt.Errorf("failed to check index existence: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode == 200 {
+		return nil
+	}
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(mapping); err != nil {
+		return fmt.Errorf("failed to encode mapping: %w", err)
+	}
+
+	res, err = client.Indices.Create(
+		indexName,
+		client.Indices.Create.WithContext(ctx),
+		client.Indices.Create.WithBody(&buf),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create index: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return fmt.Errorf("failed to create index: %s", res.Status())
+	}
+
+	return nil
+}
