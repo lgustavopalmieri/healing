@@ -16,7 +16,7 @@ func (c *SearchSpecialistsCommand) Execute(ctx context.Context, input *searchinp
 		return nil, ErrSearchExecution
 	}
 
-	if output.CursorOutput.IsEmpty() {
+	if output != nil && output.CursorOutput.IsEmpty() {
 		c.logger.Info(ctx, SearchNoResultsMessage)
 	}
 
