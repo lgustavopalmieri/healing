@@ -26,6 +26,7 @@ type Specialist struct {
 	Description   string    // Professional bio or summary shown to patients on the profile
 	Keywords      []string  // Searchable keywords/tags (e.g., "heart arrhythmia", "pediatric cardiology", "hypertension")
 	AgreedToShare bool      // Explicit agreement to share medical reports with patients (required on onboarding)
+	Rating        float64   // Average rating from patient reviews (0.0 to 5.0)
 	CreatedAt     time.Time // Timestamp when the specialist account was created
 	UpdatedAt     time.Time // Timestamp of the last profile update
 }

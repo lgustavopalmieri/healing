@@ -23,6 +23,7 @@ type elasticsearchSource struct {
 	Description   string    `json:"description"`
 	Keywords      []string  `json:"keywords"`
 	AgreedToShare bool      `json:"agreed_to_share"`
+	Rating        float64   `json:"rating"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 }

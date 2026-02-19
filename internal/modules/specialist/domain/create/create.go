@@ -38,6 +38,7 @@ func CreateSpecialist(input CreateSpecialistInput) (*domain.Specialist, error) {
 		Description:   strings.TrimSpace(input.Description),
 		Keywords:      normalizedKeywords,
 		AgreedToShare: input.AgreedToShare,
+		Rating:        0.0,
 		CreatedAt:     now,
 		UpdatedAt:     now,
 	}

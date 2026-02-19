@@ -74,6 +74,7 @@ func TestCreateSpecialistCommand_Execute(t *testing.T) {
 				assert.Equal(t, "Especialista em cardiologia", specialist.Description)
 				assert.Equal(t, []string{"coração", "arritmia"}, specialist.Keywords)
 				assert.True(t, specialist.AgreedToShare)
+				assert.Equal(t, 0.0, specialist.Rating)
 				assert.NotEmpty(t, specialist.ID)
 				assert.False(t, specialist.CreatedAt.IsZero())
 				assert.False(t, specialist.UpdatedAt.IsZero())

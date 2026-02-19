@@ -73,6 +73,9 @@ func CreateSpecialistsIndex(ctx context.Context, client *elasticsearch.Client, i
 				"agreed_to_share": map[string]interface{}{
 					"type": "boolean",
 				},
+				"rating": map[string]interface{}{
+					"type": "float",
+				},
 				"created_at": map[string]interface{}{
 					"type": "date",
 				},

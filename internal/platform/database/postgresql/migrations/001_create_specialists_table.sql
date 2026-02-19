@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS specialists (
     description TEXT,
     keywords TEXT[] DEFAULT '{}',
     agreed_to_share BOOLEAN NOT NULL DEFAULT false,
+    rating DECIMAL(3,2) NOT NULL DEFAULT 0.0 CHECK (rating >= 0.0 AND rating <= 5.0),
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );

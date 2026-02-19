@@ -42,6 +42,7 @@ func specialistFactory(overrides ...func(*domain.Specialist)) *domain.Specialist
 		Description:   "Especialista em cardiologia",
 		Keywords:      []string{"coração", "arritmia"},
 		AgreedToShare: true,
+		Rating:        4.5,
 		CreatedAt:     now,
 		UpdatedAt:     now,
 	}

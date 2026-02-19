@@ -31,6 +31,7 @@ func (r *Repository) mapToSpecialist(source elasticsearchSource) *domain.Special
 		Description:   source.Description,
 		Keywords:      source.Keywords,
 		AgreedToShare: source.AgreedToShare,
+		Rating:        source.Rating,
 		CreatedAt:     source.CreatedAt,
 		UpdatedAt:     source.UpdatedAt,
 	}
