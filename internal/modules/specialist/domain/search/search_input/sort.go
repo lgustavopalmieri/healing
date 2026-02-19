@@ -48,23 +48,13 @@ func (l *ListSearchInput) validateSortConsistency() error {
 		return nil
 	}
 
-	firstSort := l.Sort[0]
-	if !firstSort.Field.SupportsCursorPagination() {
-		return search.NewErrFieldNotSupportsCursor(string(firstSort.Field))
+	for _, sort := range l.Sort {
+		if !sort.Field.SupportsCursorPagination() {
+			return search.NewErrFieldNotSupportsCursor(string(sort.Field))
+		}
 	}
 
 	return nil
-}
-
-func (s SearchableField) IsSortable() bool {
-	switch s {
-	case FieldName, FieldSpecialty, FieldCreatedAt, FieldUpdatedAt:
-		return true
-	case FieldDescription, FieldKeywords:
-		return false
-	default:
-		return false
-	}
 }
 
 func (s SortOrder) IsValid() bool {

@@ -33,7 +33,6 @@ import (
 //   - Desempate por ID (garante unicidade)
 //   - Fácil parsing no DecodeCursor
 func EncodeCursor(id string, sortValue interface{}, sortField string) string {
-	// Converte sortValue para string
 	var sortValueStr string
 	switch v := sortValue.(type) {
 	case string:
@@ -46,10 +45,32 @@ func EncodeCursor(id string, sortValue interface{}, sortField string) string {
 		sortValueStr = fmt.Sprintf("%v", v)
 	}
 
-	// Formato: "sortField:sortValue:id"
 	cursorContent := fmt.Sprintf("%s:%s:%s", sortField, sortValueStr, id)
 
-	// Codifica em base64
+	encoded := base64.StdEncoding.EncodeToString([]byte(cursorContent))
+	return encoded
+}
+
+func EncodeCursorMultiSort(sortValues []interface{}) string {
+	if len(sortValues) == 0 {
+		return ""
+	}
+
+	parts := make([]string, len(sortValues))
+	for i, val := range sortValues {
+		switch v := val.(type) {
+		case string:
+			parts[i] = v
+		case int, int32, int64:
+			parts[i] = fmt.Sprintf("%d", v)
+		case float32, float64:
+			parts[i] = fmt.Sprintf("%f", v)
+		default:
+			parts[i] = fmt.Sprintf("%v", v)
+		}
+	}
+
+	cursorContent := fmt.Sprintf("%v", parts)
 	encoded := base64.StdEncoding.EncodeToString([]byte(cursorContent))
 	return encoded
 }

@@ -11,6 +11,8 @@ func (r *Repository) mapSortFieldToES(field searchinput.SearchableField) string 
 		return "created_at"
 	case searchinput.FieldUpdatedAt:
 		return "updated_at"
+	case searchinput.FieldRating:
+		return "rating"
 	case searchinput.FieldName:
 		return "name.keyword"
 	case searchinput.FieldSpecialty:

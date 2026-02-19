@@ -209,6 +209,166 @@ func TestRepository_Search_Pagination(t *testing.T) {
 		}
 	})
 
+	t.Run("sorts by rating desc and updated_at desc by default", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		ctx := context.Background()
+		client, indexName, cleanup := testHelper.SetupTestIndex(t, indexes.CreateSpecialistsIndex)
+		defer cleanup()
+
+		now := time.Now()
+		docs := []*elasticsearchtest.SpecialistDocument{
+			elasticsearchtest.SpecialistDocumentFactory(func(d *elasticsearchtest.SpecialistDocument) {
+				d.Name = "Dr. Low Rating Old"
+				d.Rating = 3.0
+				d.UpdatedAt = now.Add(-2 * time.Hour)
+			}),
+			elasticsearchtest.SpecialistDocumentFactory(func(d *elasticsearchtest.SpecialistDocument) {
+				d.Name = "Dr. High Rating Recent"
+				d.Rating = 5.0
+				d.UpdatedAt = now
+			}),
+			elasticsearchtest.SpecialistDocumentFactory(func(d *elasticsearchtest.SpecialistDocument) {
+				d.Name = "Dr. High Rating Old"
+				d.Rating = 5.0
+				d.UpdatedAt = now.Add(-1 * time.Hour)
+			}),
+			elasticsearchtest.SpecialistDocumentFactory(func(d *elasticsearchtest.SpecialistDocument) {
+				d.Name = "Dr. Mid Rating Recent"
+				d.Rating = 4.0
+				d.UpdatedAt = now.Add(-30 * time.Minute)
+			}),
+		}
+		elasticsearchtest.IndexSpecialists(t, ctx, client, indexName, docs)
+		time.Sleep(1 * time.Second)
+
+		mockLogger := observabilitymocks.NewMockLogger(ctrl)
+		repository := elasticsearch.NewRepository(client, indexName, mockLogger)
+
+		searchTerm := "Dr"
+		pagination, _ := cursor.NewCursorPaginationInput(nil, 10, cursor.DirectionNext)
+		input, _ := searchinput.NewListSearchInput(&searchTerm, nil, nil, pagination)
+
+		result, err := repository.Search(ctx, input)
+
+		require.NoError(t, err)
+		require.Len(t, result.Specialists, 4)
+
+		assert.Equal(t, "Dr. High Rating Recent", result.Specialists[0].Name)
+		assert.Equal(t, 5.0, result.Specialists[0].Rating)
+
+		assert.Equal(t, "Dr. High Rating Old", result.Specialists[1].Name)
+		assert.Equal(t, 5.0, result.Specialists[1].Rating)
+
+		assert.Equal(t, "Dr. Mid Rating Recent", result.Specialists[2].Name)
+		assert.Equal(t, 4.0, result.Specialists[2].Rating)
+
+		assert.Equal(t, "Dr. Low Rating Old", result.Specialists[3].Name)
+		assert.Equal(t, 3.0, result.Specialists[3].Rating)
+	})
+
+	t.Run("pagination with same rating uses updated_at as tiebreaker", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		ctx := context.Background()
+		client, indexName, cleanup := testHelper.SetupTestIndex(t, indexes.CreateSpecialistsIndex)
+		defer cleanup()
+
+		now := time.Now()
+		docs := []*elasticsearchtest.SpecialistDocument{
+			elasticsearchtest.SpecialistDocumentFactory(func(d *elasticsearchtest.SpecialistDocument) {
+				d.Name = "Dr. Same Rating 1"
+				d.Rating = 4.5
+				d.UpdatedAt = now.Add(-3 * time.Hour)
+			}),
+			elasticsearchtest.SpecialistDocumentFactory(func(d *elasticsearchtest.SpecialistDocument) {
+				d.Name = "Dr. Same Rating 2"
+				d.Rating = 4.5
+				d.UpdatedAt = now.Add(-2 * time.Hour)
+			}),
+			elasticsearchtest.SpecialistDocumentFactory(func(d *elasticsearchtest.SpecialistDocument) {
+				d.Name = "Dr. Same Rating 3"
+				d.Rating = 4.5
+				d.UpdatedAt = now.Add(-1 * time.Hour)
+			}),
+		}
+		elasticsearchtest.IndexSpecialists(t, ctx, client, indexName, docs)
+		time.Sleep(1 * time.Second)
+
+		mockLogger := observabilitymocks.NewMockLogger(ctrl)
+		repository := elasticsearch.NewRepository(client, indexName, mockLogger)
+
+		searchTerm := "Same Rating"
+		pagination, _ := cursor.NewCursorPaginationInput(nil, 2, cursor.DirectionNext)
+		input, _ := searchinput.NewListSearchInput(&searchTerm, nil, nil, pagination)
+
+		result, err := repository.Search(ctx, input)
+
+		require.NoError(t, err)
+		require.Len(t, result.Specialists, 2)
+
+		assert.Equal(t, "Dr. Same Rating 3", result.Specialists[0].Name)
+		assert.Equal(t, "Dr. Same Rating 2", result.Specialists[1].Name)
+
+		pagination2, _ := cursor.NewCursorPaginationInput(result.CursorOutput.NextCursor, 2, cursor.DirectionNext)
+		input2, _ := searchinput.NewListSearchInput(&searchTerm, nil, nil, pagination2)
+		result2, err := repository.Search(ctx, input2)
+
+		require.NoError(t, err)
+		require.Len(t, result2.Specialists, 1)
+		assert.Equal(t, "Dr. Same Rating 1", result2.Specialists[0].Name)
+	})
+
+	t.Run("no duplicates across pages with identical rating and updated_at", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		ctx := context.Background()
+		client, indexName, cleanup := testHelper.SetupTestIndex(t, indexes.CreateSpecialistsIndex)
+		defer cleanup()
+
+		now := time.Now()
+		docs := make([]*elasticsearchtest.SpecialistDocument, 5)
+		for i := range docs {
+			docs[i] = elasticsearchtest.SpecialistDocumentFactory(func(d *elasticsearchtest.SpecialistDocument) {
+				d.Name = "Dr. Identical"
+				d.Rating = 4.5
+				d.UpdatedAt = now
+			})
+		}
+		elasticsearchtest.IndexSpecialists(t, ctx, client, indexName, docs)
+		time.Sleep(1 * time.Second)
+
+		mockLogger := observabilitymocks.NewMockLogger(ctrl)
+		repository := elasticsearch.NewRepository(client, indexName, mockLogger)
+
+		searchTerm := "Identical"
+		allIDs := make(map[string]bool)
+		var nextCursor *string
+
+		for {
+			pagination, _ := cursor.NewCursorPaginationInput(nextCursor, 2, cursor.DirectionNext)
+			input, _ := searchinput.NewListSearchInput(&searchTerm, nil, nil, pagination)
+			result, err := repository.Search(ctx, input)
+
+			require.NoError(t, err)
+
+			for _, specialist := range result.Specialists {
+				assert.False(t, allIDs[specialist.ID], "Duplicate ID found: %s", specialist.ID)
+				allIDs[specialist.ID] = true
+			}
+
+			if !result.CursorOutput.HasNextPage {
+				break
+			}
+			nextCursor = result.CursorOutput.NextCursor
+		}
+
+		assert.Len(t, allIDs, 5)
+	})
+
 	t.Run("empty result set returns no cursors", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()

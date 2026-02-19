@@ -18,37 +18,25 @@ import (
 // Exemplo: Se você ordena por "created_at DESC, id DESC", o cursor deve
 // conter ambos os valores para garantir ordenação consistente.
 type DecodedCursorValue struct {
-	// ID é o identificador único do último item visualizado.
-	// Usado como fallback para garantir ordenação única.
-	ID string
-
-	// SortValue é o valor do campo usado para ordenação.
-	// Exemplo: timestamp, score, nome, etc.
+	ID        string
 	SortValue string
-
-	// SortField indica qual campo está sendo usado para ordenação.
-	// Exemplo: "created_at", "updated_at", "score", etc.
 	SortField string
 }
 
-// DecodeCursor decodifica o cursor de base64 para seus valores originais.
-//
-// O formato esperado é: "sortField:sortValue:id"
-// Exemplo: "created_at:1632489600:123"
-//
-// Retorna erro se o cursor estiver em formato inválido.
+type DecodedMultiSortCursor struct {
+	SortValues []interface{}
+}
+
 func (c *CursorPaginationInput) DecodeCursor() (*DecodedCursorValue, error) {
 	if c.IsFirstPage() {
 		return nil, nil
 	}
 
-	// Decodifica de base64
 	decoded, err := base64.StdEncoding.DecodeString(*c.EncodedCursor)
 	if err != nil {
 		return nil, ErrInvalidCursorFormat
 	}
 
-	// Parse do formato: "sortField:sortValue:id"
 	parts := strings.Split(string(decoded), ":")
 	if len(parts) != 3 {
 		return nil, ErrInvalidCursorFormat
@@ -59,4 +47,35 @@ func (c *CursorPaginationInput) DecodeCursor() (*DecodedCursorValue, error) {
 		SortValue: parts[1],
 		ID:        parts[2],
 	}, nil
+}
+
+func (c *CursorPaginationInput) DecodeMultiSortCursor() (*DecodedMultiSortCursor, error) {
+	if c.IsFirstPage() {
+		return nil, nil
+	}
+
+	decoded, err := base64.StdEncoding.DecodeString(*c.EncodedCursor)
+	if err != nil {
+		return nil, ErrInvalidCursorFormat
+	}
+
+	decodedStr := string(decoded)
+	if !strings.HasPrefix(decodedStr, "[") || !strings.HasSuffix(decodedStr, "]") {
+		return nil, ErrInvalidCursorFormat
+	}
+
+	content := strings.TrimPrefix(strings.TrimSuffix(decodedStr, "]"), "[")
+	if content == "" {
+		return &DecodedMultiSortCursor{SortValues: []interface{}{}}, nil
+	}
+
+	parts := strings.Split(content, " ")
+	sortValues := make([]interface{}, 0, len(parts))
+	for _, part := range parts {
+		if part != "" {
+			sortValues = append(sortValues, part)
+		}
+	}
+
+	return &DecodedMultiSortCursor{SortValues: sortValues}, nil
 }

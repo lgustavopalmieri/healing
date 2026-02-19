@@ -13,6 +13,7 @@ const (
 	FieldSpecialty   SearchableField = "specialty"
 	FieldDescription SearchableField = "description"
 	FieldKeywords    SearchableField = "keywords"
+	FieldRating      SearchableField = "rating"
 	FieldCreatedAt   SearchableField = "created_at"
 	FieldUpdatedAt   SearchableField = "updated_at"
 )
@@ -50,8 +51,19 @@ func (l *ListSearchInput) validateFilters() error {
 func (s SearchableField) IsValid() bool {
 	switch s {
 	case FieldName, FieldSpecialty, FieldDescription,
-		FieldKeywords, FieldCreatedAt, FieldUpdatedAt:
+		FieldKeywords, FieldRating, FieldCreatedAt, FieldUpdatedAt:
 		return true
+	default:
+		return false
+	}
+}
+
+func (s SearchableField) IsSortable() bool {
+	switch s {
+	case FieldName, FieldSpecialty, FieldRating, FieldCreatedAt, FieldUpdatedAt:
+		return true
+	case FieldDescription, FieldKeywords:
+		return false
 	default:
 		return false
 	}
@@ -59,9 +71,9 @@ func (s SearchableField) IsValid() bool {
 
 func (s SearchableField) SupportsCursorPagination() bool {
 	switch s {
-	case FieldCreatedAt, FieldUpdatedAt:
+	case FieldRating, FieldUpdatedAt:
 		return true
-	case FieldName, FieldSpecialty:
+	case FieldCreatedAt, FieldName, FieldSpecialty:
 		return false
 	case FieldDescription, FieldKeywords:
 		return false

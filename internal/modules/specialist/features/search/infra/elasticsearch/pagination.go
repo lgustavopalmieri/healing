@@ -1,9 +1,6 @@
 package elasticsearch
 
 import (
-	"fmt"
-	"time"
-
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/value-objects/pagination/cursor"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
 	searchinput "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/search/search_input"
@@ -25,14 +22,14 @@ func (r *Repository) buildCursorOutput(
 	var nextCursor *string
 	if hasNext && len(hits) > 0 {
 		lastHit := hits[len(hits)-1]
-		encoded := r.encodeCursorFromHit(lastHit, input)
+		encoded := r.encodeCursorFromHit(lastHit)
 		nextCursor = &encoded
 	}
 
 	var prevCursor *string
 	if !input.Pagination.IsFirstPage() && len(hits) > 0 {
 		firstHit := hits[0]
-		encoded := r.encodeCursorFromHit(firstHit, input)
+		encoded := r.encodeCursorFromHit(firstHit)
 		prevCursor = &encoded
 	}
 
@@ -45,18 +42,13 @@ func (r *Repository) buildCursorOutput(
 	)
 }
 
-func (r *Repository) encodeCursorFromHit(hit elasticsearchHit, input *searchinput.ListSearchInput) string {
-	if len(hit.Sort) < 2 {
-		return cursor.EncodeCursor(hit.Source.ID, hit.Source.CreatedAt.Format(time.RFC3339Nano), "created_at")
+func (r *Repository) encodeCursorFromHit(hit elasticsearchHit) string {
+	if len(hit.Sort) == 0 {
+		return ""
 	}
 
-	sortField := "created_at"
-	if input.HasSort() && len(input.Sort) > 0 {
-		sortField = string(input.Sort[0].Field)
-	}
+	sortValues := make([]interface{}, len(hit.Sort))
+	copy(sortValues, hit.Sort)
 
-	sortValue := fmt.Sprintf("%v", hit.Sort[0])
-	id := hit.Source.ID
-
-	return cursor.EncodeCursor(id, sortValue, sortField)
+	return cursor.EncodeCursorMultiSort(sortValues)
 }

@@ -138,7 +138,6 @@ func (r *Repository) buildFilterQuery(filter searchinput.Filter) map[string]inte
 func (r *Repository) buildSort(input *searchinput.ListSearchInput) []interface{} {
 	sort := make([]interface{}, 0)
 
-	// change to a domain rule
 	if input.HasSort() {
 		for _, s := range input.Sort {
 			fieldName := r.mapSortFieldToES(s.Field)
@@ -148,12 +147,6 @@ func (r *Repository) buildSort(input *searchinput.ListSearchInput) []interface{}
 				},
 			})
 		}
-	} else {
-		sort = append(sort, map[string]interface{}{
-			"created_at": map[string]interface{}{
-				"order": "desc",
-			},
-		})
 	}
 
 	sort = append(sort, map[string]interface{}{
@@ -170,7 +163,7 @@ func (r *Repository) buildSearchAfter(input *searchinput.ListSearchInput) []inte
 		return nil
 	}
 
-	decoded, err := input.Pagination.DecodeCursor()
+	decoded, err := input.Pagination.DecodeMultiSortCursor()
 	if err != nil {
 		return nil
 	}
@@ -179,9 +172,5 @@ func (r *Repository) buildSearchAfter(input *searchinput.ListSearchInput) []inte
 		return nil
 	}
 
-	if decoded.SortField == "created_at" || decoded.SortField == "updated_at" {
-		return []interface{}{decoded.SortValue, decoded.ID}
-	}
-
-	return []interface{}{decoded.SortValue, decoded.ID}
+	return decoded.SortValues
 }

@@ -84,6 +84,36 @@ func (l *ListSearchInput) normalize() {
 	for i := range l.Filters {
 		l.Filters[i].Value = strings.TrimSpace(l.Filters[i].Value)
 	}
+
+	l.ensureDefaultSort()
+}
+
+func (l *ListSearchInput) ensureDefaultSort() {
+	hasRating := false
+	hasUpdatedAt := false
+
+	for _, s := range l.Sort {
+		if s.Field == FieldRating {
+			hasRating = true
+		}
+		if s.Field == FieldUpdatedAt {
+			hasUpdatedAt = true
+		}
+	}
+
+	if !hasRating {
+		l.Sort = append(l.Sort, Sort{
+			Field: FieldRating,
+			Order: SortDesc,
+		})
+	}
+
+	if !hasUpdatedAt {
+		l.Sort = append(l.Sort, Sort{
+			Field: FieldUpdatedAt,
+			Order: SortDesc,
+		})
+	}
 }
 
 func (l *ListSearchInput) HasSearchTerm() bool {
