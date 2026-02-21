@@ -24,6 +24,7 @@ type elasticsearchSource struct {
 	Keywords      []string  `json:"keywords"`
 	AgreedToShare bool      `json:"agreed_to_share"`
 	Rating        float64   `json:"rating"`
+	Status        string    `json:"status"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 }

@@ -26,6 +26,7 @@ type SpecialistDocument struct {
 	Keywords      []string  `json:"keywords"`
 	AgreedToShare bool      `json:"agreed_to_share"`
 	Rating        float64   `json:"rating"`
+	Status        string    `json:"status"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 }
@@ -43,6 +44,7 @@ func SpecialistDocumentFactory(overrides ...func(*SpecialistDocument)) *Speciali
 		Keywords:      []string{"cardiologia", "coração", "hipertensão"},
 		AgreedToShare: true,
 		Rating:        4.5,
+		Status:        "active",
 		CreatedAt:     now,
 		UpdatedAt:     now,
 	}
@@ -69,6 +71,7 @@ func GetPredefinedSpecialists() []*SpecialistDocument {
 			Keywords:      []string{"cardiologia", "coração", "hipertensão", "arritmia"},
 			AgreedToShare: true,
 			Rating:        4.8,
+			Status:        "active",
 			CreatedAt:     now,
 			UpdatedAt:     now,
 		},
@@ -83,6 +86,7 @@ func GetPredefinedSpecialists() []*SpecialistDocument {
 			Keywords:      []string{"neurologia", "cérebro", "alzheimer", "parkinson", "epilepsia"},
 			AgreedToShare: true,
 			Rating:        4.9,
+			Status:        "active",
 			CreatedAt:     now,
 			UpdatedAt:     now,
 		},
@@ -97,6 +101,7 @@ func GetPredefinedSpecialists() []*SpecialistDocument {
 			Keywords:      []string{"ortopedia", "joelho", "quadril", "cirurgia", "artroscopia"},
 			AgreedToShare: true,
 			Rating:        4.6,
+			Status:        "active",
 			CreatedAt:     now,
 			UpdatedAt:     now,
 		},
@@ -111,6 +116,7 @@ func GetPredefinedSpecialists() []*SpecialistDocument {
 			Keywords:      []string{"pediatria", "criança", "bebê", "vacinação", "desenvolvimento"},
 			AgreedToShare: true,
 			Rating:        5.0,
+			Status:        "active",
 			CreatedAt:     now,
 			UpdatedAt:     now,
 		},
@@ -125,6 +131,7 @@ func GetPredefinedSpecialists() []*SpecialistDocument {
 			Keywords:      []string{"dermatologia", "pele", "acne", "estética", "laser"},
 			AgreedToShare: true,
 			Rating:        4.3,
+			Status:        "active",
 			CreatedAt:     now,
 			UpdatedAt:     now,
 		},
@@ -163,6 +170,7 @@ func ToSpecialistEntity(doc *SpecialistDocument) *domain.Specialist {
 		Keywords:      doc.Keywords,
 		AgreedToShare: doc.AgreedToShare,
 		Rating:        doc.Rating,
+		Status:        domain.SpecialistStatus(doc.Status),
 		CreatedAt:     doc.CreatedAt,
 		UpdatedAt:     doc.UpdatedAt,
 	}

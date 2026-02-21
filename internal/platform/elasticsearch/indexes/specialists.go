@@ -76,6 +76,9 @@ func CreateSpecialistsIndex(ctx context.Context, client *elasticsearch.Client, i
 				"rating": map[string]interface{}{
 					"type": "float",
 				},
+				"status": map[string]interface{}{
+					"type": "keyword",
+				},
 				"created_at": map[string]interface{}{
 					"type": "date",
 				},

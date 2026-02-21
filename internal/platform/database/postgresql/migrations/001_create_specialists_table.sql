@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS specialists (
     keywords TEXT[] DEFAULT '{}',
     agreed_to_share BOOLEAN NOT NULL DEFAULT false,
     rating DECIMAL(3,2) NOT NULL DEFAULT 0.0 CHECK (rating >= 0.0 AND rating <= 5.0),
+    status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'unavailable', 'deleted', 'banned')),
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
@@ -19,6 +20,7 @@ CREATE INDEX IF NOT EXISTS idx_specialists_email ON specialists(email);
 CREATE INDEX IF NOT EXISTS idx_specialists_license_number ON specialists(license_number);
 CREATE INDEX IF NOT EXISTS idx_specialists_specialty ON specialists(specialty);
 CREATE INDEX IF NOT EXISTS idx_specialists_keywords ON specialists USING GIN(keywords);
+CREATE INDEX IF NOT EXISTS idx_specialists_status ON specialists(status);
 
 -- +goose Down
 DROP TABLE IF EXISTS specialists;

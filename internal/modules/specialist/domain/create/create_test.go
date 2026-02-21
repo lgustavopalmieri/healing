@@ -50,6 +50,7 @@ func TestCreateSpecialist(t *testing.T) {
 				assert.Equal(t, []string{"coração", "arritmia"}, specialist.Keywords)
 				assert.True(t, specialist.AgreedToShare)
 				assert.Equal(t, 0.0, specialist.Rating)
+				assert.Equal(t, domain.StatusPending, specialist.Status)
 				assert.False(t, specialist.CreatedAt.IsZero())
 				assert.False(t, specialist.UpdatedAt.IsZero())
 				assert.Equal(t, specialist.CreatedAt, specialist.UpdatedAt)

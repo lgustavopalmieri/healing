@@ -17,11 +17,11 @@ func (r *SpecialistCreateRepository) Save(ctx context.Context, specialist *domai
 	query := `
 		INSERT INTO specialists (
 			id, name, email, phone, specialty, license_number, 
-			description, keywords, agreed_to_share, rating, created_at, updated_at
+			description, keywords, agreed_to_share, rating, status, created_at, updated_at
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
 		) RETURNING id, name, email, phone, specialty, license_number, 
-		           description, keywords, agreed_to_share, rating, created_at, updated_at`
+		           description, keywords, agreed_to_share, rating, status, created_at, updated_at`
 
 	var savedSpecialist domain.Specialist
 	var keywords pq.StringArray
@@ -39,6 +39,7 @@ func (r *SpecialistCreateRepository) Save(ctx context.Context, specialist *domai
 		pq.Array(specialist.Keywords),
 		specialist.AgreedToShare,
 		specialist.Rating,
+		specialist.Status,
 		specialist.CreatedAt,
 		specialist.UpdatedAt,
 	).Scan(
@@ -52,6 +53,7 @@ func (r *SpecialistCreateRepository) Save(ctx context.Context, specialist *domai
 		&keywords,
 		&savedSpecialist.AgreedToShare,
 		&savedSpecialist.Rating,
+		&savedSpecialist.Status,
 		&savedSpecialist.CreatedAt,
 		&savedSpecialist.UpdatedAt,
 	)

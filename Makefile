@@ -37,3 +37,5 @@ es-logs:
 es-health:
 	@echo "🏥 Checking Elasticsearch health..."
 	@curl -s http://localhost:9200/_cluster/health?pretty
+
+

@@ -16,6 +16,7 @@ message Specialist {
     bool agreed_to_share = 9;
     google.protobuf.Timestamp created_at = 10;
     google.protobuf.Timestamp updated_at = 11;
+    string status = 12;
 }
 
 message CreateSpecialistRequest {

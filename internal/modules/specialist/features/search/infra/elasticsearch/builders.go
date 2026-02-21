@@ -19,6 +19,12 @@ func (r *Repository) buildQuery(input *searchinput.ListSearchInput) map[string]i
 func (r *Repository) buildBoolQuery(input *searchinput.ListSearchInput) map[string]interface{} {
 	must := make([]interface{}, 0)
 
+	must = append(must, map[string]interface{}{
+		"term": map[string]interface{}{
+			"status": "active",
+		},
+	})
+
 	if input.HasSearchTerm() {
 		searchTerm := *input.SearchTerm
 

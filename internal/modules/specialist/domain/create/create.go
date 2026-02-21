@@ -39,6 +39,7 @@ func CreateSpecialist(input CreateSpecialistInput) (*domain.Specialist, error) {
 		Keywords:      normalizedKeywords,
 		AgreedToShare: input.AgreedToShare,
 		Rating:        0.0,
+		Status:        domain.StatusPending,
 		CreatedAt:     now,
 		UpdatedAt:     now,
 	}

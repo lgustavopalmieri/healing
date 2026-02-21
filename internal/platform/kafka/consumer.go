@@ -8,6 +8,8 @@ import (
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
 )
 
+// repo pocs/kafka-poc
+
 type KafkaConsumer struct {
 	consumer *kafka.Consumer
 	manager  *event.ListenerManager

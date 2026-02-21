@@ -46,6 +46,7 @@ func ToProtoSpecialist(s *domain.Specialist) *pb.Specialist {
 		Description:   s.Description,
 		Keywords:      append([]string(nil), s.Keywords...),
 		AgreedToShare: s.AgreedToShare,
+		Status:        string(s.Status),
 		CreatedAt:     timestamppb.New(s.CreatedAt),
 		UpdatedAt:     timestamppb.New(s.UpdatedAt),
 	}

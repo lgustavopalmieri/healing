@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        v3.12.4
-// source: proto/specialist.proto
+// source: internal/modules/specialist/features/create/infra/grpc_service/proto/specialist.proto
 
 package pb
 
@@ -42,7 +42,7 @@ type Specialist struct {
 
 func (x *Specialist) Reset() {
 	*x = Specialist{}
-	mi := &file_proto_specialist_proto_msgTypes[0]
+	mi := &file_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -54,7 +54,7 @@ func (x *Specialist) String() string {
 func (*Specialist) ProtoMessage() {}
 
 func (x *Specialist) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_specialist_proto_msgTypes[0]
+	mi := &file_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -67,7 +67,7 @@ func (x *Specialist) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Specialist.ProtoReflect.Descriptor instead.
 func (*Specialist) Descriptor() ([]byte, []int) {
-	return file_proto_specialist_proto_rawDescGZIP(), []int{0}
+	return file_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *Specialist) GetId() string {
@@ -170,7 +170,7 @@ type CreateSpecialistRequest struct {
 
 func (x *CreateSpecialistRequest) Reset() {
 	*x = CreateSpecialistRequest{}
-	mi := &file_proto_specialist_proto_msgTypes[1]
+	mi := &file_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -182,7 +182,7 @@ func (x *CreateSpecialistRequest) String() string {
 func (*CreateSpecialistRequest) ProtoMessage() {}
 
 func (x *CreateSpecialistRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_specialist_proto_msgTypes[1]
+	mi := &file_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -195,7 +195,7 @@ func (x *CreateSpecialistRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateSpecialistRequest.ProtoReflect.Descriptor instead.
 func (*CreateSpecialistRequest) Descriptor() ([]byte, []int) {
-	return file_proto_specialist_proto_rawDescGZIP(), []int{1}
+	return file_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *CreateSpecialistRequest) GetName() string {
@@ -263,7 +263,7 @@ type CreateSpecialistResponse struct {
 
 func (x *CreateSpecialistResponse) Reset() {
 	*x = CreateSpecialistResponse{}
-	mi := &file_proto_specialist_proto_msgTypes[2]
+	mi := &file_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -275,7 +275,7 @@ func (x *CreateSpecialistResponse) String() string {
 func (*CreateSpecialistResponse) ProtoMessage() {}
 
 func (x *CreateSpecialistResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_specialist_proto_msgTypes[2]
+	mi := &file_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -288,7 +288,7 @@ func (x *CreateSpecialistResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateSpecialistResponse.ProtoReflect.Descriptor instead.
 func (*CreateSpecialistResponse) Descriptor() ([]byte, []int) {
-	return file_proto_specialist_proto_rawDescGZIP(), []int{2}
+	return file_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *CreateSpecialistResponse) GetSpecialist() *Specialist {
@@ -298,11 +298,11 @@ func (x *CreateSpecialistResponse) GetSpecialist() *Specialist {
 	return nil
 }
 
-var File_proto_specialist_proto protoreflect.FileDescriptor
+var File_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto protoreflect.FileDescriptor
 
-const file_proto_specialist_proto_rawDesc = "" +
+const file_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto_rawDesc = "" +
 	"\n" +
-	"\x16proto/specialist.proto\x12\x02pb\x1a\x1fgoogle/protobuf/timestamp.proto\"\x95\x03\n" +
+	"Uinternal/modules/specialist/features/create/infra/grpc_service/proto/specialist.proto\x12\x02pb\x1a\x1fgoogle/protobuf/timestamp.proto\"\x95\x03\n" +
 	"\n" +
 	"Specialist\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
@@ -337,25 +337,25 @@ const file_proto_specialist_proto_rawDesc = "" +
 	"\x10CreateSpecialist\x12\x1b.pb.CreateSpecialistRequest\x1a\x1c.pb.CreateSpecialistResponse\"\x00B\x06Z\x04./pbb\x06proto3"
 
 var (
-	file_proto_specialist_proto_rawDescOnce sync.Once
-	file_proto_specialist_proto_rawDescData []byte
+	file_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto_rawDescOnce sync.Once
+	file_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto_rawDescData []byte
 )
 
-func file_proto_specialist_proto_rawDescGZIP() []byte {
-	file_proto_specialist_proto_rawDescOnce.Do(func() {
-		file_proto_specialist_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_proto_specialist_proto_rawDesc), len(file_proto_specialist_proto_rawDesc)))
+func file_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto_rawDescGZIP() []byte {
+	file_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto_rawDescOnce.Do(func() {
+		file_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto_rawDesc), len(file_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto_rawDesc)))
 	})
-	return file_proto_specialist_proto_rawDescData
+	return file_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto_rawDescData
 }
 
-var file_proto_specialist_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
-var file_proto_specialist_proto_goTypes = []any{
+var file_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto_goTypes = []any{
 	(*Specialist)(nil),               // 0: pb.Specialist
 	(*CreateSpecialistRequest)(nil),  // 1: pb.CreateSpecialistRequest
 	(*CreateSpecialistResponse)(nil), // 2: pb.CreateSpecialistResponse
 	(*timestamp.Timestamp)(nil),      // 3: google.protobuf.Timestamp
 }
-var file_proto_specialist_proto_depIdxs = []int32{
+var file_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto_depIdxs = []int32{
 	3, // 0: pb.Specialist.created_at:type_name -> google.protobuf.Timestamp
 	3, // 1: pb.Specialist.updated_at:type_name -> google.protobuf.Timestamp
 	0, // 2: pb.CreateSpecialistResponse.specialist:type_name -> pb.Specialist
@@ -368,26 +368,28 @@ var file_proto_specialist_proto_depIdxs = []int32{
 	0, // [0:3] is the sub-list for field type_name
 }
 
-func init() { file_proto_specialist_proto_init() }
-func file_proto_specialist_proto_init() {
-	if File_proto_specialist_proto != nil {
+func init() {
+	file_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto_init()
+}
+func file_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto_init() {
+	if File_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_specialist_proto_rawDesc), len(file_proto_specialist_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto_rawDesc), len(file_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_proto_specialist_proto_goTypes,
-		DependencyIndexes: file_proto_specialist_proto_depIdxs,
-		MessageInfos:      file_proto_specialist_proto_msgTypes,
+		GoTypes:           file_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto_goTypes,
+		DependencyIndexes: file_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto_depIdxs,
+		MessageInfos:      file_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto_msgTypes,
 	}.Build()
-	File_proto_specialist_proto = out.File
-	file_proto_specialist_proto_goTypes = nil
-	file_proto_specialist_proto_depIdxs = nil
+	File_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto = out.File
+	file_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto_goTypes = nil
+	file_internal_modules_specialist_features_create_infra_grpc_service_proto_specialist_proto_depIdxs = nil
 }
