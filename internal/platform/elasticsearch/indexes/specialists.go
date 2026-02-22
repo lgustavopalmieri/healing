@@ -13,7 +13,7 @@ func CreateSpecialistsIndex(ctx context.Context, client *elasticsearch.Client, i
 	mapping := map[string]interface{}{
 		"settings": map[string]interface{}{
 			"number_of_shards":   1,
-			"number_of_replicas": 0,
+			"number_of_replicas": 1,
 			"analysis": map[string]interface{}{
 				"analyzer": map[string]interface{}{
 					"standard_analyzer": map[string]interface{}{

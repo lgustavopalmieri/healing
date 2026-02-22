@@ -9,7 +9,14 @@ import (
 )
 
 func (c *SearchSpecialistsCommand) Execute(ctx context.Context, input *searchinput.ListSearchInput) (*searchoutput.ListSearchOutput, error) {
-	output, err := c.repository.Search(ctx, input)
+	i, err := searchinput.NewListSearchInput(input.SearchTerm, input.Filters, input.Sort, input.Pagination)
+	if err != nil {
+		c.logger.Error(ctx, ErrSearchExecutionMessage,
+			observability.Field{Key: "error", Value: err.Error()})
+		return nil, ErrSearchExecution
+	}
+
+	output, err := c.repository.Search(ctx, i)
 	if err != nil {
 		c.logger.Error(ctx, ErrSearchExecutionMessage,
 			observability.Field{Key: "error", Value: err.Error()})
