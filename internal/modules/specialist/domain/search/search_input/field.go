@@ -71,9 +71,9 @@ func (s SearchableField) IsSortable() bool {
 
 func (s SearchableField) SupportsCursorPagination() bool {
 	switch s {
-	case FieldRating, FieldUpdatedAt:
+	case FieldRating, FieldUpdatedAt, FieldCreatedAt:
 		return true
-	case FieldCreatedAt, FieldName, FieldSpecialty:
+	case FieldName, FieldSpecialty:
 		return false
 	case FieldDescription, FieldKeywords:
 		return false

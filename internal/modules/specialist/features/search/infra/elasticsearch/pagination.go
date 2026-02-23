@@ -46,7 +46,7 @@ func (r *Repository) encodeCursorFromHit(hit elasticsearchHit) string {
 		return ""
 	}
 
-	sortValues := make([]interface{}, len(hit.Sort))
+	sortValues := make([]any, len(hit.Sort))
 	copy(sortValues, hit.Sort)
 
 	return cursor.EncodeCursorMultiSort(sortValues)

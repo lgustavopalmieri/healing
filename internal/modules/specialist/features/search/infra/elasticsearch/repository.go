@@ -14,7 +14,12 @@ import (
 )
 
 func (r *Repository) Search(ctx context.Context, input *searchinput.ListSearchInput) (*searchoutput.ListSearchOutput, error) {
-	query := r.buildQuery(input)
+	query, err := r.buildQuery(input)
+	if err != nil {
+		r.logger.Error(ctx, "failed to build elasticsearch query",
+			observability.Field{Key: "error", Value: err.Error()})
+		return nil, fmt.Errorf("%w: %w", ErrInvalidCursor, err)
+	}
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(query); err != nil {

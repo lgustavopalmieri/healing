@@ -1,26 +1,34 @@
 package elasticsearch
 
-import searchinput "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/search/search_input"
+import (
+	"fmt"
 
-func (r *Repository) buildQuery(input *searchinput.ListSearchInput) map[string]interface{} {
-	query := map[string]interface{}{
+	searchinput "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/search/search_input"
+)
+
+func (r *Repository) buildQuery(input *searchinput.ListSearchInput) (map[string]any, error) {
+	query := map[string]any{
 		"query": r.buildBoolQuery(input),
 		"sort":  r.buildSort(input),
 		"size":  input.Pagination.PageSize + 1,
 	}
 
-	if searchAfter := r.buildSearchAfter(input); searchAfter != nil {
+	searchAfter, err := r.buildSearchAfter(input)
+	if err != nil {
+		return nil, fmt.Errorf("failed to build search_after: %w", err)
+	}
+	if searchAfter != nil {
 		query["search_after"] = searchAfter
 	}
 
-	return query
+	return query, nil
 }
 
-func (r *Repository) buildBoolQuery(input *searchinput.ListSearchInput) map[string]interface{} {
-	must := make([]interface{}, 0)
+func (r *Repository) buildBoolQuery(input *searchinput.ListSearchInput) map[string]any {
+	must := make([]any, 0)
 
-	must = append(must, map[string]interface{}{
-		"term": map[string]interface{}{
+	must = append(must, map[string]any{
+		"term": map[string]any{
 			"status": "active",
 		},
 	})
@@ -29,35 +37,35 @@ func (r *Repository) buildBoolQuery(input *searchinput.ListSearchInput) map[stri
 		searchTerm := *input.SearchTerm
 
 		if len(searchTerm) <= 3 {
-			must = append(must, map[string]interface{}{
-				"bool": map[string]interface{}{
-					"should": []interface{}{
-						map[string]interface{}{
-							"wildcard": map[string]interface{}{
-								"name": map[string]interface{}{
+			must = append(must, map[string]any{
+				"bool": map[string]any{
+					"should": []any{
+						map[string]any{
+							"wildcard": map[string]any{
+								"name": map[string]any{
 									"value":            searchTerm + "*",
 									"case_insensitive": true,
 								},
 							},
 						},
-						map[string]interface{}{
-							"wildcard": map[string]interface{}{
-								"description": map[string]interface{}{
+						map[string]any{
+							"wildcard": map[string]any{
+								"description": map[string]any{
 									"value":            "*" + searchTerm + "*",
 									"case_insensitive": true,
 								},
 							},
 						},
-						map[string]interface{}{
-							"wildcard": map[string]interface{}{
-								"specialty": map[string]interface{}{
+						map[string]any{
+							"wildcard": map[string]any{
+								"specialty": map[string]any{
 									"value":            "*" + searchTerm + "*",
 									"case_insensitive": true,
 								},
 							},
 						},
-						map[string]interface{}{
-							"term": map[string]interface{}{
+						map[string]any{
+							"term": map[string]any{
 								"keywords": searchTerm,
 							},
 						},
@@ -66,8 +74,8 @@ func (r *Repository) buildBoolQuery(input *searchinput.ListSearchInput) map[stri
 				},
 			})
 		} else {
-			must = append(must, map[string]interface{}{
-				"multi_match": map[string]interface{}{
+			must = append(must, map[string]any{
+				"multi_match": map[string]any{
 					"query":     searchTerm,
 					"fields":    []string{"name^3", "description^2", "specialty^2", "keywords"},
 					"type":      "best_fields",
@@ -85,78 +93,78 @@ func (r *Repository) buildBoolQuery(input *searchinput.ListSearchInput) map[stri
 	}
 
 	if len(must) == 0 {
-		return map[string]interface{}{
-			"match_all": map[string]interface{}{},
+		return map[string]any{
+			"match_all": map[string]any{},
 		}
 	}
 
-	return map[string]interface{}{
-		"bool": map[string]interface{}{
+	return map[string]any{
+		"bool": map[string]any{
 			"must": must,
 		},
 	}
 }
 
-func (r *Repository) buildFilterQuery(filter searchinput.Filter) map[string]interface{} {
+func (r *Repository) buildFilterQuery(filter searchinput.Filter) map[string]any {
 	switch filter.Field {
 	case searchinput.FieldKeywords:
-		return map[string]interface{}{
-			"term": map[string]interface{}{
+		return map[string]any{
+			"term": map[string]any{
 				"keywords": filter.Value,
 			},
 		}
 	case searchinput.FieldSpecialty:
-		return map[string]interface{}{
-			"match": map[string]interface{}{
-				"specialty": map[string]interface{}{
+		return map[string]any{
+			"match": map[string]any{
+				"specialty": map[string]any{
 					"query":    filter.Value,
 					"operator": "and",
 				},
 			},
 		}
 	case searchinput.FieldName:
-		return map[string]interface{}{
-			"match": map[string]interface{}{
-				"name": map[string]interface{}{
+		return map[string]any{
+			"match": map[string]any{
+				"name": map[string]any{
 					"query":    filter.Value,
 					"operator": "and",
 				},
 			},
 		}
 	case searchinput.FieldDescription:
-		return map[string]interface{}{
-			"match": map[string]interface{}{
-				"description": map[string]interface{}{
+		return map[string]any{
+			"match": map[string]any{
+				"description": map[string]any{
 					"query":    filter.Value,
 					"operator": "and",
 				},
 			},
 		}
 	default:
-		return map[string]interface{}{
-			"match": map[string]interface{}{
+		return map[string]any{
+			"match": map[string]any{
 				string(filter.Field): filter.Value,
 			},
 		}
 	}
 }
 
-func (r *Repository) buildSort(input *searchinput.ListSearchInput) []interface{} {
-	sort := make([]interface{}, 0)
+func (r *Repository) buildSort(input *searchinput.ListSearchInput) []any {
+	sort := make([]any, 0)
 
 	if input.HasSort() {
 		for _, s := range input.Sort {
 			fieldName := r.mapSortFieldToES(s.Field)
-			sort = append(sort, map[string]interface{}{
-				fieldName: map[string]interface{}{
+			sort = append(sort, map[string]any{
+				fieldName: map[string]any{
 					"order": string(s.Order),
 				},
 			})
 		}
 	}
 
-	sort = append(sort, map[string]interface{}{
-		"id": map[string]interface{}{
+	sort = append(sort, map[string]any{
+		"id": map[string]any{
 			"order": "asc",
 		},
 	})
@@ -164,19 +172,19 @@ func (r *Repository) buildSort(input *searchinput.ListSearchInput) []interface{}
 	return sort
 }
 
-func (r *Repository) buildSearchAfter(input *searchinput.ListSearchInput) []interface{} {
+func (r *Repository) buildSearchAfter(input *searchinput.ListSearchInput) ([]any, error) {
 	if input.Pagination.IsFirstPage() {
-		return nil
+		return nil, nil
 	}
 
 	decoded, err := input.Pagination.DecodeMultiSortCursor()
 	if err != nil {
-		return nil
+		return nil, fmt.Errorf("%w: %w", ErrInvalidCursor, err)
 	}
 
 	if decoded == nil {
-		return nil
+		return nil, nil
 	}
 
-	return decoded.SortValues
+	return decoded.SortValues, nil
 }

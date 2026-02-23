@@ -10,7 +10,7 @@ type elasticsearchResponse struct {
 
 type elasticsearchHit struct {
 	Source elasticsearchSource `json:"_source"`
-	Sort   []interface{}       `json:"sort"`
+	Sort   []any               `json:"sort"`
 }
 
 type elasticsearchSource struct {

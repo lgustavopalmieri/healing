@@ -48,10 +48,16 @@ func (l *ListSearchInput) validateSortConsistency() error {
 		return nil
 	}
 
+	hasCursorCompatibleSort := false
 	for _, sort := range l.Sort {
-		if !sort.Field.SupportsCursorPagination() {
-			return search.NewErrFieldNotSupportsCursor(string(sort.Field))
+		if sort.Field.SupportsCursorPagination() {
+			hasCursorCompatibleSort = true
+			break
 		}
+	}
+
+	if !hasCursorCompatibleSort {
+		return search.NewErrFieldNotSupportsCursor(string(l.Sort[0].Field))
 	}
 
 	return nil
