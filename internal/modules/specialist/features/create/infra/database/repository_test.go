@@ -33,13 +33,15 @@ func specialistFactory(overrides ...func(*domain.Specialist)) *domain.Specialist
 	specialist := &domain.Specialist{
 		ID:            uniqueID,
 		Name:          "Dr. João Silva",
-		Email:         "joao.silva+" + uniqueID[:8] + "@example.com", // Unique email
+		Email:         "joao.silva+" + uniqueID[:8] + "@example.com",
 		Phone:         "+5511999999999",
 		Specialty:     "Cardiologia",
-		LicenseNumber: "CRM" + uniqueID[:6], // Unique license number
+		LicenseNumber: "CRM" + uniqueID[:6],
 		Description:   "Cardiologista especializado em arritmias",
 		Keywords:      []string{"cardiologia", "arritmia", "coração"},
 		AgreedToShare: true,
+		Rating:        4.5,
+		Status:        domain.StatusActive,
 		CreatedAt:     now,
 		UpdatedAt:     now,
 	}
@@ -228,7 +230,7 @@ func TestSpecialistCreateRepository_ValidateUniqueness(t *testing.T) {
 			id, email, licenseNumber := tt.setupMocks(repo)
 
 			err := repo.ValidateUniqueness(context.Background(), id, email, licenseNumber)
-			
+
 			if tt.expectError {
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), tt.expectedErr)

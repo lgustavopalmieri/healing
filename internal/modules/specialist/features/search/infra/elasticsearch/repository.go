@@ -57,7 +57,14 @@ func (r *Repository) Search(ctx context.Context, input *searchinput.ListSearchIn
 		specialists = append(specialists, specialist)
 	}
 
-	cursorOutput := r.buildCursorOutput(input, specialists, esResponse.Hits.Hits)
+	pageSize := input.Pagination.PageSize
+	hasNext := len(specialists) > pageSize
+
+	if hasNext {
+		specialists = specialists[:pageSize]
+	}
+
+	cursorOutput := r.buildCursorOutput(input, specialists, esResponse.Hits.Hits, hasNext)
 
 	return searchoutput.NewListSearchOutput(specialists, cursorOutput), nil
 }

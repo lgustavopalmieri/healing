@@ -10,12 +10,11 @@ func (r *Repository) buildCursorOutput(
 	input *searchinput.ListSearchInput,
 	specialists []*domain.Specialist,
 	hits []elasticsearchHit,
+	hasNext bool,
 ) *cursor.CursorPaginationOutput {
 	pageSize := input.Pagination.PageSize
-	hasNext := len(specialists) > pageSize
 
-	if hasNext {
-		specialists = specialists[:pageSize]
+	if hasNext && len(hits) > pageSize {
 		hits = hits[:pageSize]
 	}
 
