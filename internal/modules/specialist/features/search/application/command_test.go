@@ -87,9 +87,7 @@ func TestSearchSpecialistsCommand_Execute(t *testing.T) {
 			name:  "success - returns specialists when search finds results",
 			input: searchInputFactory(),
 			setupMocks: func(repo *mocks.MockSpecialistSearchRepositoryInterface, logger *loggerMocks.MockLogger) {
-				logger.EXPECT().Info(gomock.Any(), StartingSearchMessage).Times(1)
 				repo.EXPECT().Search(gomock.Any(), gomock.Any()).Return(searchOutputFactory(), nil).Times(1)
-				logger.EXPECT().Info(gomock.Any(), SearchCompletedMessage, gomock.Any()).Times(1)
 			},
 			expectError: false,
 			expectedErr: nil,
@@ -104,9 +102,7 @@ func TestSearchSpecialistsCommand_Execute(t *testing.T) {
 			name:  "success - returns empty output when no specialists match",
 			input: searchInputFactory(),
 			setupMocks: func(repo *mocks.MockSpecialistSearchRepositoryInterface, logger *loggerMocks.MockLogger) {
-				logger.EXPECT().Info(gomock.Any(), StartingSearchMessage).Times(1)
 				repo.EXPECT().Search(gomock.Any(), gomock.Any()).Return(emptySearchOutputFactory(), nil).Times(1)
-				logger.EXPECT().Info(gomock.Any(), SearchNoResultsMessage).Times(1)
 			},
 			expectError: false,
 			expectedErr: nil,
@@ -120,7 +116,6 @@ func TestSearchSpecialistsCommand_Execute(t *testing.T) {
 			name:  "failure - returns ErrInvalidSearchInput when input is nil",
 			input: nil,
 			setupMocks: func(repo *mocks.MockSpecialistSearchRepositoryInterface, logger *loggerMocks.MockLogger) {
-				logger.EXPECT().Info(gomock.Any(), StartingSearchMessage).Times(1)
 				logger.EXPECT().Error(gomock.Any(), ErrInvalidSearchInputMessage).Times(1)
 				repo.EXPECT().Search(gomock.Any(), gomock.Any()).Times(0)
 			},
@@ -134,7 +129,6 @@ func TestSearchSpecialistsCommand_Execute(t *testing.T) {
 			name:  "failure - returns ErrSearchExecution when repository returns infrastructure error",
 			input: searchInputFactory(),
 			setupMocks: func(repo *mocks.MockSpecialistSearchRepositoryInterface, logger *loggerMocks.MockLogger) {
-				logger.EXPECT().Info(gomock.Any(), StartingSearchMessage).Times(1)
 				repo.EXPECT().Search(gomock.Any(), gomock.Any()).Return(nil, errors.New("connection refused")).Times(1)
 				logger.EXPECT().Error(gomock.Any(), ErrSearchExecutionMessage, gomock.Any()).Times(1)
 			},
@@ -148,7 +142,6 @@ func TestSearchSpecialistsCommand_Execute(t *testing.T) {
 			name:  "failure - returns ErrInvalidSearchInput when repository returns domain error",
 			input: searchInputFactory(),
 			setupMocks: func(repo *mocks.MockSpecialistSearchRepositoryInterface, logger *loggerMocks.MockLogger) {
-				logger.EXPECT().Info(gomock.Any(), StartingSearchMessage).Times(1)
 				repo.EXPECT().Search(gomock.Any(), gomock.Any()).Return(nil, search.ErrEmptySearchCriteria).Times(1)
 				logger.EXPECT().Error(gomock.Any(), ErrSearchExecutionMessage, gomock.Any()).Times(1)
 			},

@@ -27,10 +27,5 @@ func (c *SearchSpecialistsCommand) Execute(ctx context.Context, input *searchinp
 		return nil, ErrSearchExecution
 	}
 
-	if output.IsEmpty() {
-		c.logger.Info(ctx, SearchNoResultsMessage)
-		return output, nil
-	}
-
 	return output, nil
 }
