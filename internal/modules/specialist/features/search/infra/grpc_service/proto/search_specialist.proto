@@ -1,0 +1,57 @@
+syntax = "proto3";
+package searchpb;
+option go_package = "./pb";
+
+import "google/protobuf/timestamp.proto";
+
+message Specialist {
+    string id = 1;
+    string name = 2;
+    string email = 3;
+    string phone = 4;
+    string specialty = 5;
+    string license_number = 6;
+    string description = 7;
+    repeated string keywords = 8;
+    bool agreed_to_share = 9;
+    double rating = 10;
+    string status = 11;
+    google.protobuf.Timestamp created_at = 12;
+    google.protobuf.Timestamp updated_at = 13;
+}
+
+message SearchFilter {
+    string field = 1;
+    string value = 2;
+}
+
+message SortCriteria {
+    string field = 1;
+    string order = 2;
+}
+
+message SearchSpecialistsRequest {
+    string search_term = 1;
+    repeated SearchFilter filters = 2;
+    repeated SortCriteria sort = 3;
+    int32 page_size = 4;
+    string cursor = 5;
+    string direction = 6;
+}
+
+message PaginationInfo {
+    string next_cursor = 1;
+    string previous_cursor = 2;
+    bool has_next_page = 3;
+    bool has_previous_page = 4;
+    int32 total_items_in_page = 5;
+}
+
+message SearchSpecialistsResponse {
+    repeated Specialist specialists = 1;
+    PaginationInfo pagination = 2;
+}
+
+service SearchSpecialistService {
+    rpc SearchSpecialists(SearchSpecialistsRequest) returns (SearchSpecialistsResponse) {}
+}
