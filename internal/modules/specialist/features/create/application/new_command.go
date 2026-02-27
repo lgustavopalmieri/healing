@@ -6,25 +6,22 @@ import (
 )
 
 type CreateSpecialistCommand struct {
-	repository      SpecialistCreateRepositoryInterface
-	externalGateway SpecialistCreateExternalGatewayInterface
-	eventPublisher  event.EventDispatcher
-	tracer          observability.Tracer
-	logger          observability.Logger
+	repository     SpecialistCreateRepositoryInterface
+	eventPublisher event.EventDispatcher
+	tracer         observability.Tracer
+	logger         observability.Logger
 }
 
 func NewCreateSpecialistCommand(
 	repository SpecialistCreateRepositoryInterface,
-	externalGateway SpecialistCreateExternalGatewayInterface,
 	eventPublisher event.EventDispatcher,
 	tracer observability.Tracer,
 	logger observability.Logger,
 ) *CreateSpecialistCommand {
 	return &CreateSpecialistCommand{
-		repository:      repository,
-		externalGateway: externalGateway,
-		eventPublisher:  eventPublisher,
-		tracer:          tracer,
-		logger:          logger,
+		repository:     repository,
+		eventPublisher: eventPublisher,
+		tracer:         tracer,
+		logger:         logger,
 	}
 }

@@ -170,7 +170,7 @@ func TestSpecialistCreateGRPCService_CreateSpecialist(t *testing.T) {
 			},
 		},
 		{
-			name:  "failure - propagates ErrExternalValidationTimeout from command to handler",
+			name:  "failure - propagates ErrSaveSpecialist from command to handler",
 			input: createSpecialistRequestFactory(),
 			setupContext: func() context.Context {
 				return context.Background()
@@ -188,11 +188,11 @@ func TestSpecialistCreateGRPCService_CreateSpecialist(t *testing.T) {
 				}
 				mockCommand.EXPECT().
 					Execute(gomock.Any(), expectedDTO).
-					Return(nil, application.ErrExternalValidationTimeout).
+					Return(nil, application.ErrSaveSpecialist).
 					Times(1)
 			},
 			expectError: true,
-			expectedErr: application.ErrExternalValidationTimeout,
+			expectedErr: application.ErrSaveSpecialist,
 			validateResponse: func(t *testing.T, response *pb.CreateSpecialistResponse) {
 				assert.Nil(t, response)
 			},

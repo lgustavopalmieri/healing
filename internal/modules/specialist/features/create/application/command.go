@@ -2,8 +2,6 @@ package application
 
 import (
 	"context"
-	"errors"
-	"time"
 
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
@@ -31,45 +29,8 @@ func (c *CreateSpecialistCommand) Execute(contx context.Context, input CreateSpe
 		return nil, err
 	}
 
-	apiCtx, apiCancel := context.WithTimeout(ctx, 800*time.Millisecond)
-	defer apiCancel()
-
-	type apiResult struct {
-		result bool
-		err    error
-	}
-
-	apiCh := make(chan apiResult, 1)
-	go func() {
-		apiCtx, apiSpan := c.tracer.Start(apiCtx, "ValidateLicenseExternal")
-		defer apiSpan.End()
-
-		res, err := c.validateLicenseWithExternalGateway(apiCtx, apiSpan, specialist.LicenseNumber)
-		apiCh <- apiResult{result: res, err: err}
-	}()
-
 	if err := c.validateUniquenessConstraints(ctx, span, specialist.ID, specialist.Email, specialist.LicenseNumber); err != nil {
-		apiCancel()
 		return nil, err
-	}
-
-	select {
-	case <-ctx.Done():
-		return nil, ctx.Err()
-
-	case <-apiCtx.Done():
-		return nil, ErrExternalValidationTimeout
-
-	case res := <-apiCh:
-		if res.err != nil {
-			if errors.Is(res.err, context.DeadlineExceeded) {
-				return nil, ErrExternalValidationTimeout
-			}
-			return nil, res.err
-		}
-		if !res.result {
-			return nil, create.ErrInvalidLicense
-		}
 	}
 
 	savedSpecialist, err := c.repository.Save(ctx, specialist)
@@ -104,24 +65,8 @@ func (c *CreateSpecialistCommand) validateUniquenessConstraints(ctx context.Cont
 	return nil
 }
 
-func (c *CreateSpecialistCommand) validateLicenseWithExternalGateway(ctx context.Context, span observability.Span, licenseNumber string) (bool, error) {
-	isValidLicense, err := c.externalGateway.ValidateLicenseNumber(ctx, licenseNumber)
-	if err != nil {
-		span.RecordError(err)
-		c.logger.Error(ctx, ErrLicenseValidationMessage,
-			observability.Field{Key: "licenseNumber", Value: licenseNumber},
-			observability.Field{Key: "error", Value: err.Error()})
-		return false, ErrLicenseValidation
-	}
-	if !isValidLicense {
-		c.logger.Warn(ctx, InvalidLicenseNumberMessage, observability.Field{Key: "licenseNumber", Value: licenseNumber})
-		return false, ErrInvalidLicense
-	}
-	return true, nil
-}
-
 func (c *CreateSpecialistCommand) publishSpecialistCreatedEvent(ctx context.Context, specialist *domain.Specialist) {
-	specialistCreatedEvent := event.NewEvent(SpecialistCreatedEventName, map[string]interface{}{
+	specialistCreatedEvent := event.NewEvent(SpecialistCreatedEventName, map[string]any{
 		"id":            specialist.ID,
 		"email":         specialist.Email,
 		"licenseNumber": specialist.LicenseNumber,

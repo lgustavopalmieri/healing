@@ -7,7 +7,6 @@ import (
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/application"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/infra/database"
-	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/infra/external"
 )
 
 type Dependencies struct {
@@ -20,11 +19,8 @@ type Dependencies struct {
 func NewSpecialistCreateService(deps Dependencies) *SpecialistCreateGRPCService {
 	repository := database.NewSpecialistCreateRepository(deps.DB)
 
-	externalGateway := external.NewLicenseValidationGateway()
-
 	command := application.NewCreateSpecialistCommand(
 		repository,
-		externalGateway,
 		deps.EventPublisher,
 		deps.Tracer,
 		deps.Logger,

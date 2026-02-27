@@ -3,9 +3,6 @@ package application
 import "errors"
 
 const (
-	// Timeouts
-	ExternalValidationTimeoutMs = 800 // milliseconds
-
 	// Span names
 	CreateSpecialistSpanName = "CreateSpecialistCommand.Execute"
 
@@ -17,23 +14,14 @@ const (
 	SpecialistCreatedSuccessMessage   = "Specialist created successfully"
 
 	// Error messages
-	ErrUniquenessValidationMessage  = "Failed to validate uniqueness constraints"
-	ErrSaveSpecialistMessage        = "Failed to save specialist"
-	ErrLicenseValidationMessage     = "Failed to validate license number"
-	ErrInvalidLicenseMessage       = "Invalid license number"
-	ErrEventPublishMessage          = "Failed to publish specialist created event"
-	ErrExternalValidationTimeoutMsg = "License Number validation timeout. Try again."
-
-	// Warning messages
-	InvalidLicenseNumberMessage = "Invalid license number"
+	ErrUniquenessValidationMessage = "Failed to validate uniqueness constraints"
+	ErrSaveSpecialistMessage       = "Failed to save specialist"
+	ErrEventPublishMessage         = "Failed to publish specialist created event"
 )
 
 // Application errors
 var (
-	ErrUniquenessValidation      = errors.New(ErrUniquenessValidationMessage)
-	ErrSaveSpecialist            = errors.New(ErrSaveSpecialistMessage)
-	ErrLicenseValidation         = errors.New(ErrLicenseValidationMessage)
-	ErrInvalidLicense           = errors.New(ErrInvalidLicenseMessage)
-	ErrEventPublish              = errors.New(ErrEventPublishMessage)
-	ErrExternalValidationTimeout = errors.New(ErrExternalValidationTimeoutMsg)
+	ErrUniquenessValidation = errors.New(ErrUniquenessValidationMessage)
+	ErrSaveSpecialist       = errors.New(ErrSaveSpecialistMessage)
+	ErrEventPublish         = errors.New(ErrEventPublishMessage)
 )
