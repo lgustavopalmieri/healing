@@ -81,6 +81,17 @@ func run() error {
 		ESIndexSpecialists: cfg.Elasticsearch.IndexSpecialists,
 	})
 
+	if err := bootstrap.InitKafkaConsumers(ctx, bootstrap.ConsumerDependencies{
+		DB:                 db,
+		ESClient:           esClient,
+		ESIndexSpecialists: cfg.Elasticsearch.IndexSpecialists,
+		Tracer:             observability.Tracer,
+		Logger:             observability.Logger,
+		Config:             cfg,
+	}); err != nil {
+		return err
+	}
+
 	shutdownManager := bootstrap.NewShutdownManager(cfg.Server.ShutdownTimeout)
 
 	go func() {

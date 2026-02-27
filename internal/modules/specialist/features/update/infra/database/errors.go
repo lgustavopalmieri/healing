@@ -1,0 +1,6 @@
+package database
+
+var (
+	FailedToFindByIDErr   = "failed to find specialist by ID: %w"
+	SpecialistNotFoundErr = "specialist with ID %s not found"
+)
