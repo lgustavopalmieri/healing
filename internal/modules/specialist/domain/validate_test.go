@@ -1,4 +1,4 @@
-package create
+package domain
 
 import (
 	"testing"
@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type ValidatorsTestCases struct {
+type validatorTestCase struct {
 	name        string
 	input       string
 	expectError bool
@@ -14,7 +14,7 @@ type ValidatorsTestCases struct {
 }
 
 func TestValidateName(t *testing.T) {
-	tests := []ValidatorsTestCases{
+	tests := []validatorTestCase{
 		{
 			name:        "should return nil when name is valid",
 			input:       "João Silva",
@@ -58,7 +58,7 @@ func TestValidateName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := validateName(tt.input)
+			err := ValidateName(tt.input)
 			if tt.expectError {
 				assert.Error(t, err)
 				assert.Equal(t, tt.expectedErr, err)
@@ -70,7 +70,7 @@ func TestValidateName(t *testing.T) {
 }
 
 func TestValidateEmail(t *testing.T) {
-	tests := []ValidatorsTestCases{
+	tests := []validatorTestCase{
 		{
 			name:        "should return nil when email is valid",
 			input:       "joao@example.com",
@@ -137,7 +137,7 @@ func TestValidateEmail(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := validateEmail(tt.input)
+			err := ValidateEmail(tt.input)
 			if tt.expectError {
 				assert.Error(t, err)
 				assert.Equal(t, tt.expectedErr, err)
@@ -149,7 +149,7 @@ func TestValidateEmail(t *testing.T) {
 }
 
 func TestValidateSpecialty(t *testing.T) {
-	tests := []ValidatorsTestCases{
+	tests := []validatorTestCase{
 		{
 			name:        "should return nil when specialty is valid",
 			input:       "Cardiologia",
@@ -187,7 +187,7 @@ func TestValidateSpecialty(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := validateSpecialty(tt.input)
+			err := ValidateSpecialty(tt.input)
 			if tt.expectError {
 				assert.Error(t, err)
 				assert.Equal(t, tt.expectedErr, err)
@@ -199,7 +199,7 @@ func TestValidateSpecialty(t *testing.T) {
 }
 
 func TestValidateLicenseNumber(t *testing.T) {
-	tests := []ValidatorsTestCases{
+	tests := []validatorTestCase{
 		{
 			name:        "should return nil when license number is valid",
 			input:       "CRM123456",
@@ -242,7 +242,69 @@ func TestValidateLicenseNumber(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := validateLicenseNumber(tt.input)
+			err := ValidateLicenseNumber(tt.input)
+			if tt.expectError {
+				assert.Error(t, err)
+				assert.Equal(t, tt.expectedErr, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestValidateAgreedToShare(t *testing.T) {
+	tests := []struct {
+		name        string
+		input       bool
+		expectError bool
+		expectedErr error
+	}{
+		{
+			name:        "should return nil when agreed is true",
+			input:       true,
+			expectError: false,
+		},
+		{
+			name:        "should return error when agreed is false",
+			input:       false,
+			expectError: true,
+			expectedErr: ErrMustAgreeToShare,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateAgreedToShare(tt.input)
+			if tt.expectError {
+				assert.Error(t, err)
+				assert.Equal(t, tt.expectedErr, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestValidateStatus(t *testing.T) {
+	tests := []struct {
+		name        string
+		input       SpecialistStatus
+		expectError bool
+		expectedErr error
+	}{
+		{name: "should return nil for pending", input: StatusPending, expectError: false},
+		{name: "should return nil for active", input: StatusActive, expectError: false},
+		{name: "should return nil for unavailable", input: StatusUnavailable, expectError: false},
+		{name: "should return nil for deleted", input: StatusDeleted, expectError: false},
+		{name: "should return nil for banned", input: StatusBanned, expectError: false},
+		{name: "should return error for invalid status", input: SpecialistStatus("invalid"), expectError: true, expectedErr: ErrInvalidStatus},
+		{name: "should return error for empty status", input: SpecialistStatus(""), expectError: true, expectedErr: ErrInvalidStatus},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateStatus(tt.input)
 			if tt.expectError {
 				assert.Error(t, err)
 				assert.Equal(t, tt.expectedErr, err)

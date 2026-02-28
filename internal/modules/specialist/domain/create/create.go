@@ -48,24 +48,24 @@ func CreateSpecialist(input CreateSpecialistInput) (*domain.Specialist, error) {
 }
 
 func validate(name, email, specialty, licenseNumber string, agreedToShare bool) error {
-	if err := validateName(name); err != nil {
+	if err := domain.ValidateName(name); err != nil {
 		return err
 	}
 
-	if err := validateEmail(email); err != nil {
+	if err := domain.ValidateEmail(email); err != nil {
 		return err
 	}
 
-	if err := validateSpecialty(specialty); err != nil {
+	if err := domain.ValidateSpecialty(specialty); err != nil {
 		return err
 	}
 
-	if err := validateLicenseNumber(licenseNumber); err != nil {
+	if err := domain.ValidateLicenseNumber(licenseNumber); err != nil {
 		return err
 	}
 
-	if !agreedToShare {
-		return ErrMustAgreeToShare
+	if err := domain.ValidateAgreedToShare(agreedToShare); err != nil {
+		return err
 	}
 
 	return nil
