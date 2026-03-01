@@ -10,6 +10,7 @@ type Config struct {
 	Kafka         KafkaConfig
 	Observability ObservabilityConfig
 	Elasticsearch ElasticsearchConfig
+	External      ExternalConfig
 }
 
 type ServerConfig struct {
@@ -46,4 +47,8 @@ type ElasticsearchConfig struct {
 	IndexSpecialists string
 	MaxRetries       int
 	RetryBackoff     time.Duration
+}
+
+type ExternalConfig struct {
+	LicenseBaseURL string
 }

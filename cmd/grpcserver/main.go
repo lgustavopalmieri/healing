@@ -87,6 +87,7 @@ func run() error {
 		ESIndexSpecialists: cfg.Elasticsearch.IndexSpecialists,
 		Tracer:             observability.Tracer,
 		Logger:             observability.Logger,
+		EventPublisher:     kafkaProducer,
 		Config:             cfg,
 	}); err != nil {
 		return err

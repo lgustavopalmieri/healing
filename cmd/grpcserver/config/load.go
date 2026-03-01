@@ -49,6 +49,9 @@ func Load() (*Config, error) {
 			MaxRetries:       getEnvAsInt("ELASTICSEARCH_MAX_RETRIES", 3),
 			RetryBackoff:     getEnvAsDuration("ELASTICSEARCH_RETRY_BACKOFF", 1*time.Second),
 		},
+		External: ExternalConfig{
+			LicenseBaseURL: getEnv("LICENSE_VALIDATION_BASE_URL", "http://localhost:8080"),
+		},
 	}
 
 	if err := cfg.Validate(); err != nil {
