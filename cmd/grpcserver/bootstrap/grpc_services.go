@@ -11,6 +11,8 @@ import (
 	createpb "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/infra/grpc_service/pb"
 	searchgrpc "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/infra/grpc_service"
 	searchpb "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/infra/grpc_service/pb"
+	updategrpc "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/infra/grpc_service"
+	updatepb "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/infra/grpc_service/pb"
 	"github.com/lgustavopalmieri/healing-specialist/internal/platform/server"
 )
 
@@ -39,6 +41,14 @@ func RegisterServices(grpcServer *server.GRPCServer, deps ServiceDependencies) {
 		Logger:             deps.Logger,
 	})
 	searchpb.RegisterSearchSpecialistServiceServer(grpcServer.GetServer(), specialistSearchService)
+
+	specialistUpdateService := updategrpc.NewSpecialistUpdateService(updategrpc.Dependencies{
+		DB:             deps.DB,
+		EventPublisher: deps.EventPublisher,
+		Tracer:         deps.Tracer,
+		Logger:         deps.Logger,
+	})
+	updatepb.RegisterUpdateSpecialistServiceServer(grpcServer.GetServer(), specialistUpdateService)
 
 	log.Println("✅ Services registered successfully")
 }

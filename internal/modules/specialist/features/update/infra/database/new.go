@@ -3,11 +3,11 @@ package database
 import (
 	"database/sql"
 
-	eventlisteners "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/infra/event_listeners"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/application"
 )
 
-func NewSpecialistFindByIDRepository(db *sql.DB) eventlisteners.FindByIDRepositoryInterface {
-	return &SpecialistFindByIDRepository{
+func NewSpecialistUpdateRepository(db *sql.DB) application.SpecialistUpdateRepositoryInterface {
+	return &SpecialistUpdateRepository{
 		db: db,
 	}
 }

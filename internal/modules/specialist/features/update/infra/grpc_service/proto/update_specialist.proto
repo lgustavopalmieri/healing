@@ -1,0 +1,43 @@
+syntax = "proto3";
+package updatepb;
+option go_package = "./pb";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+message Specialist {
+    string id = 1;
+    string name = 2;
+    string email = 3;
+    string phone = 4;
+    string specialty = 5;
+    string license_number = 6;
+    string description = 7;
+    repeated string keywords = 8;
+    bool agreed_to_share = 9;
+    double rating = 10;
+    string status = 11;
+    google.protobuf.Timestamp created_at = 12;
+    google.protobuf.Timestamp updated_at = 13;
+}
+
+message UpdateSpecialistRequest {
+    string id = 1;
+    google.protobuf.StringValue name = 2;
+    google.protobuf.StringValue email = 3;
+    google.protobuf.StringValue phone = 4;
+    google.protobuf.StringValue specialty = 5;
+    google.protobuf.StringValue license_number = 6;
+    google.protobuf.StringValue description = 7;
+    repeated string keywords = 8;
+    google.protobuf.BoolValue agreed_to_share = 9;
+    google.protobuf.StringValue status = 10;
+}
+
+message UpdateSpecialistResponse {
+    Specialist specialist = 1;
+}
+
+service UpdateSpecialistService {
+    rpc UpdateSpecialist(UpdateSpecialistRequest) returns (UpdateSpecialistResponse) {}
+}
