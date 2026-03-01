@@ -8,7 +8,7 @@ import (
 
 type ValidateLicenseRepositoryInterface interface {
 	FindByID(ctx context.Context, id string) (*domain.Specialist, error)
-	UpdateStatus(ctx context.Context, id string, status domain.SpecialistStatus) (*domain.Specialist, error)
+	UpdateStatus(ctx context.Context, id string, status domain.SpecialistStatus) error
 }
 
 type LicenseGatewayInterface interface {

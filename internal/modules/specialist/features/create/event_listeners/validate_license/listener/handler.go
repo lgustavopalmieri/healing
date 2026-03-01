@@ -8,6 +8,7 @@ import (
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
+	authorizelicense "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/authorize_license"
 )
 
 func (h *ValidateLicenseHandler) Handle(ctx context.Context, evt event.Event) error {
@@ -55,23 +56,33 @@ func (h *ValidateLicenseHandler) execute(contx context.Context, payload Validate
 		return ErrInvalidLicense
 	}
 
-	updatedSpecialist, err := h.repository.UpdateStatus(ctx, specialist.ID, domain.StatusActive)
+	authorized, err := authorizelicense.AuthorizeLicense(specialist)
+	if err != nil {
+		span.RecordError(err)
+		h.logger.Error(ctx, ErrInvalidStatusTransitionMessage,
+			observability.Field{Key: "id", Value: specialist.ID},
+			observability.Field{Key: "status", Value: string(specialist.Status)},
+			observability.Field{Key: "error", Value: err.Error()})
+		return err
+	}
+
+	err = h.repository.UpdateStatus(ctx, authorized.ID, authorized.Status)
 	if err != nil {
 		span.RecordError(err)
 		h.logger.Error(ctx, ErrUpdateStatusMessage,
-			observability.Field{Key: "id", Value: specialist.ID},
+			observability.Field{Key: "id", Value: authorized.ID},
 			observability.Field{Key: "error", Value: err.Error()})
 		return ErrUpdateStatus
 	}
 
 	h.logger.Info(ctx, SpecialistStatusUpdatedMessage,
-		observability.Field{Key: "id", Value: updatedSpecialist.ID})
+		observability.Field{Key: "id", Value: authorized.ID})
 
-	h.publishSpecialistUpdatedEvent(ctx, updatedSpecialist)
+	h.publishSpecialistUpdatedEvent(ctx, authorized)
 
 	h.logger.Info(ctx, LicenseValidatedSuccessMessage,
-		observability.Field{Key: "id", Value: updatedSpecialist.ID},
-		observability.Field{Key: "email", Value: updatedSpecialist.Email})
+		observability.Field{Key: "id", Value: authorized.ID},
+		observability.Field{Key: "email", Value: authorized.Email})
 
 	return nil
 }

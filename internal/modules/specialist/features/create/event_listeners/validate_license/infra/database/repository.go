@@ -50,38 +50,22 @@ func (r *ValidateLicenseRepository) FindByID(ctx context.Context, id string) (*d
 	return &specialist, nil
 }
 
-func (r *ValidateLicenseRepository) UpdateStatus(ctx context.Context, id string, status domain.SpecialistStatus) (*domain.Specialist, error) {
-	query := `
-		UPDATE specialists SET status = $2, updated_at = $3
-		WHERE id = $1
-		RETURNING id, name, email, phone, specialty, license_number,
-		          description, keywords, agreed_to_share, rating, status, created_at, updated_at`
+func (r *ValidateLicenseRepository) UpdateStatus(ctx context.Context, id string, status domain.SpecialistStatus) error {
+	query := `UPDATE specialists SET status = $2, updated_at = $3 WHERE id = $1`
 
-	var updated domain.Specialist
-	var keywords pq.StringArray
-
-	err := r.DB.QueryRowContext(ctx, query, id, status, time.Now().UTC()).Scan(
-		&updated.ID,
-		&updated.Name,
-		&updated.Email,
-		&updated.Phone,
-		&updated.Specialty,
-		&updated.LicenseNumber,
-		&updated.Description,
-		&keywords,
-		&updated.AgreedToShare,
-		&updated.Rating,
-		&updated.Status,
-		&updated.CreatedAt,
-		&updated.UpdatedAt,
-	)
+	result, err := r.DB.ExecContext(ctx, query, id, status, time.Now().UTC())
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf(UpdateStatusNotFoundErr, id)
-		}
-		return nil, fmt.Errorf(FailedToUpdateStatusErr, err)
+		return fmt.Errorf(FailedToUpdateStatusErr, err)
 	}
 
-	updated.Keywords = []string(keywords)
-	return &updated, nil
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf(FailedToUpdateStatusErr, err)
+	}
+
+	if rows == 0 {
+		return fmt.Errorf(UpdateStatusNotFoundErr, id)
+	}
+
+	return nil
 }
