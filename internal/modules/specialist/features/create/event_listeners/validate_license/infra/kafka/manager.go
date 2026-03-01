@@ -10,10 +10,9 @@ import (
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/application"
-	vlApplication "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/event_listeners/validate_license/application"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/event_listeners/validate_license/infra/database"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/event_listeners/validate_license/infra/external"
-	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/event_listeners/validate_license/infra/listener"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/event_listeners/validate_license/listener"
 	platformkafka "github.com/lgustavopalmieri/healing-specialist/internal/platform/kafka"
 )
 
@@ -30,7 +29,7 @@ func NewValidateLicenseKafkaManager(ctx context.Context, deps ManagerDependencie
 	repository := database.NewValidateLicenseRepository(deps.DB)
 	gateway := external.NewLicenseGateway(deps.LicenseBaseURL, &http.Client{})
 
-	command := vlApplication.NewValidateLicenseCommand(
+	handler := listener.NewValidateLicenseHandler(
 		repository,
 		gateway,
 		deps.EventDispatcher,
@@ -38,10 +37,8 @@ func NewValidateLicenseKafkaManager(ctx context.Context, deps ManagerDependencie
 		deps.Logger,
 	)
 
-	validateLicenseListener := listener.NewValidateLicenseListener(command)
-
 	manager := event.NewListenerManager()
-	manager.Register(application.SpecialistCreatedEventName, validateLicenseListener)
+	manager.Register(application.SpecialistCreatedEventName, handler)
 
 	config := &libkafka.ConfigMap{
 		"bootstrap.servers":  deps.BootstrapServers,

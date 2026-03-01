@@ -3,10 +3,10 @@ package external
 import (
 	"net/http"
 
-	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/event_listeners/validate_license/application"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/event_listeners/validate_license/listener"
 )
 
-func NewLicenseGateway(baseURL string, client *http.Client) application.LicenseGatewayInterface {
+func NewLicenseGateway(baseURL string, client *http.Client) listener.LicenseGatewayInterface {
 	if client == nil {
 		client = http.DefaultClient
 	}

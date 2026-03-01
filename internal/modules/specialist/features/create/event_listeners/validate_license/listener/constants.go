@@ -1,9 +1,9 @@
-package application
+package listener
 
 import "errors"
 
 const (
-	ValidateLicenseSpanName = "ValidateLicenseCommand.Execute"
+	ValidateLicenseSpanName = "ValidateLicenseHandler.Handle"
 
 	SpecialistUpdatedEventName = "specialist.updated"
 

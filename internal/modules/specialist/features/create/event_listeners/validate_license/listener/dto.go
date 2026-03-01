@@ -1,4 +1,4 @@
-package application
+package listener
 
 type ValidateLicenseEventPayload struct {
 	ID            string `json:"id"`
