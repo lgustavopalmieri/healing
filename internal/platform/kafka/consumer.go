@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
@@ -33,9 +34,21 @@ func NewKafkaConsumer(config *kafka.ConfigMap, manager *event.ListenerManager) (
 }
 
 func (dc *KafkaConsumer) Start(ctx context.Context) {
+	defer dc.consumer.Close()
+
 	for {
-		msg, err := dc.consumer.ReadMessage(-1)
+		select {
+		case <-ctx.Done():
+			fmt.Println("Kafka consumer stopped: context cancelled")
+			return
+		default:
+		}
+
+		msg, err := dc.consumer.ReadMessage(1 * time.Second)
 		if err != nil {
+			if kafkaErr, ok := err.(kafka.Error); ok && kafkaErr.IsTimeout() {
+				continue
+			}
 			fmt.Printf("Kafka error: %v\n", err)
 			continue
 		}

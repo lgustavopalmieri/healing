@@ -146,6 +146,16 @@ func (h *TestHelper) RunTestMain(m *testing.M) {
 	os.Exit(code)
 }
 
+func (h *TestHelper) RunTestMainWithoutExit(m *testing.M) {
+	h.sharedContainer = SetupPostgreSQLContainer(&testing.T{})
+}
+
+func (h *TestHelper) TerminateContainer() {
+	if h.sharedContainer != nil {
+		h.sharedContainer.Terminate(&testing.T{})
+	}
+}
+
 // SetupTestDB creates a clean database for a single test
 func (h *TestHelper) SetupTestDB(t *testing.T) (*sql.DB, func()) {
 	// Create a unique database name for this test

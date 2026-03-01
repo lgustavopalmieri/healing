@@ -39,11 +39,18 @@ func (p *KafkaProducer) Dispatch(ctx context.Context, evt event.Event) error {
 		Timestamp: evt.Timestamp,
 	}
 
-	err = p.producer.Produce(msg, nil)
+	deliveryChan := make(chan kafkalib.Event)
+
+	err = p.producer.Produce(msg, deliveryChan)
 	if err != nil {
 		return fmt.Errorf("failed to produce kafka message: %w", err)
 	}
-	fmt.Println("Kafka message produced: ", msg)
+
+	e := <-deliveryChan
+	deliveredMsg := e.(*kafkalib.Message)
+	if deliveredMsg.TopicPartition.Error != nil {
+		return fmt.Errorf("kafka delivery failed: %w", deliveredMsg.TopicPartition.Error)
+	}
 
 	return nil
 }
