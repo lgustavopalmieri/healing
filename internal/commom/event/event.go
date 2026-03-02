@@ -15,5 +15,3 @@ func NewEvent(name string, payload any) Event {
 		Timestamp: time.Now().UTC(),
 	}
 }
-
-// ver implementação em pocs/kafka-poc

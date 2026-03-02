@@ -13,9 +13,6 @@ func (c *UpdateSpecialistCommand) Execute(contx context.Context, input UpdateSpe
 	ctx, span := c.tracer.Start(contx, UpdateSpecialistSpanName)
 	defer span.End()
 
-	c.logger.Info(ctx, StartingSpecialistUpdateMessage,
-		observability.Field{Key: "id", Value: input.ID})
-
 	existing, err := c.repository.FindByID(ctx, input.ID)
 	if err != nil {
 		span.RecordError(err)
@@ -54,10 +51,6 @@ func (c *UpdateSpecialistCommand) Execute(contx context.Context, input UpdateSpe
 	}
 
 	c.publishSpecialistUpdatedEvent(ctx, saved)
-
-	c.logger.Info(ctx, SpecialistUpdatedSuccessMessage,
-		observability.Field{Key: "id", Value: saved.ID},
-		observability.Field{Key: "email", Value: saved.Email})
 
 	return saved, nil
 }

@@ -25,10 +25,6 @@ func (h *ValidateLicenseHandler) execute(contx context.Context, payload Validate
 	ctx, span := h.tracer.Start(contx, ValidateLicenseSpanName)
 	defer span.End()
 
-	h.logger.Info(ctx, StartingLicenseValidationMessage,
-		observability.Field{Key: "id", Value: payload.ID},
-		observability.Field{Key: "licenseNumber", Value: payload.LicenseNumber})
-
 	specialist, err := h.repository.FindByID(ctx, payload.ID)
 	if err != nil {
 		span.RecordError(err)
@@ -75,14 +71,8 @@ func (h *ValidateLicenseHandler) execute(contx context.Context, payload Validate
 		return ErrUpdateStatus
 	}
 
-	h.logger.Info(ctx, SpecialistStatusUpdatedMessage,
-		observability.Field{Key: "id", Value: authorized.ID})
-
 	h.publishSpecialistUpdatedEvent(ctx, authorized)
 
-	h.logger.Info(ctx, LicenseValidatedSuccessMessage,
-		observability.Field{Key: "id", Value: authorized.ID},
-		observability.Field{Key: "email", Value: authorized.Email})
 
 	return nil
 }
