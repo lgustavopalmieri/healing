@@ -44,10 +44,6 @@ func (c *CreateSpecialistCommand) Execute(contx context.Context, input CreateSpe
 
 	c.publishSpecialistCreatedEvent(ctx, savedSpecialist)
 
-	c.logger.Info(ctx, SpecialistCreatedSuccessMessage,
-		observability.Field{Key: "id", Value: savedSpecialist.ID},
-		observability.Field{Key: "email", Value: savedSpecialist.Email})
-
 	return savedSpecialist, nil
 }
 

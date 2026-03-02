@@ -12,18 +12,14 @@ import (
 )
 
 func (h *ValidateLicenseHandler) Handle(ctx context.Context, evt event.Event) error {
+	ctx, span := h.tracer.Start(ctx, ValidateLicenseSpanName)
+	defer span.End()
+
 	payload := ValidateLicenseEventPayload{}
 	err := json.Unmarshal(evt.Payload.([]byte), &payload)
 	if err != nil {
 		return fmt.Errorf("%s: %w", ErrUnmarshalEventPayloadMessage, err)
 	}
-
-	return h.execute(ctx, payload)
-}
-
-func (h *ValidateLicenseHandler) execute(contx context.Context, payload ValidateLicenseEventPayload) error {
-	ctx, span := h.tracer.Start(contx, ValidateLicenseSpanName)
-	defer span.End()
 
 	specialist, err := h.repository.FindByID(ctx, payload.ID)
 	if err != nil {
@@ -72,7 +68,6 @@ func (h *ValidateLicenseHandler) execute(contx context.Context, payload Validate
 	}
 
 	h.publishSpecialistUpdatedEvent(ctx, authorized)
-
 
 	return nil
 }
