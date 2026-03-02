@@ -13,46 +13,40 @@ import (
 	context "context"
 	reflect "reflect"
 
-	searchinput "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/search/search_input"
 	searchoutput "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/search/search_output"
+	application "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/application"
 	gomock "go.uber.org/mock/gomock"
 )
 
-// MockSpecialistSearchCommandInterface is a mock of SpecialistSearchCommandInterface interface.
 type MockSpecialistSearchCommandInterface struct {
 	ctrl     *gomock.Controller
 	recorder *MockSpecialistSearchCommandInterfaceMockRecorder
 	isgomock struct{}
 }
 
-// MockSpecialistSearchCommandInterfaceMockRecorder is the mock recorder for MockSpecialistSearchCommandInterface.
 type MockSpecialistSearchCommandInterfaceMockRecorder struct {
 	mock *MockSpecialistSearchCommandInterface
 }
 
-// NewMockSpecialistSearchCommandInterface creates a new mock instance.
 func NewMockSpecialistSearchCommandInterface(ctrl *gomock.Controller) *MockSpecialistSearchCommandInterface {
 	mock := &MockSpecialistSearchCommandInterface{ctrl: ctrl}
 	mock.recorder = &MockSpecialistSearchCommandInterfaceMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockSpecialistSearchCommandInterface) EXPECT() *MockSpecialistSearchCommandInterfaceMockRecorder {
 	return m.recorder
 }
 
-// Execute mocks base method.
-func (m *MockSpecialistSearchCommandInterface) Execute(ctx context.Context, input *searchinput.ListSearchInput) (*searchoutput.ListSearchOutput, error) {
+func (m *MockSpecialistSearchCommandInterface) Execute(ctx context.Context, dto *application.SearchSpecialistsDTO) (*searchoutput.ListSearchOutput, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Execute", ctx, input)
+	ret := m.ctrl.Call(m, "Execute", ctx, dto)
 	ret0, _ := ret[0].(*searchoutput.ListSearchOutput)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// Execute indicates an expected call of Execute.
-func (mr *MockSpecialistSearchCommandInterfaceMockRecorder) Execute(ctx, input any) *gomock.Call {
+func (mr *MockSpecialistSearchCommandInterfaceMockRecorder) Execute(ctx, dto any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Execute", reflect.TypeOf((*MockSpecialistSearchCommandInterface)(nil).Execute), ctx, input)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Execute", reflect.TypeOf((*MockSpecialistSearchCommandInterface)(nil).Execute), ctx, dto)
 }

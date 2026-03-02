@@ -9,5 +9,5 @@ import (
 
 //go:generate mockgen -source=interface.go -destination=mocks/repository_mock.go -package=mocks
 type SpecialistSearchRepositoryInterface interface {
-	Search(ctx context.Context, input *searchinput.ListSearchInput) (*searchoutput.ListSearchOutput, error)
+	Search(ctx context.Context, input *searchinput.ListSearchInput) (*searchoutput.SearchResult, error)
 }

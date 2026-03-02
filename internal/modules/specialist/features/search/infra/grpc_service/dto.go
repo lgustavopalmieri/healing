@@ -1,15 +1,16 @@
 package grpcservice
 
 import (
-	"github.com/lgustavopalmieri/healing-specialist/internal/commom/value-objects/pagination/cursor"
+	cursor "github.com/lgustavopalmieri/healing-specialist/internal/commom/value-objects/pagination/cursor"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
 	searchinput "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/search/search_input"
 	searchoutput "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/search/search_output"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/application"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/infra/grpc_service/pb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func ToSearchInput(req *pb.SearchSpecialistsRequest) (*searchinput.ListSearchInput, error) {
+func ToSearchDTO(req *pb.SearchSpecialistsRequest) (*application.SearchSpecialistsDTO, error) {
 	var searchTerm *string
 	if req.GetSearchTerm() != "" {
 		term := req.GetSearchTerm()
@@ -53,7 +54,12 @@ func ToSearchInput(req *pb.SearchSpecialistsRequest) (*searchinput.ListSearchInp
 		return nil, err
 	}
 
-	return searchinput.NewListSearchInput(searchTerm, filters, sorts, pagination)
+	return &application.SearchSpecialistsDTO{
+		SearchTerm: searchTerm,
+		Filters:    filters,
+		Sort:       sorts,
+		Pagination: pagination,
+	}, nil
 }
 
 func ToSearchSpecialistsResponse(output *searchoutput.ListSearchOutput) *pb.SearchSpecialistsResponse {

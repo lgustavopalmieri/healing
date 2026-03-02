@@ -3,13 +3,13 @@ package grpcservice
 import (
 	"context"
 
-	searchinput "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/search/search_input"
 	searchoutput "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/search/search_output"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/application"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/infra/grpc_service/pb"
 )
 
 type SpecialistSearchCommandInterface interface {
-	Execute(ctx context.Context, input *searchinput.ListSearchInput) (*searchoutput.ListSearchOutput, error)
+	Execute(ctx context.Context, dto *application.SearchSpecialistsDTO) (*searchoutput.ListSearchOutput, error)
 }
 
 type SpecialistSearchGRPCService struct {
@@ -24,12 +24,12 @@ func NewSpecialistSearchGRPCService(command SpecialistSearchCommandInterface) *S
 }
 
 func (s *SpecialistSearchGRPCService) SearchSpecialists(ctx context.Context, req *pb.SearchSpecialistsRequest) (*pb.SearchSpecialistsResponse, error) {
-	input, err := ToSearchInput(req)
+	dto, err := ToSearchDTO(req)
 	if err != nil {
 		return nil, err
 	}
 
-	output, err := s.command.Execute(ctx, input)
+	output, err := s.command.Execute(ctx, dto)
 	if err != nil {
 		return nil, err
 	}
