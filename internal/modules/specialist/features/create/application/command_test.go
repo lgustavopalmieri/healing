@@ -54,8 +54,6 @@ func TestCreateSpecialistCommand_Execute(t *testing.T) {
 				}).Times(1)
 
 				mockEventPublisher.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-
-				mockLogger.EXPECT().Info(gomock.Any(), SpecialistCreatedSuccessMessage, gomock.Any(), gomock.Any()).Times(1)
 			},
 			expectError: false,
 			validateResult: func(t *testing.T, specialist *domain.Specialist) {
@@ -151,8 +149,6 @@ func TestCreateSpecialistCommand_Execute(t *testing.T) {
 
 				mockEventPublisher.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Return(errors.New("kafka unavailable")).Times(1)
 				mockLogger.EXPECT().Warn(gomock.Any(), ErrEventPublishMessage, gomock.Any(), gomock.Any()).Times(1)
-
-				mockLogger.EXPECT().Info(gomock.Any(), SpecialistCreatedSuccessMessage, gomock.Any(), gomock.Any()).Times(1)
 			},
 			expectError: false,
 			validateResult: func(t *testing.T, specialist *domain.Specialist) {

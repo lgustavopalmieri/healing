@@ -2,11 +2,14 @@ package grpcservice
 
 import (
 	"context"
+	"errors"
 
 	searchoutput "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/search/search_output"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/application"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/infra/grpc_service/pb"
 )
+
+var ErrNilRequest = errors.New("request cannot be nil")
 
 type SpecialistSearchCommandInterface interface {
 	Execute(ctx context.Context, dto *application.SearchSpecialistsDTO) (*searchoutput.ListSearchOutput, error)
@@ -24,6 +27,10 @@ func NewSpecialistSearchGRPCService(command SpecialistSearchCommandInterface) *S
 }
 
 func (s *SpecialistSearchGRPCService) SearchSpecialists(ctx context.Context, req *pb.SearchSpecialistsRequest) (*pb.SearchSpecialistsResponse, error) {
+	if req == nil {
+		return nil, ErrNilRequest
+	}
+
 	dto, err := ToSearchDTO(req)
 	if err != nil {
 		return nil, err

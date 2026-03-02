@@ -66,7 +66,6 @@ func TestUpdateSpecialistCommand_Execute(t *testing.T) {
 				ctx := context.Background()
 				mockTracer.EXPECT().Start(gomock.Any(), UpdateSpecialistSpanName).Return(ctx, mockSpan).Times(1)
 				mockSpan.EXPECT().End().Times(1)
-				mockLogger.EXPECT().Info(gomock.Any(), StartingSpecialistUpdateMessage, gomock.Any()).Times(1)
 
 				existing := existingSpecialistFactory()
 				mockRepo.EXPECT().FindByID(gomock.Any(), "550e8400-e29b-41d4-a716-446655440000").Return(existing, nil).Times(1)
@@ -76,7 +75,6 @@ func TestUpdateSpecialistCommand_Execute(t *testing.T) {
 				}).Times(1)
 
 				mockEvent.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-				mockLogger.EXPECT().Info(gomock.Any(), SpecialistUpdatedSuccessMessage, gomock.Any(), gomock.Any()).Times(1)
 			},
 			expectError: false,
 			validateResult: func(t *testing.T, s *domain.Specialist) {
@@ -98,7 +96,6 @@ func TestUpdateSpecialistCommand_Execute(t *testing.T) {
 				ctx := context.Background()
 				mockTracer.EXPECT().Start(gomock.Any(), UpdateSpecialistSpanName).Return(ctx, mockSpan).Times(1)
 				mockSpan.EXPECT().End().Times(1)
-				mockLogger.EXPECT().Info(gomock.Any(), StartingSpecialistUpdateMessage, gomock.Any()).Times(1)
 
 				existing := existingSpecialistFactory()
 				mockRepo.EXPECT().FindByID(gomock.Any(), "550e8400-e29b-41d4-a716-446655440000").Return(existing, nil).Times(1)
@@ -108,7 +105,6 @@ func TestUpdateSpecialistCommand_Execute(t *testing.T) {
 				}).Times(1)
 
 				mockEvent.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-				mockLogger.EXPECT().Info(gomock.Any(), SpecialistUpdatedSuccessMessage, gomock.Any(), gomock.Any()).Times(1)
 			},
 			expectError: false,
 			validateResult: func(t *testing.T, s *domain.Specialist) {
@@ -125,7 +121,6 @@ func TestUpdateSpecialistCommand_Execute(t *testing.T) {
 				ctx := context.Background()
 				mockTracer.EXPECT().Start(gomock.Any(), UpdateSpecialistSpanName).Return(ctx, mockSpan).Times(1)
 				mockSpan.EXPECT().End().Times(1)
-				mockLogger.EXPECT().Info(gomock.Any(), StartingSpecialistUpdateMessage, gomock.Any()).Times(1)
 
 				existing := existingSpecialistFactory()
 				mockRepo.EXPECT().FindByID(gomock.Any(), "550e8400-e29b-41d4-a716-446655440000").Return(existing, nil).Times(1)
@@ -136,7 +131,6 @@ func TestUpdateSpecialistCommand_Execute(t *testing.T) {
 
 				mockEvent.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Return(errors.New("kafka unavailable")).Times(1)
 				mockLogger.EXPECT().Warn(gomock.Any(), ErrEventPublishMessage, gomock.Any(), gomock.Any()).Times(1)
-				mockLogger.EXPECT().Info(gomock.Any(), SpecialistUpdatedSuccessMessage, gomock.Any(), gomock.Any()).Times(1)
 			},
 			expectError: false,
 			validateResult: func(t *testing.T, s *domain.Specialist) {
@@ -151,7 +145,6 @@ func TestUpdateSpecialistCommand_Execute(t *testing.T) {
 				ctx := context.Background()
 				mockTracer.EXPECT().Start(gomock.Any(), UpdateSpecialistSpanName).Return(ctx, mockSpan).Times(1)
 				mockSpan.EXPECT().End().Times(1)
-				mockLogger.EXPECT().Info(gomock.Any(), StartingSpecialistUpdateMessage, gomock.Any()).Times(1)
 
 				mockRepo.EXPECT().FindByID(gomock.Any(), "550e8400-e29b-41d4-a716-446655440000").Return(nil, errors.New("not found")).Times(1)
 				mockSpan.EXPECT().RecordError(gomock.Any()).Times(1)
@@ -172,7 +165,6 @@ func TestUpdateSpecialistCommand_Execute(t *testing.T) {
 				ctx := context.Background()
 				mockTracer.EXPECT().Start(gomock.Any(), UpdateSpecialistSpanName).Return(ctx, mockSpan).Times(1)
 				mockSpan.EXPECT().End().Times(1)
-				mockLogger.EXPECT().Info(gomock.Any(), StartingSpecialistUpdateMessage, gomock.Any()).Times(1)
 
 				existing := existingSpecialistFactory()
 				mockRepo.EXPECT().FindByID(gomock.Any(), "550e8400-e29b-41d4-a716-446655440000").Return(existing, nil).Times(1)
@@ -196,7 +188,6 @@ func TestUpdateSpecialistCommand_Execute(t *testing.T) {
 				ctx := context.Background()
 				mockTracer.EXPECT().Start(gomock.Any(), UpdateSpecialistSpanName).Return(ctx, mockSpan).Times(1)
 				mockSpan.EXPECT().End().Times(1)
-				mockLogger.EXPECT().Info(gomock.Any(), StartingSpecialistUpdateMessage, gomock.Any()).Times(1)
 
 				existing := existingSpecialistFactory()
 				mockRepo.EXPECT().FindByID(gomock.Any(), "550e8400-e29b-41d4-a716-446655440000").Return(existing, nil).Times(1)
@@ -220,7 +211,6 @@ func TestUpdateSpecialistCommand_Execute(t *testing.T) {
 				ctx := context.Background()
 				mockTracer.EXPECT().Start(gomock.Any(), UpdateSpecialistSpanName).Return(ctx, mockSpan).Times(1)
 				mockSpan.EXPECT().End().Times(1)
-				mockLogger.EXPECT().Info(gomock.Any(), StartingSpecialistUpdateMessage, gomock.Any()).Times(1)
 
 				existing := existingSpecialistFactory()
 				mockRepo.EXPECT().FindByID(gomock.Any(), "550e8400-e29b-41d4-a716-446655440000").Return(existing, nil).Times(1)
@@ -241,7 +231,6 @@ func TestUpdateSpecialistCommand_Execute(t *testing.T) {
 				ctx := context.Background()
 				mockTracer.EXPECT().Start(gomock.Any(), UpdateSpecialistSpanName).Return(ctx, mockSpan).Times(1)
 				mockSpan.EXPECT().End().Times(1)
-				mockLogger.EXPECT().Info(gomock.Any(), StartingSpecialistUpdateMessage, gomock.Any()).Times(1)
 
 				existing := existingSpecialistFactory()
 				mockRepo.EXPECT().FindByID(gomock.Any(), "550e8400-e29b-41d4-a716-446655440000").Return(existing, nil).Times(1)
@@ -265,7 +254,6 @@ func TestUpdateSpecialistCommand_Execute(t *testing.T) {
 				ctx := context.Background()
 				mockTracer.EXPECT().Start(gomock.Any(), UpdateSpecialistSpanName).Return(ctx, mockSpan).Times(1)
 				mockSpan.EXPECT().End().Times(1)
-				mockLogger.EXPECT().Info(gomock.Any(), StartingSpecialistUpdateMessage, gomock.Any()).Times(1)
 
 				existing := existingSpecialistFactory()
 				mockRepo.EXPECT().FindByID(gomock.Any(), "550e8400-e29b-41d4-a716-446655440000").Return(existing, nil).Times(1)

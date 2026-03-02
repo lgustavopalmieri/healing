@@ -74,19 +74,13 @@ func TestValidateLicenseHandler_Handle(t *testing.T) {
 				mockTracer.EXPECT().Start(gomock.Any(), ValidateLicenseSpanName).Return(ctx, mockSpan).Times(1)
 				mockSpan.EXPECT().End().Times(1)
 
-				mockLogger.EXPECT().Info(gomock.Any(), StartingLicenseValidationMessage, gomock.Any(), gomock.Any()).Times(1)
-
 				mockRepo.EXPECT().FindByID(gomock.Any(), "specialist-123").Return(specialist, nil).Times(1)
 
 				mockGateway.EXPECT().Validate(gomock.Any(), "CRM123456").Return(true, nil).Times(1)
 
 				mockRepo.EXPECT().UpdateStatus(gomock.Any(), "specialist-123", domain.StatusAuthorizedLicense).Return(nil).Times(1)
 
-				mockLogger.EXPECT().Info(gomock.Any(), SpecialistStatusUpdatedMessage, gomock.Any()).Times(1)
-
 				mockEvent.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-
-				mockLogger.EXPECT().Info(gomock.Any(), LicenseValidatedSuccessMessage, gomock.Any(), gomock.Any()).Times(1)
 			},
 			expectError: false,
 		},
@@ -94,6 +88,10 @@ func TestValidateLicenseHandler_Handle(t *testing.T) {
 			name:  "failure - returns error when payload is invalid JSON",
 			event: event.NewEvent("specialist.created", []byte("invalid-json")),
 			setupMocks: func(mockRepo *mocks.MockValidateLicenseRepositoryInterface, mockGateway *mocks.MockLicenseGatewayInterface, mockEvent *mocks.MockEventDispatcher, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan) {
+				ctx := context.Background()
+				mockTracer.EXPECT().Start(gomock.Any(), ValidateLicenseSpanName).Return(ctx, mockSpan).Times(1)
+				mockSpan.EXPECT().End().Times(1)
+
 				mockRepo.EXPECT().FindByID(gomock.Any(), gomock.Any()).Times(0)
 				mockGateway.EXPECT().Validate(gomock.Any(), gomock.Any()).Times(0)
 				mockRepo.EXPECT().UpdateStatus(gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
@@ -109,8 +107,6 @@ func TestValidateLicenseHandler_Handle(t *testing.T) {
 
 				mockTracer.EXPECT().Start(gomock.Any(), ValidateLicenseSpanName).Return(ctx, mockSpan).Times(1)
 				mockSpan.EXPECT().End().Times(1)
-
-				mockLogger.EXPECT().Info(gomock.Any(), StartingLicenseValidationMessage, gomock.Any(), gomock.Any()).Times(1)
 
 				mockRepo.EXPECT().FindByID(gomock.Any(), "specialist-123").Return(nil, errors.New("not found")).Times(1)
 				mockSpan.EXPECT().RecordError(gomock.Any()).Times(1)
@@ -133,8 +129,6 @@ func TestValidateLicenseHandler_Handle(t *testing.T) {
 				mockTracer.EXPECT().Start(gomock.Any(), ValidateLicenseSpanName).Return(ctx, mockSpan).Times(1)
 				mockSpan.EXPECT().End().Times(1)
 
-				mockLogger.EXPECT().Info(gomock.Any(), StartingLicenseValidationMessage, gomock.Any(), gomock.Any()).Times(1)
-
 				mockRepo.EXPECT().FindByID(gomock.Any(), "specialist-123").Return(specialist, nil).Times(1)
 
 				mockGateway.EXPECT().Validate(gomock.Any(), "CRM123456").Return(false, errors.New("service unavailable")).Times(1)
@@ -156,8 +150,6 @@ func TestValidateLicenseHandler_Handle(t *testing.T) {
 
 				mockTracer.EXPECT().Start(gomock.Any(), ValidateLicenseSpanName).Return(ctx, mockSpan).Times(1)
 				mockSpan.EXPECT().End().Times(1)
-
-				mockLogger.EXPECT().Info(gomock.Any(), StartingLicenseValidationMessage, gomock.Any(), gomock.Any()).Times(1)
 
 				mockRepo.EXPECT().FindByID(gomock.Any(), "specialist-123").Return(specialist, nil).Times(1)
 
@@ -183,8 +175,6 @@ func TestValidateLicenseHandler_Handle(t *testing.T) {
 				mockTracer.EXPECT().Start(gomock.Any(), ValidateLicenseSpanName).Return(ctx, mockSpan).Times(1)
 				mockSpan.EXPECT().End().Times(1)
 
-				mockLogger.EXPECT().Info(gomock.Any(), StartingLicenseValidationMessage, gomock.Any(), gomock.Any()).Times(1)
-
 				mockRepo.EXPECT().FindByID(gomock.Any(), "specialist-123").Return(specialist, nil).Times(1)
 
 				mockGateway.EXPECT().Validate(gomock.Any(), "CRM123456").Return(true, nil).Times(1)
@@ -207,8 +197,6 @@ func TestValidateLicenseHandler_Handle(t *testing.T) {
 
 				mockTracer.EXPECT().Start(gomock.Any(), ValidateLicenseSpanName).Return(ctx, mockSpan).Times(1)
 				mockSpan.EXPECT().End().Times(1)
-
-				mockLogger.EXPECT().Info(gomock.Any(), StartingLicenseValidationMessage, gomock.Any(), gomock.Any()).Times(1)
 
 				mockRepo.EXPECT().FindByID(gomock.Any(), "specialist-123").Return(specialist, nil).Times(1)
 
@@ -233,20 +221,14 @@ func TestValidateLicenseHandler_Handle(t *testing.T) {
 				mockTracer.EXPECT().Start(gomock.Any(), ValidateLicenseSpanName).Return(ctx, mockSpan).Times(1)
 				mockSpan.EXPECT().End().Times(1)
 
-				mockLogger.EXPECT().Info(gomock.Any(), StartingLicenseValidationMessage, gomock.Any(), gomock.Any()).Times(1)
-
 				mockRepo.EXPECT().FindByID(gomock.Any(), "specialist-123").Return(specialist, nil).Times(1)
 
 				mockGateway.EXPECT().Validate(gomock.Any(), "CRM123456").Return(true, nil).Times(1)
 
 				mockRepo.EXPECT().UpdateStatus(gomock.Any(), "specialist-123", domain.StatusAuthorizedLicense).Return(nil).Times(1)
 
-				mockLogger.EXPECT().Info(gomock.Any(), SpecialistStatusUpdatedMessage, gomock.Any()).Times(1)
-
 				mockEvent.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Return(errors.New("kafka unavailable")).Times(1)
 				mockLogger.EXPECT().Warn(gomock.Any(), ErrEventPublishMessage, gomock.Any(), gomock.Any()).Times(1)
-
-				mockLogger.EXPECT().Info(gomock.Any(), LicenseValidatedSuccessMessage, gomock.Any(), gomock.Any()).Times(1)
 			},
 			expectError: false,
 		},

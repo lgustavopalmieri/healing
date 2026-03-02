@@ -229,7 +229,7 @@ func TestSpecialistSearchGRPCService_SearchSpecialists(t *testing.T) {
 			},
 		},
 		{
-			name: "failure - returns error when search input validation fails (empty criteria)",
+			name: "failure - propagates ErrInvalidSearchInput when command rejects empty criteria",
 			input: searchRequestFactory(func(req *pb.SearchSpecialistsRequest) {
 				req.SearchTerm = ""
 				req.Filters = []*pb.SearchFilter{}
@@ -240,10 +240,11 @@ func TestSpecialistSearchGRPCService_SearchSpecialists(t *testing.T) {
 			setupMocks: func(mockCommand *mocks.MockSpecialistSearchCommandInterface) {
 				mockCommand.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
-					Times(0)
+					Return(nil, application.ErrInvalidSearchInput).
+					Times(1)
 			},
 			expectError: true,
-			expectedErr: nil,
+			expectedErr: application.ErrInvalidSearchInput,
 			validateResponse: func(t *testing.T, response *pb.SearchSpecialistsResponse) {
 				assert.Nil(t, response)
 			},
@@ -305,7 +306,7 @@ func TestSpecialistSearchGRPCService_SearchSpecialists(t *testing.T) {
 			},
 		},
 		{
-			name:  "failure - handles nil request by producing validation error",
+			name:  "failure - returns ErrNilRequest when request is nil",
 			input: nil,
 			setupContext: func() context.Context {
 				return context.Background()
@@ -316,7 +317,7 @@ func TestSpecialistSearchGRPCService_SearchSpecialists(t *testing.T) {
 					Times(0)
 			},
 			expectError: true,
-			expectedErr: nil,
+			expectedErr: ErrNilRequest,
 			validateResponse: func(t *testing.T, response *pb.SearchSpecialistsResponse) {
 				assert.Nil(t, response)
 			},
