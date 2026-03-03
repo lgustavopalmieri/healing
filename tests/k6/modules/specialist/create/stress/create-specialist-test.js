@@ -1,6 +1,6 @@
 import { GrpcClient } from '../../../../commom/grpc-client.js';
 import { validateSpecialistResponse } from './validations.js';
-import { generateSpecialistData } from './generate-data.js';
+import { generateSpecialistData } from '../../../../commom/factories/specialist.js';
 import { stressTestConfig } from './config.js';
 import { stressTestRunner } from '../../../../commom/stress-runner.js';
 

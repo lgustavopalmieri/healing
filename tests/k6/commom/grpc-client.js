@@ -1,7 +1,7 @@
 import grpc from 'k6/net/grpc';
 
 /**
- * GrpcClient - Cliente gRPC reutilizável para testes K6
+ * GrpcClient - Reusable gRPC client for K6 tests
  */
 export class GrpcClient {
   constructor(config = {}) {
@@ -12,7 +12,7 @@ export class GrpcClient {
     this.plaintext = config.plaintext !== undefined ? config.plaintext : true;
     this.isConnected = false;
     
-    // Carrega o arquivo proto
+    // Load the proto file
     this.client.load(this.protoPath, this.protoFile);
   }
 

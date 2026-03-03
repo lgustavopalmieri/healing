@@ -14,6 +14,7 @@ export function validateSpecialistResponse(response, request = null) {
     'description present': (r) => r && r.message && r.message.specialist && r.message.specialist.description,
     'keywords array': (r) => r && r.message && r.message.specialist && Array.isArray(r.message.specialist.keywords),
     'agreement boolean': (r) => r && r.message && r.message.specialist && typeof r.message.specialist.agreedToShare === 'boolean',
+    'status present': (r) => r && r.message && r.message.specialist && r.message.specialist.status,
   };
   return check(response, validations);
 }
