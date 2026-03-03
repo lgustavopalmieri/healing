@@ -2,6 +2,8 @@ package httphandler
 
 import (
 	"context"
+	"encoding/json"
+	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -24,8 +26,14 @@ func NewSpecialistSearchHTTPHandler(command SpecialistSearchCommandInterface) *S
 }
 
 func (h *SpecialistSearchHTTPHandler) SearchSpecialists(c *gin.Context) {
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 	var req SearchSpecialistsRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := json.Unmarshal(body, &req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
