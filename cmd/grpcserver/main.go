@@ -59,27 +59,32 @@ func run() error {
 		return err
 	}
 
-	// Initialize metrics server
+	httpServer := server.NewHTTPServer(server.HTTPConfig{
+		Port: cfg.Server.HTTPPort,
+	})
+
 	metricsServer := server.NewMetricsServer(server.MetricsConfig{
-		Port:     9090, // Prometheus default port
+		Port:     9090,
 		Registry: observability.Metrics.(*telemetry.PrometheusMetrics).Registry(),
 	})
 
-	// Start metrics server in background
 	go func() {
 		if err := metricsServer.Start(); err != nil {
 			log.Printf("❌ Metrics server error: %v", err)
 		}
 	}()
 
-	bootstrap.RegisterServices(grpcServer, bootstrap.ServiceDependencies{
+	serviceDeps := bootstrap.ServiceDependencies{
 		DB:                 db,
 		ESClient:           esClient,
 		EventPublisher:     kafkaProducer,
 		Tracer:             observability.Tracer,
 		Logger:             observability.Logger,
 		ESIndexSpecialists: cfg.Elasticsearch.IndexSpecialists,
-	})
+	}
+
+	bootstrap.RegisterServices(grpcServer, serviceDeps)
+	bootstrap.RegisterHTTPServices(httpServer, serviceDeps)
 
 	if err := bootstrap.InitKafkaConsumers(ctx, bootstrap.ConsumerDependencies{
 		DB:                 db,
@@ -97,12 +102,15 @@ func run() error {
 
 	go func() {
 		shutdownManager.Wait()
-		// Mark application as unhealthy during shutdown
 		observability.GRPCMetrics.SetUnhealthy()
 
-		// Shutdown metrics server first
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), cfg.Server.ShutdownTimeout)
 		defer cancel()
+
+		if err := httpServer.Shutdown(shutdownCtx); err != nil {
+			log.Printf("⚠️ HTTP server shutdown error: %v", err)
+		}
+
 		if err := metricsServer.Shutdown(shutdownCtx); err != nil {
 			log.Printf("⚠️ Metrics server shutdown error: %v", err)
 		}
@@ -112,6 +120,12 @@ func run() error {
 			os.Exit(1)
 		}
 		os.Exit(0)
+	}()
+
+	go func() {
+		if err := httpServer.Start(); err != nil {
+			log.Printf("❌ HTTP server error: %v", err)
+		}
 	}()
 
 	return grpcServer.Start()

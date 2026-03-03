@@ -15,6 +15,7 @@ type Config struct {
 
 type ServerConfig struct {
 	GRPCPort          int
+	HTTPPort          int
 	ShutdownTimeout   time.Duration
 	MaxConnections    int
 	ConnectionTimeout time.Duration

@@ -20,6 +20,7 @@ func Load() (*Config, error) {
 	cfg := &Config{
 		Server: ServerConfig{
 			GRPCPort:          getEnvAsInt("SERVER_GRPC_PORT", 50051),
+			HTTPPort:          getEnvAsInt("SERVER_HTTP_PORT", 8080),
 			ShutdownTimeout:   getEnvAsDuration("SERVER_SHUTDOWN_TIMEOUT", 30*time.Second),
 			MaxConnections:    getEnvAsInt("SERVER_MAX_CONNECTIONS", 1000),
 			ConnectionTimeout: getEnvAsDuration("SERVER_CONNECTION_TIMEOUT", 10*time.Second),
