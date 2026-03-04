@@ -3,10 +3,8 @@ package kafka
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"net/http"
 
-	libkafka "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/application"
@@ -40,16 +38,13 @@ func NewValidateLicenseKafkaManager(ctx context.Context, deps ManagerDependencie
 	manager := event.NewListenerManager()
 	manager.Register(application.SpecialistCreatedEventName, handler)
 
-	config := &libkafka.ConfigMap{
-		"bootstrap.servers":  deps.BootstrapServers,
-		"group.id":           "specialist-validate-license-consumer-group",
-		"auto.offset.reset":  "earliest",
-		"enable.auto.commit": false,
-	}
-
-	consumer, err := platformkafka.NewKafkaConsumer(config, manager)
+	consumer, err := platformkafka.NewKafkaConsumer(
+		[]string{deps.BootstrapServers},
+		"specialist-validate-license-consumer-group",
+		manager,
+	)
 	if err != nil {
-		return fmt.Errorf("failed to create validate license kafka consumer: %w", err)
+		return err
 	}
 
 	go consumer.Start(ctx)

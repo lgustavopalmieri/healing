@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	kafkalib "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -154,12 +153,9 @@ func TestValidateLicenseHandler_Integration(t *testing.T) {
 			licenseServer := setupMockLicenseServer(tt.licenseValid)
 			defer licenseServer.Close()
 
-			bootstrapServers := kafkaHelper.SharedContainer.BootstrapServers()
+			brokers := kafkaHelper.SharedContainer.Brokers
 
-			producerConfig := &kafkalib.ConfigMap{
-				"bootstrap.servers": bootstrapServers,
-			}
-			producer, err := platformkafka.NewKafkaProducer(producerConfig)
+			producer, err := platformkafka.NewKafkaProducer(brokers)
 			require.NoError(t, err)
 
 			handler := setupHandler(db, licenseServer.URL, producer)
@@ -168,14 +164,8 @@ func TestValidateLicenseHandler_Integration(t *testing.T) {
 			manager.Register(application.SpecialistCreatedEventName, handler)
 
 			consumerGroupID := "test-validate-license-" + uuid.New().String()[:8]
-			consumerConfig := &kafkalib.ConfigMap{
-				"bootstrap.servers":  bootstrapServers,
-				"group.id":           consumerGroupID,
-				"auto.offset.reset":  "earliest",
-				"enable.auto.commit": false,
-			}
 
-			consumer, err := platformkafka.NewKafkaConsumer(consumerConfig, manager)
+			consumer, err := platformkafka.NewKafkaConsumer(brokers, consumerGroupID, manager)
 			require.NoError(t, err)
 
 			ctx, cancel := context.WithCancel(context.Background())

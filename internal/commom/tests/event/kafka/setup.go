@@ -8,10 +8,11 @@ import (
 	"testing"
 	"time"
 
-	kafkalib "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	tckafka "github.com/testcontainers/testcontainers-go/modules/kafka"
+	"github.com/twmb/franz-go/pkg/kadm"
+	"github.com/twmb/franz-go/pkg/kgo"
 
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
 	platformkafka "github.com/lgustavopalmieri/healing-specialist/internal/platform/kafka"
@@ -51,27 +52,14 @@ func (c *KafkaContainer) BootstrapServers() string {
 }
 
 func (c *KafkaContainer) CreateProducer(t *testing.T) *platformkafka.KafkaProducer {
-	config := &kafkalib.ConfigMap{
-		"bootstrap.servers": c.BootstrapServers(),
-	}
-
-	producer, err := platformkafka.NewKafkaProducer(config)
+	producer, err := platformkafka.NewKafkaProducer(c.Brokers)
 	require.NoError(t, err)
-
 	return producer
 }
 
 func (c *KafkaContainer) CreateConsumer(t *testing.T, groupID string, manager *event.ListenerManager) *platformkafka.KafkaConsumer {
-	config := &kafkalib.ConfigMap{
-		"bootstrap.servers":  c.BootstrapServers(),
-		"group.id":           groupID,
-		"auto.offset.reset":  "earliest",
-		"enable.auto.commit": false,
-	}
-
-	consumer, err := platformkafka.NewKafkaConsumer(config, manager)
+	consumer, err := platformkafka.NewKafkaConsumer(c.Brokers, groupID, manager)
 	require.NoError(t, err)
-
 	return consumer
 }
 
@@ -79,61 +67,51 @@ func (c *KafkaContainer) ProduceEvent(t *testing.T, topic string, payload any) {
 	data, err := json.Marshal(payload)
 	require.NoError(t, err)
 
-	config := &kafkalib.ConfigMap{
-		"bootstrap.servers": c.BootstrapServers(),
-	}
-
-	producer, err := kafkalib.NewProducer(config)
+	client, err := kgo.NewClient(
+		kgo.SeedBrokers(c.Brokers...),
+		kgo.AllowAutoTopicCreation(),
+	)
 	require.NoError(t, err)
-	defer producer.Close()
+	defer client.Close()
 
-	deliveryChan := make(chan kafkalib.Event)
-
-	err = producer.Produce(&kafkalib.Message{
-		TopicPartition: kafkalib.TopicPartition{
-			Topic:     &topic,
-			Partition: kafkalib.PartitionAny,
-		},
+	record := &kgo.Record{
+		Topic: topic,
 		Value: data,
-	}, deliveryChan)
-	require.NoError(t, err)
-
-	select {
-	case e := <-deliveryChan:
-		msg := e.(*kafkalib.Message)
-		require.NoError(t, msg.TopicPartition.Error)
-	case <-time.After(10 * time.Second):
-		t.Fatal("timeout waiting for kafka message delivery")
 	}
+
+	result := client.ProduceSync(context.Background(), record)
+	require.NoError(t, result.FirstErr())
 }
 
 func (c *KafkaContainer) ConsumeEvent(t *testing.T, topic string, groupID string, timeout time.Duration) []byte {
-	config := &kafkalib.ConfigMap{
-		"bootstrap.servers":  c.BootstrapServers(),
-		"group.id":           groupID,
-		"auto.offset.reset":  "earliest",
-		"enable.auto.commit": true,
-	}
-
-	consumer, err := kafkalib.NewConsumer(config)
+	client, err := kgo.NewClient(
+		kgo.SeedBrokers(c.Brokers...),
+		kgo.ConsumerGroup(groupID),
+		kgo.ConsumeTopics(topic),
+		kgo.ConsumeResetOffset(kgo.NewOffset().AtStart()),
+	)
 	require.NoError(t, err)
-	defer consumer.Close()
+	defer client.Close()
 
-	err = consumer.SubscribeTopics([]string{topic}, nil)
-	require.NoError(t, err)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 
-	deadline := time.After(timeout)
 	for {
-		select {
-		case <-deadline:
+		fetches := client.PollFetches(ctx)
+		if ctx.Err() != nil {
 			t.Fatalf("timeout waiting for message on topic %s", topic)
 			return nil
-		default:
-			msg, err := consumer.ReadMessage(500 * time.Millisecond)
-			if err != nil {
-				continue
+		}
+
+		var result []byte
+		fetches.EachRecord(func(record *kgo.Record) {
+			if result == nil {
+				result = record.Value
 			}
-			return msg.Value
+		})
+
+		if result != nil {
+			return result
 		}
 	}
 }
@@ -159,36 +137,28 @@ func (h *TestHelper) RunTestMain(m *testing.M) {
 }
 
 func (c *KafkaContainer) CreateTopics(topics ...string) error {
-	adminConfig := &kafkalib.ConfigMap{
-		"bootstrap.servers": c.BootstrapServers(),
-	}
-
-	admin, err := kafkalib.NewAdminClient(adminConfig)
+	client, err := kgo.NewClient(kgo.SeedBrokers(c.Brokers...))
 	if err != nil {
 		return fmt.Errorf("failed to create admin client: %w", err)
 	}
-	defer admin.Close()
+	defer client.Close()
 
-	topicSpecs := make([]kafkalib.TopicSpecification, len(topics))
-	for i, topic := range topics {
-		topicSpecs[i] = kafkalib.TopicSpecification{
-			Topic:             topic,
-			NumPartitions:     1,
-			ReplicationFactor: 1,
-		}
-	}
+	admin := kadm.NewClient(client)
+	defer admin.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	results, err := admin.CreateTopics(ctx, topicSpecs)
+	resp, err := admin.CreateTopics(ctx, 1, 1, nil, topics...)
 	if err != nil {
 		return fmt.Errorf("failed to create topics: %w", err)
 	}
 
-	for _, result := range results {
-		if result.Error.Code() != kafkalib.ErrNoError && result.Error.Code() != kafkalib.ErrTopicAlreadyExists {
-			return fmt.Errorf("failed to create topic %s: %v", result.Topic, result.Error)
+	for _, r := range resp.Sorted() {
+		if r.Err != nil {
+			if r.Err.Error() != "TOPIC_ALREADY_EXISTS" {
+				return fmt.Errorf("failed to create topic %s: %v", r.Topic, r.Err)
+			}
 		}
 	}
 
@@ -201,14 +171,13 @@ func WaitForConsumerGroupReady(bootstrapServers string, groupID string, timeout 
 	ticker := time.NewTicker(200 * time.Millisecond)
 	defer ticker.Stop()
 
-	adminConfig := &kafkalib.ConfigMap{
-		"bootstrap.servers": bootstrapServers,
-	}
-
-	admin, err := kafkalib.NewAdminClient(adminConfig)
+	client, err := kgo.NewClient(kgo.SeedBrokers(bootstrapServers))
 	if err != nil {
 		return fmt.Errorf("failed to create admin client: %w", err)
 	}
+	defer client.Close()
+
+	admin := kadm.NewClient(client)
 	defer admin.Close()
 
 	for {
@@ -217,13 +186,13 @@ func WaitForConsumerGroupReady(bootstrapServers string, groupID string, timeout 
 			return fmt.Errorf("timeout waiting for consumer group %s to be ready", groupID)
 		case <-ticker.C:
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-			result, err := admin.ListConsumerGroups(ctx, kafkalib.SetAdminRequestTimeout(5*time.Second))
+			groups, err := admin.ListGroups(ctx)
 			cancel()
 			if err != nil {
 				continue
 			}
-			for _, group := range result.Valid {
-				if group.GroupID == groupID {
+			for _, g := range groups.Sorted() {
+				if g.Group == groupID {
 					return nil
 				}
 			}

@@ -11,6 +11,8 @@ up:
 	ENV_FILE=.env APP_ENV=development docker-compose up -d --build
 	@echo "✅ Server is running in DEVELOPMENT mode!"
 	@echo "🚀 gRPC Server: localhost:50051"
+	@echo "🌐 HTTP Server: localhost:4000"
+	@echo "📊 Metrics:     localhost:4001"
 
 down:
 	@echo "🛑 Stopping server..."
