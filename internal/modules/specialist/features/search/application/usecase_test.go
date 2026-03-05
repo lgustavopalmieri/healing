@@ -77,7 +77,7 @@ func emptySearchResult() *searchoutput.SearchResult {
 	}
 }
 
-func TestSearchSpecialistsCommand_Execute(t *testing.T) {
+func TestSearchSpecialistsUseCase_Execute(t *testing.T) {
 	tests := []struct {
 		name           string
 		input          *SearchSpecialistsDTO
@@ -254,9 +254,9 @@ func TestSearchSpecialistsCommand_Execute(t *testing.T) {
 
 			tt.setupMocks(mockRepo, mockLogger)
 
-			command := NewSearchSpecialistsCommand(mockRepo, mockLogger)
+			useCase := NewSearchSpecialistsUseCase(mockRepo, mockLogger)
 
-			output, err := command.Execute(context.Background(), tt.input)
+			output, err := useCase.Execute(context.Background(), tt.input)
 
 			if tt.expectError {
 				assert.Error(t, err)

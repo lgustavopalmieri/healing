@@ -73,15 +73,15 @@ func TestSpecialistCreateHTTPHandler_CreateSpecialist(t *testing.T) {
 	tests := []struct {
 		name           string
 		body           any
-		setupMocks     func(*mocks.MockSpecialistCreateCommandInterface)
+		setupMocks     func(*mocks.MockSpecialistCreateUseCaseInterface)
 		expectedStatus int
 		validateBody   func(*testing.T, map[string]any)
 	}{
 		{
 			name: "success - creates specialist and returns 201 with specialist data",
 			body: createRequestFactory(),
-			setupMocks: func(mockCommand *mocks.MockSpecialistCreateCommandInterface) {
-				mockCommand.EXPECT().
+			setupMocks: func(mockUseCase *mocks.MockSpecialistCreateUseCaseInterface) {
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), application.CreateSpecialistDTO{
 						Name:          "Dr. João Silva",
 						Email:         "joao@exemplo.com",
@@ -114,8 +114,8 @@ func TestSpecialistCreateHTTPHandler_CreateSpecialist(t *testing.T) {
 		{
 			name: "failure - returns 400 when request body is invalid JSON",
 			body: "invalid-json{{{",
-			setupMocks: func(mockCommand *mocks.MockSpecialistCreateCommandInterface) {
-				mockCommand.EXPECT().Execute(gomock.Any(), gomock.Any()).Times(0)
+			setupMocks: func(mockUseCase *mocks.MockSpecialistCreateUseCaseInterface) {
+				mockUseCase.EXPECT().Execute(gomock.Any(), gomock.Any()).Times(0)
 			},
 			expectedStatus: http.StatusBadRequest,
 			validateBody: func(t *testing.T, body map[string]any) {
@@ -127,8 +127,8 @@ func TestSpecialistCreateHTTPHandler_CreateSpecialist(t *testing.T) {
 			body: createRequestFactory(func(r *CreateSpecialistRequest) {
 				r.Name = ""
 			}),
-			setupMocks: func(mockCommand *mocks.MockSpecialistCreateCommandInterface) {
-				mockCommand.EXPECT().
+			setupMocks: func(mockUseCase *mocks.MockSpecialistCreateUseCaseInterface) {
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					Return(nil, create.ErrInvalidName).
 					Times(1)
@@ -141,8 +141,8 @@ func TestSpecialistCreateHTTPHandler_CreateSpecialist(t *testing.T) {
 		{
 			name: "failure - returns 422 when command returns ErrSaveSpecialist",
 			body: createRequestFactory(),
-			setupMocks: func(mockCommand *mocks.MockSpecialistCreateCommandInterface) {
-				mockCommand.EXPECT().
+			setupMocks: func(mockUseCase *mocks.MockSpecialistCreateUseCaseInterface) {
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					Return(nil, application.ErrSaveSpecialist).
 					Times(1)
@@ -155,8 +155,8 @@ func TestSpecialistCreateHTTPHandler_CreateSpecialist(t *testing.T) {
 		{
 			name: "failure - returns 422 when command returns context.Canceled",
 			body: createRequestFactory(),
-			setupMocks: func(mockCommand *mocks.MockSpecialistCreateCommandInterface) {
-				mockCommand.EXPECT().
+			setupMocks: func(mockUseCase *mocks.MockSpecialistCreateUseCaseInterface) {
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					Return(nil, context.Canceled).
 					Times(1)
@@ -173,10 +173,10 @@ func TestSpecialistCreateHTTPHandler_CreateSpecialist(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mockCommand := mocks.NewMockSpecialistCreateCommandInterface(ctrl)
-			tt.setupMocks(mockCommand)
+			mockUseCase := mocks.NewMockSpecialistCreateUseCaseInterface(ctrl)
+			tt.setupMocks(mockUseCase)
 
-			handler := NewSpecialistCreateHTTPHandler(mockCommand)
+			handler := NewSpecialistCreateHTTPHandler(mockUseCase)
 			router := setupRouter(handler)
 
 			var bodyBytes []byte

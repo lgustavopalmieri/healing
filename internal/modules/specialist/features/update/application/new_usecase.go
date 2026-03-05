@@ -5,20 +5,20 @@ import (
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
 )
 
-type UpdateSpecialistCommand struct {
+type UpdateSpecialistUseCase struct {
 	repository     SpecialistUpdateRepositoryInterface
 	eventPublisher event.EventDispatcher
 	tracer         observability.Tracer
 	logger         observability.Logger
 }
 
-func NewUpdateSpecialistCommand(
+func NewUpdateSpecialistUseCase(
 	repository SpecialistUpdateRepositoryInterface,
 	eventPublisher event.EventDispatcher,
 	tracer observability.Tracer,
 	logger observability.Logger,
-) *UpdateSpecialistCommand {
-	return &UpdateSpecialistCommand{
+) *UpdateSpecialistUseCase {
+	return &UpdateSpecialistUseCase{
 		repository:     repository,
 		eventPublisher: eventPublisher,
 		tracer:         tracer,

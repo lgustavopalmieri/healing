@@ -11,17 +11,17 @@ import (
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/application"
 )
 
-type SpecialistUpdateCommandInterface interface {
+type SpecialistUpdateUseCaseInterface interface {
 	Execute(ctx context.Context, input application.UpdateSpecialistDTO) (*domain.Specialist, error)
 }
 
 type SpecialistUpdateHTTPHandler struct {
-	Command SpecialistUpdateCommandInterface
+	UseCase SpecialistUpdateUseCaseInterface
 }
 
-func NewSpecialistUpdateHTTPHandler(command SpecialistUpdateCommandInterface) *SpecialistUpdateHTTPHandler {
+func NewSpecialistUpdateHTTPHandler(useCase SpecialistUpdateUseCaseInterface) *SpecialistUpdateHTTPHandler {
 	return &SpecialistUpdateHTTPHandler{
-		Command: command,
+		UseCase: useCase,
 	}
 }
 
@@ -45,7 +45,7 @@ func (h *SpecialistUpdateHTTPHandler) UpdateSpecialist(c *gin.Context) {
 	}
 
 	dto := ToUpdateSpecialistDTO(id, req)
-	specialist, err := h.Command.Execute(c.Request.Context(), dto)
+	specialist, err := h.UseCase.Execute(c.Request.Context(), dto)
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return

@@ -4,16 +4,16 @@ import (
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
 )
 
-type SearchSpecialistsCommand struct {
+type SearchSpecialistsUseCase struct {
 	repository SpecialistSearchRepositoryInterface
 	logger     observability.Logger
 }
 
-func NewSearchSpecialistsCommand(
+func NewSearchSpecialistsUseCase(
 	repository SpecialistSearchRepositoryInterface,
 	logger observability.Logger,
-) *SearchSpecialistsCommand {
-	return &SearchSpecialistsCommand{
+) *SearchSpecialistsUseCase {
+	return &SearchSpecialistsUseCase{
 		repository: repository,
 		logger:     logger,
 	}

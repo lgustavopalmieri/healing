@@ -9,7 +9,7 @@ import (
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/create"
 )
 
-func (c *CreateSpecialistCommand) Execute(contx context.Context, input CreateSpecialistDTO) (*domain.Specialist, error) {
+func (c *CreateSpecialistUseCase) Execute(contx context.Context, input CreateSpecialistDTO) (*domain.Specialist, error) {
 	ctx, span := c.tracer.Start(contx, CreateSpecialistSpanName)
 	defer span.End()
 
@@ -47,7 +47,7 @@ func (c *CreateSpecialistCommand) Execute(contx context.Context, input CreateSpe
 	return savedSpecialist, nil
 }
 
-func (c *CreateSpecialistCommand) validateUniquenessConstraints(ctx context.Context, span observability.Span, id, email, licenseNumber string) error {
+func (c *CreateSpecialistUseCase) validateUniquenessConstraints(ctx context.Context, span observability.Span, id, email, licenseNumber string) error {
 	err := c.repository.ValidateUniqueness(ctx, id, email, licenseNumber)
 	if err != nil {
 		span.RecordError(err)
@@ -61,7 +61,7 @@ func (c *CreateSpecialistCommand) validateUniquenessConstraints(ctx context.Cont
 	return nil
 }
 
-func (c *CreateSpecialistCommand) publishSpecialistCreatedEvent(ctx context.Context, specialist *domain.Specialist) {
+func (c *CreateSpecialistUseCase) publishSpecialistCreatedEvent(ctx context.Context, specialist *domain.Specialist) {
 	specialistCreatedEvent := event.NewEvent(SpecialistCreatedEventName, map[string]any{
 		"id":            specialist.ID,
 		"email":         specialist.Email,

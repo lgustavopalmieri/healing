@@ -132,8 +132,8 @@ Note: `event_listeners/` inside features retain their own `infra/` subdirectory 
 ```
 features/create/
 ├── application/
-│   ├── command.go / command_test.go
-│   ├── new_command.go
+│   ├── usecase.go / usecase_test.go
+│   ├── new_usecase.go
 │   ├── interface.go
 │   ├── dto.go
 │   ├── constants.go
@@ -173,8 +173,8 @@ Create specifics:
 ```
 features/search/
 ├── application/
-│   ├── command.go / command_test.go
-│   ├── new_command.go
+│   ├── usecase.go / usecase_test.go
+│   ├── new_usecase.go
 │   ├── interface.go
 │   ├── dto.go
 │   ├── constants.go
@@ -204,8 +204,8 @@ Search specifics:
 ```
 features/update/
 ├── application/
-│   ├── command.go / command_test.go
-│   ├── new_command.go
+│   ├── usecase.go / usecase_test.go
+│   ├── new_usecase.go
 │   ├── interface.go
 │   ├── dto.go
 │   ├── constants.go
@@ -319,7 +319,7 @@ update:
 
 ## File Naming Patterns by Layer
 
-- `command.go` + `new_command.go` — application layer (logic and constructor separated)
+- `usecase.go` + `new_usecase.go` — application layer (logic and constructor separated)
 - `handler.go` + `new_handler.go` — listener layer (same pattern)
 - `repository.go` + `new.go` — adapters/outbound/database and adapters/outbound/elasticsearch
 - `gateway.go` + `new.go` — event_listeners/*/infra/external
@@ -337,7 +337,7 @@ domain (entity, status, errors, validate)
     ↑
 domain/<feature>/ (factory, validation, feature-specific errors)
     ↑
-features/<feature>/application/ (command orchestration, interfaces, DTOs)
+features/<feature>/application/ (use case orchestration, interfaces, DTOs)
     ↑
 features/<feature>/adapters/inbound/ (grpc_service, http_handler)
 features/<feature>/adapters/outbound/ (database, elasticsearch)

@@ -11,17 +11,17 @@ import (
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/application"
 )
 
-type SpecialistSearchCommandInterface interface {
+type SpecialistSearchUseCaseInterface interface {
 	Execute(ctx context.Context, dto *application.SearchSpecialistsDTO) (*searchoutput.ListSearchOutput, error)
 }
 
 type SpecialistSearchHTTPHandler struct {
-	Command SpecialistSearchCommandInterface
+	UseCase SpecialistSearchUseCaseInterface
 }
 
-func NewSpecialistSearchHTTPHandler(command SpecialistSearchCommandInterface) *SpecialistSearchHTTPHandler {
+func NewSpecialistSearchHTTPHandler(useCase SpecialistSearchUseCaseInterface) *SpecialistSearchHTTPHandler {
 	return &SpecialistSearchHTTPHandler{
-		Command: command,
+		UseCase: useCase,
 	}
 }
 
@@ -44,7 +44,7 @@ func (h *SpecialistSearchHTTPHandler) SearchSpecialists(c *gin.Context) {
 		return
 	}
 
-	output, err := h.Command.Execute(c.Request.Context(), dto)
+	output, err := h.UseCase.Execute(c.Request.Context(), dto)
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return

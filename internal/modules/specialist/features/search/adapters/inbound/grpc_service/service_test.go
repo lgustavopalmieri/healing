@@ -15,7 +15,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-//go:generate mockgen -source=service.go -destination=mocks/command_mock.go -package=mocks
+//go:generate mockgen -source=service.go -destination=mocks/usecase_mock.go -package=mocks
 
 func searchRequestFactory(overrides ...func(*pb.SearchSpecialistsRequest)) *pb.SearchSpecialistsRequest {
 	req := &pb.SearchSpecialistsRequest{
@@ -73,7 +73,7 @@ func TestSpecialistSearchGRPCService_SearchSpecialists(t *testing.T) {
 		name             string
 		input            *pb.SearchSpecialistsRequest
 		setupContext     func() context.Context
-		setupMocks       func(*mocks.MockSpecialistSearchCommandInterface)
+		setupMocks     func(*mocks.MockSpecialistSearchUseCaseInterface)
 		expectError      bool
 		expectedErr      error
 		validateResponse func(*testing.T, *pb.SearchSpecialistsResponse)
@@ -84,10 +84,10 @@ func TestSpecialistSearchGRPCService_SearchSpecialists(t *testing.T) {
 			setupContext: func() context.Context {
 				return context.Background()
 			},
-			setupMocks: func(mockCommand *mocks.MockSpecialistSearchCommandInterface) {
+			setupMocks: func(mockUseCase *mocks.MockSpecialistSearchUseCaseInterface) {
 				specialists := []*domain.Specialist{specialistFactory()}
 				output := searchOutputFactory(specialists, nil, nil, false, false)
-				mockCommand.EXPECT().
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					Return(output, nil).
 					Times(1)
@@ -123,7 +123,7 @@ func TestSpecialistSearchGRPCService_SearchSpecialists(t *testing.T) {
 			setupContext: func() context.Context {
 				return context.Background()
 			},
-			setupMocks: func(mockCommand *mocks.MockSpecialistSearchCommandInterface) {
+			setupMocks: func(mockUseCase *mocks.MockSpecialistSearchUseCaseInterface) {
 				specialists := []*domain.Specialist{
 					specialistFactory(),
 					specialistFactory(func(s *domain.Specialist) {
@@ -133,7 +133,7 @@ func TestSpecialistSearchGRPCService_SearchSpecialists(t *testing.T) {
 					}),
 				}
 				output := searchOutputFactory(specialists, nil, nil, false, false)
-				mockCommand.EXPECT().
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					Return(output, nil).
 					Times(1)
@@ -153,9 +153,9 @@ func TestSpecialistSearchGRPCService_SearchSpecialists(t *testing.T) {
 			setupContext: func() context.Context {
 				return context.Background()
 			},
-			setupMocks: func(mockCommand *mocks.MockSpecialistSearchCommandInterface) {
+			setupMocks: func(mockUseCase *mocks.MockSpecialistSearchUseCaseInterface) {
 				output := searchOutputFactory([]*domain.Specialist{}, nil, nil, false, false)
-				mockCommand.EXPECT().
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					Return(output, nil).
 					Times(1)
@@ -176,11 +176,11 @@ func TestSpecialistSearchGRPCService_SearchSpecialists(t *testing.T) {
 			setupContext: func() context.Context {
 				return context.Background()
 			},
-			setupMocks: func(mockCommand *mocks.MockSpecialistSearchCommandInterface) {
+			setupMocks: func(mockUseCase *mocks.MockSpecialistSearchUseCaseInterface) {
 				specialists := []*domain.Specialist{specialistFactory()}
 				nextCur := "eyJzb3J0IjpbNC44LCIyMDI0LTAxLTAxVDAwOjAwOjAwWiJdfQ=="
 				output := searchOutputFactory(specialists, &nextCur, nil, true, false)
-				mockCommand.EXPECT().
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					Return(output, nil).
 					Times(1)
@@ -205,14 +205,14 @@ func TestSpecialistSearchGRPCService_SearchSpecialists(t *testing.T) {
 			setupContext: func() context.Context {
 				return context.Background()
 			},
-			setupMocks: func(mockCommand *mocks.MockSpecialistSearchCommandInterface) {
+			setupMocks: func(mockUseCase *mocks.MockSpecialistSearchUseCaseInterface) {
 				specialists := []*domain.Specialist{specialistFactory(func(s *domain.Specialist) {
 					s.ID = "770e8400-e29b-41d4-a716-446655440002"
 					s.Name = "Dr. Pedro Costa"
 				})}
 				prevCur := "eyJzb3J0IjpbNC41LCIyMDI0LTAxLTAyVDAwOjAwOjAwWiJdfQ=="
 				output := searchOutputFactory(specialists, nil, &prevCur, false, true)
-				mockCommand.EXPECT().
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					Return(output, nil).
 					Times(1)
@@ -237,8 +237,8 @@ func TestSpecialistSearchGRPCService_SearchSpecialists(t *testing.T) {
 			setupContext: func() context.Context {
 				return context.Background()
 			},
-			setupMocks: func(mockCommand *mocks.MockSpecialistSearchCommandInterface) {
-				mockCommand.EXPECT().
+			setupMocks: func(mockUseCase *mocks.MockSpecialistSearchUseCaseInterface) {
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					Return(nil, application.ErrInvalidSearchInput).
 					Times(1)
@@ -255,8 +255,8 @@ func TestSpecialistSearchGRPCService_SearchSpecialists(t *testing.T) {
 			setupContext: func() context.Context {
 				return context.Background()
 			},
-			setupMocks: func(mockCommand *mocks.MockSpecialistSearchCommandInterface) {
-				mockCommand.EXPECT().
+			setupMocks: func(mockUseCase *mocks.MockSpecialistSearchUseCaseInterface) {
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					Return(nil, application.ErrInvalidSearchInput).
 					Times(1)
@@ -273,8 +273,8 @@ func TestSpecialistSearchGRPCService_SearchSpecialists(t *testing.T) {
 			setupContext: func() context.Context {
 				return context.Background()
 			},
-			setupMocks: func(mockCommand *mocks.MockSpecialistSearchCommandInterface) {
-				mockCommand.EXPECT().
+			setupMocks: func(mockUseCase *mocks.MockSpecialistSearchUseCaseInterface) {
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					Return(nil, application.ErrSearchExecution).
 					Times(1)
@@ -293,8 +293,8 @@ func TestSpecialistSearchGRPCService_SearchSpecialists(t *testing.T) {
 				cancel()
 				return ctx
 			},
-			setupMocks: func(mockCommand *mocks.MockSpecialistSearchCommandInterface) {
-				mockCommand.EXPECT().
+			setupMocks: func(mockUseCase *mocks.MockSpecialistSearchUseCaseInterface) {
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					Return(nil, context.Canceled).
 					Times(1)
@@ -311,8 +311,8 @@ func TestSpecialistSearchGRPCService_SearchSpecialists(t *testing.T) {
 			setupContext: func() context.Context {
 				return context.Background()
 			},
-			setupMocks: func(mockCommand *mocks.MockSpecialistSearchCommandInterface) {
-				mockCommand.EXPECT().
+			setupMocks: func(mockUseCase *mocks.MockSpecialistSearchUseCaseInterface) {
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					Times(0)
 			},
@@ -329,10 +329,10 @@ func TestSpecialistSearchGRPCService_SearchSpecialists(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mockCommand := mocks.NewMockSpecialistSearchCommandInterface(ctrl)
-			tt.setupMocks(mockCommand)
+			mockUseCase := mocks.NewMockSpecialistSearchUseCaseInterface(ctrl)
+			tt.setupMocks(mockUseCase)
 
-			service := NewSpecialistSearchGRPCService(mockCommand)
+			service := NewSpecialistSearchGRPCService(mockUseCase)
 			ctx := tt.setupContext()
 
 			response, err := service.SearchSpecialists(ctx, tt.input)

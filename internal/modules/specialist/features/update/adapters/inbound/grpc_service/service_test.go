@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-//go:generate mockgen -source=service.go -destination=mocks/command_mock.go -package=mocks
+//go:generate mockgen -source=service.go -destination=mocks/usecase_mock.go -package=mocks
 
 func updateRequestFactory(overrides ...func(*pb.UpdateSpecialistRequest)) *pb.UpdateSpecialistRequest {
 	req := &pb.UpdateSpecialistRequest{
@@ -64,7 +64,7 @@ func TestSpecialistUpdateGRPCService_UpdateSpecialist(t *testing.T) {
 		name             string
 		input            *pb.UpdateSpecialistRequest
 		setupContext     func() context.Context
-		setupMocks       func(*mocks.MockSpecialistUpdateCommandInterface)
+		setupMocks     func(*mocks.MockSpecialistUpdateUseCaseInterface)
 		expectError      bool
 		expectedErr      error
 		validateResponse func(*testing.T, *pb.UpdateSpecialistResponse)
@@ -75,8 +75,8 @@ func TestSpecialistUpdateGRPCService_UpdateSpecialist(t *testing.T) {
 			setupContext: func() context.Context {
 				return context.Background()
 			},
-			setupMocks: func(mockCommand *mocks.MockSpecialistUpdateCommandInterface) {
-				mockCommand.EXPECT().
+			setupMocks: func(mockUseCase *mocks.MockSpecialistUpdateUseCaseInterface) {
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					DoAndReturn(func(ctx context.Context, dto application.UpdateSpecialistDTO) (*domain.Specialist, error) {
 						assert.Equal(t, "550e8400-e29b-41d4-a716-446655440000", dto.ID)
@@ -127,8 +127,8 @@ func TestSpecialistUpdateGRPCService_UpdateSpecialist(t *testing.T) {
 			setupContext: func() context.Context {
 				return context.Background()
 			},
-			setupMocks: func(mockCommand *mocks.MockSpecialistUpdateCommandInterface) {
-				mockCommand.EXPECT().
+			setupMocks: func(mockUseCase *mocks.MockSpecialistUpdateUseCaseInterface) {
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					DoAndReturn(func(ctx context.Context, dto application.UpdateSpecialistDTO) (*domain.Specialist, error) {
 						assert.Equal(t, "550e8400-e29b-41d4-a716-446655440000", dto.ID)
@@ -159,8 +159,8 @@ func TestSpecialistUpdateGRPCService_UpdateSpecialist(t *testing.T) {
 			setupContext: func() context.Context {
 				return context.Background()
 			},
-			setupMocks: func(mockCommand *mocks.MockSpecialistUpdateCommandInterface) {
-				mockCommand.EXPECT().
+			setupMocks: func(mockUseCase *mocks.MockSpecialistUpdateUseCaseInterface) {
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					Return(nil, application.ErrSpecialistNotFound).
 					Times(1)
@@ -179,8 +179,8 @@ func TestSpecialistUpdateGRPCService_UpdateSpecialist(t *testing.T) {
 			setupContext: func() context.Context {
 				return context.Background()
 			},
-			setupMocks: func(mockCommand *mocks.MockSpecialistUpdateCommandInterface) {
-				mockCommand.EXPECT().
+			setupMocks: func(mockUseCase *mocks.MockSpecialistUpdateUseCaseInterface) {
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					Return(nil, domain.ErrInvalidName).
 					Times(1)
@@ -197,8 +197,8 @@ func TestSpecialistUpdateGRPCService_UpdateSpecialist(t *testing.T) {
 			setupContext: func() context.Context {
 				return context.Background()
 			},
-			setupMocks: func(mockCommand *mocks.MockSpecialistUpdateCommandInterface) {
-				mockCommand.EXPECT().
+			setupMocks: func(mockUseCase *mocks.MockSpecialistUpdateUseCaseInterface) {
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					Return(nil, application.ErrUpdateSpecialist).
 					Times(1)
@@ -217,8 +217,8 @@ func TestSpecialistUpdateGRPCService_UpdateSpecialist(t *testing.T) {
 				cancel()
 				return ctx
 			},
-			setupMocks: func(mockCommand *mocks.MockSpecialistUpdateCommandInterface) {
-				mockCommand.EXPECT().
+			setupMocks: func(mockUseCase *mocks.MockSpecialistUpdateUseCaseInterface) {
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					Return(nil, context.Canceled).
 					Times(1)
@@ -235,8 +235,8 @@ func TestSpecialistUpdateGRPCService_UpdateSpecialist(t *testing.T) {
 			setupContext: func() context.Context {
 				return context.Background()
 			},
-			setupMocks: func(mockCommand *mocks.MockSpecialistUpdateCommandInterface) {
-				mockCommand.EXPECT().
+			setupMocks: func(mockUseCase *mocks.MockSpecialistUpdateUseCaseInterface) {
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					DoAndReturn(func(ctx context.Context, dto application.UpdateSpecialistDTO) (*domain.Specialist, error) {
 						assert.Empty(t, dto.ID)
@@ -266,10 +266,10 @@ func TestSpecialistUpdateGRPCService_UpdateSpecialist(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mockCommand := mocks.NewMockSpecialistUpdateCommandInterface(ctrl)
-			tt.setupMocks(mockCommand)
+			mockUseCase := mocks.NewMockSpecialistUpdateUseCaseInterface(ctrl)
+			tt.setupMocks(mockUseCase)
 
-			service := NewSpecialistUpdateGRPCService(mockCommand)
+			service := NewSpecialistUpdateGRPCService(mockUseCase)
 			ctx := tt.setupContext()
 
 			resp, err := service.UpdateSpecialist(ctx, tt.input)

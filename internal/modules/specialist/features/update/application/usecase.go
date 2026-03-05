@@ -9,7 +9,7 @@ import (
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/update"
 )
 
-func (c *UpdateSpecialistCommand) Execute(contx context.Context, input UpdateSpecialistDTO) (*domain.Specialist, error) {
+func (c *UpdateSpecialistUseCase) Execute(contx context.Context, input UpdateSpecialistDTO) (*domain.Specialist, error) {
 	ctx, span := c.tracer.Start(contx, UpdateSpecialistSpanName)
 	defer span.End()
 
@@ -55,7 +55,7 @@ func (c *UpdateSpecialistCommand) Execute(contx context.Context, input UpdateSpe
 	return saved, nil
 }
 
-func (c *UpdateSpecialistCommand) publishSpecialistUpdatedEvent(ctx context.Context, specialist *domain.Specialist) {
+func (c *UpdateSpecialistUseCase) publishSpecialistUpdatedEvent(ctx context.Context, specialist *domain.Specialist) {
 	specialistUpdatedEvent := event.NewEvent(SpecialistUpdatedEventName, map[string]any{
 		"id":            specialist.ID,
 		"email":         specialist.Email,

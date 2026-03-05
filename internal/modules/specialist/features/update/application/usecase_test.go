@@ -50,7 +50,7 @@ func updateDTOFactory(overrides ...func(*UpdateSpecialistDTO)) UpdateSpecialistD
 	return dto
 }
 
-func TestUpdateSpecialistCommand_Execute(t *testing.T) {
+func TestUpdateSpecialistUseCase_Execute(t *testing.T) {
 	tests := []struct {
 		name           string
 		input          UpdateSpecialistDTO
@@ -282,9 +282,9 @@ func TestUpdateSpecialistCommand_Execute(t *testing.T) {
 
 			tt.setupMocks(mockRepo, mockEvent, mockTracer, mockLogger, mockSpan)
 
-			command := NewUpdateSpecialistCommand(mockRepo, mockEvent, mockTracer, mockLogger)
+			useCase := NewUpdateSpecialistUseCase(mockRepo, mockEvent, mockTracer, mockLogger)
 
-			result, err := command.Execute(context.Background(), tt.input)
+			result, err := useCase.Execute(context.Background(), tt.input)
 
 			if tt.expectError {
 				assert.Error(t, err)

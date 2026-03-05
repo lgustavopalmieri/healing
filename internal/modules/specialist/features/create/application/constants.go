@@ -4,7 +4,7 @@ import "errors"
 
 const (
 	// Span names
-	CreateSpecialistSpanName = "CreateSpecialistCommand.Execute"
+	CreateSpecialistSpanName = "CreateSpecialistUseCase.Execute"
 
 	// Event names
 	SpecialistCreatedEventName = "specialist.created"

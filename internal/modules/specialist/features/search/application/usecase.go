@@ -10,7 +10,7 @@ import (
 	searchoutput "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/search/search_output"
 )
 
-func (c *SearchSpecialistsCommand) Execute(ctx context.Context, dto *SearchSpecialistsDTO) (*searchoutput.ListSearchOutput, error) {
+func (c *SearchSpecialistsUseCase) Execute(ctx context.Context, dto *SearchSpecialistsDTO) (*searchoutput.ListSearchOutput, error) {
 	if dto == nil {
 		c.logger.Error(ctx, ErrInvalidSearchInputMessage)
 		return nil, ErrInvalidSearchInput
@@ -40,7 +40,7 @@ func (c *SearchSpecialistsCommand) Execute(ctx context.Context, dto *SearchSpeci
 	return searchoutput.NewListSearchOutput(result.Specialists, cursorOutput), nil
 }
 
-func (c *SearchSpecialistsCommand) buildPagination(input *searchinput.ListSearchInput, result *searchoutput.SearchResult) *cursor.CursorPaginationOutput {
+func (c *SearchSpecialistsUseCase) buildPagination(input *searchinput.ListSearchInput, result *searchoutput.SearchResult) *cursor.CursorPaginationOutput {
 	var nextCursor *string
 	if result.HasNextPage && len(result.LastSortValues) > 0 {
 		encoded := cursor.EncodeCursorMultiSort(result.LastSortValues)

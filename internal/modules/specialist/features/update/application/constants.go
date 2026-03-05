@@ -3,7 +3,7 @@ package application
 import "errors"
 
 const (
-	UpdateSpecialistSpanName = "UpdateSpecialistCommand.Execute"
+	UpdateSpecialistSpanName = "UpdateSpecialistUseCase.Execute"
 
 	SpecialistUpdatedEventName = "specialist.updated"
 

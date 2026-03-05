@@ -76,7 +76,7 @@ func TestSpecialistUpdateHTTPHandler_UpdateSpecialist(t *testing.T) {
 		name           string
 		specialistID   string
 		body           any
-		setupMocks     func(*mocks.MockSpecialistUpdateCommandInterface)
+		setupMocks     func(*mocks.MockSpecialistUpdateUseCaseInterface)
 		expectedStatus int
 		validateBody   func(*testing.T, map[string]any)
 	}{
@@ -84,8 +84,8 @@ func TestSpecialistUpdateHTTPHandler_UpdateSpecialist(t *testing.T) {
 			name:         "success - updates specialist and returns 200 with updated data",
 			specialistID: "550e8400-e29b-41d4-a716-446655440000",
 			body:         updateRequestFactory(),
-			setupMocks: func(mockCommand *mocks.MockSpecialistUpdateCommandInterface) {
-				mockCommand.EXPECT().
+			setupMocks: func(mockUseCase *mocks.MockSpecialistUpdateUseCaseInterface) {
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					DoAndReturn(func(_ any, dto application.UpdateSpecialistDTO) (*domain.Specialist, error) {
 						assert.Equal(t, "550e8400-e29b-41d4-a716-446655440000", dto.ID)
@@ -122,8 +122,8 @@ func TestSpecialistUpdateHTTPHandler_UpdateSpecialist(t *testing.T) {
 				r.AgreedToShare = nil
 				r.Status = nil
 			}),
-			setupMocks: func(mockCommand *mocks.MockSpecialistUpdateCommandInterface) {
-				mockCommand.EXPECT().
+			setupMocks: func(mockUseCase *mocks.MockSpecialistUpdateUseCaseInterface) {
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					DoAndReturn(func(_ any, dto application.UpdateSpecialistDTO) (*domain.Specialist, error) {
 						assert.Equal(t, "550e8400-e29b-41d4-a716-446655440000", dto.ID)
@@ -151,8 +151,8 @@ func TestSpecialistUpdateHTTPHandler_UpdateSpecialist(t *testing.T) {
 			name:         "failure - returns 400 when request body is invalid JSON",
 			specialistID: "550e8400-e29b-41d4-a716-446655440000",
 			body:         "invalid{{{json",
-			setupMocks: func(mockCommand *mocks.MockSpecialistUpdateCommandInterface) {
-				mockCommand.EXPECT().Execute(gomock.Any(), gomock.Any()).Times(0)
+			setupMocks: func(mockUseCase *mocks.MockSpecialistUpdateUseCaseInterface) {
+				mockUseCase.EXPECT().Execute(gomock.Any(), gomock.Any()).Times(0)
 			},
 			expectedStatus: http.StatusBadRequest,
 			validateBody: func(t *testing.T, body map[string]any) {
@@ -163,8 +163,8 @@ func TestSpecialistUpdateHTTPHandler_UpdateSpecialist(t *testing.T) {
 			name:         "failure - returns 422 when command returns ErrSpecialistNotFound",
 			specialistID: "nonexistent-id",
 			body:         updateRequestFactory(),
-			setupMocks: func(mockCommand *mocks.MockSpecialistUpdateCommandInterface) {
-				mockCommand.EXPECT().
+			setupMocks: func(mockUseCase *mocks.MockSpecialistUpdateUseCaseInterface) {
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					Return(nil, application.ErrSpecialistNotFound).
 					Times(1)
@@ -180,8 +180,8 @@ func TestSpecialistUpdateHTTPHandler_UpdateSpecialist(t *testing.T) {
 			body: updateRequestFactory(func(r *UpdateSpecialistRequest) {
 				r.Name = strPtr("")
 			}),
-			setupMocks: func(mockCommand *mocks.MockSpecialistUpdateCommandInterface) {
-				mockCommand.EXPECT().
+			setupMocks: func(mockUseCase *mocks.MockSpecialistUpdateUseCaseInterface) {
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					Return(nil, domain.ErrInvalidName).
 					Times(1)
@@ -195,8 +195,8 @@ func TestSpecialistUpdateHTTPHandler_UpdateSpecialist(t *testing.T) {
 			name:         "failure - returns 422 when command returns ErrUpdateSpecialist",
 			specialistID: "550e8400-e29b-41d4-a716-446655440000",
 			body:         updateRequestFactory(),
-			setupMocks: func(mockCommand *mocks.MockSpecialistUpdateCommandInterface) {
-				mockCommand.EXPECT().
+			setupMocks: func(mockUseCase *mocks.MockSpecialistUpdateUseCaseInterface) {
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					Return(nil, application.ErrUpdateSpecialist).
 					Times(1)
@@ -213,10 +213,10 @@ func TestSpecialistUpdateHTTPHandler_UpdateSpecialist(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mockCommand := mocks.NewMockSpecialistUpdateCommandInterface(ctrl)
-			tt.setupMocks(mockCommand)
+			mockUseCase := mocks.NewMockSpecialistUpdateUseCaseInterface(ctrl)
+			tt.setupMocks(mockUseCase)
 
-			handler := NewSpecialistUpdateHTTPHandler(mockCommand)
+			handler := NewSpecialistUpdateHTTPHandler(mockUseCase)
 			router := setupRouter(handler)
 
 			var bodyBytes []byte

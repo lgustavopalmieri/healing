@@ -8,24 +8,24 @@ import (
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/adapters/inbound/grpc_service/pb"
 )
 
-type SpecialistUpdateCommandInterface interface {
+type SpecialistUpdateUseCaseInterface interface {
 	Execute(ctx context.Context, input application.UpdateSpecialistDTO) (*domain.Specialist, error)
 }
 
 type SpecialistUpdateGRPCService struct {
 	pb.UnimplementedUpdateSpecialistServiceServer
-	command SpecialistUpdateCommandInterface
+	useCase SpecialistUpdateUseCaseInterface
 }
 
-func NewSpecialistUpdateGRPCService(command SpecialistUpdateCommandInterface) *SpecialistUpdateGRPCService {
+func NewSpecialistUpdateGRPCService(useCase SpecialistUpdateUseCaseInterface) *SpecialistUpdateGRPCService {
 	return &SpecialistUpdateGRPCService{
-		command: command,
+		useCase: useCase,
 	}
 }
 
 func (s *SpecialistUpdateGRPCService) UpdateSpecialist(ctx context.Context, req *pb.UpdateSpecialistRequest) (*pb.UpdateSpecialistResponse, error) {
 	dto := ToUpdateSpecialistDTO(req)
-	specialist, err := s.command.Execute(ctx, dto)
+	specialist, err := s.useCase.Execute(ctx, dto)
 	if err != nil {
 		return nil, err
 	}

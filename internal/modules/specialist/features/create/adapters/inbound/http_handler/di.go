@@ -19,12 +19,12 @@ type Dependencies struct {
 func NewSpecialistCreateHandler(deps Dependencies) *SpecialistCreateHTTPHandler {
 	repository := database.NewSpecialistCreateRepository(deps.DB)
 
-	command := application.NewCreateSpecialistCommand(
+	useCase := application.NewCreateSpecialistUseCase(
 		repository,
 		deps.EventPublisher,
 		deps.Tracer,
 		deps.Logger,
 	)
 
-	return NewSpecialistCreateHTTPHandler(command)
+	return NewSpecialistCreateHTTPHandler(useCase)
 }

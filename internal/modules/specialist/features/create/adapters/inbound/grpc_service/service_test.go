@@ -15,7 +15,7 @@ import (
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/adapters/inbound/grpc_service/pb"
 )
 
-//go:generate mockgen -source=service.go -destination=mocks/command_mock.go -package=mocks
+//go:generate mockgen -source=service.go -destination=mocks/usecase_mock.go -package=mocks
 
 // go test ./internal/modules/specialist/features/create/adapters/inbound/grpc_service/ -v
 // go test ./internal/modules/specialist/features/create/adapters/inbound/grpc_service/ -cover
@@ -66,7 +66,7 @@ func TestSpecialistCreateGRPCService_CreateSpecialist(t *testing.T) {
 		name             string
 		input            *pb.CreateSpecialistRequest
 		setupContext     func() context.Context
-		setupMocks       func(*mocks.MockSpecialistCreateCommandInterface)
+		setupMocks     func(*mocks.MockSpecialistCreateUseCaseInterface)
 		expectError      bool
 		expectedErr      error
 		validateResponse func(*testing.T, *pb.CreateSpecialistResponse)
@@ -77,7 +77,7 @@ func TestSpecialistCreateGRPCService_CreateSpecialist(t *testing.T) {
 			setupContext: func() context.Context {
 				return context.Background()
 			},
-			setupMocks: func(mockCommand *mocks.MockSpecialistCreateCommandInterface) {
+			setupMocks: func(mockUseCase *mocks.MockSpecialistCreateUseCaseInterface) {
 				expectedDTO := application.CreateSpecialistDTO{
 					Name:          "Dr. João Silva",
 					Email:         "joao@exemplo.com",
@@ -88,7 +88,7 @@ func TestSpecialistCreateGRPCService_CreateSpecialist(t *testing.T) {
 					Keywords:      []string{"heart", "cardiology"},
 					AgreedToShare: true,
 				}
-				mockCommand.EXPECT().
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), expectedDTO).
 					Return(specialistFactory(), nil).
 					Times(1)
@@ -119,7 +119,7 @@ func TestSpecialistCreateGRPCService_CreateSpecialist(t *testing.T) {
 			setupContext: func() context.Context {
 				return context.Background()
 			},
-			setupMocks: func(mockCommand *mocks.MockSpecialistCreateCommandInterface) {
+			setupMocks: func(mockUseCase *mocks.MockSpecialistCreateUseCaseInterface) {
 				expectedDTO := application.CreateSpecialistDTO{
 					Name:          "",
 					Email:         "joao@exemplo.com",
@@ -130,7 +130,7 @@ func TestSpecialistCreateGRPCService_CreateSpecialist(t *testing.T) {
 					Keywords:      []string{"heart", "cardiology"},
 					AgreedToShare: true,
 				}
-				mockCommand.EXPECT().
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), expectedDTO).
 					Return(nil, create.ErrInvalidName).
 					Times(1)
@@ -147,7 +147,7 @@ func TestSpecialistCreateGRPCService_CreateSpecialist(t *testing.T) {
 			setupContext: func() context.Context {
 				return context.Background()
 			},
-			setupMocks: func(mockCommand *mocks.MockSpecialistCreateCommandInterface) {
+			setupMocks: func(mockUseCase *mocks.MockSpecialistCreateUseCaseInterface) {
 				expectedDTO := application.CreateSpecialistDTO{
 					Name:          "Dr. João Silva",
 					Email:         "joao@exemplo.com",
@@ -158,7 +158,7 @@ func TestSpecialistCreateGRPCService_CreateSpecialist(t *testing.T) {
 					Keywords:      []string{"heart", "cardiology"},
 					AgreedToShare: true,
 				}
-				mockCommand.EXPECT().
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), expectedDTO).
 					Return(nil, create.ErrDuplicateEmail).
 					Times(1)
@@ -175,7 +175,7 @@ func TestSpecialistCreateGRPCService_CreateSpecialist(t *testing.T) {
 			setupContext: func() context.Context {
 				return context.Background()
 			},
-			setupMocks: func(mockCommand *mocks.MockSpecialistCreateCommandInterface) {
+			setupMocks: func(mockUseCase *mocks.MockSpecialistCreateUseCaseInterface) {
 				expectedDTO := application.CreateSpecialistDTO{
 					Name:          "Dr. João Silva",
 					Email:         "joao@exemplo.com",
@@ -186,7 +186,7 @@ func TestSpecialistCreateGRPCService_CreateSpecialist(t *testing.T) {
 					Keywords:      []string{"heart", "cardiology"},
 					AgreedToShare: true,
 				}
-				mockCommand.EXPECT().
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), expectedDTO).
 					Return(nil, application.ErrSaveSpecialist).
 					Times(1)
@@ -205,8 +205,8 @@ func TestSpecialistCreateGRPCService_CreateSpecialist(t *testing.T) {
 				cancel()
 				return ctx
 			},
-			setupMocks: func(mockCommand *mocks.MockSpecialistCreateCommandInterface) {
-				mockCommand.EXPECT().
+			setupMocks: func(mockUseCase *mocks.MockSpecialistCreateUseCaseInterface) {
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					Return(nil, context.Canceled).
 					Times(1)
@@ -223,8 +223,8 @@ func TestSpecialistCreateGRPCService_CreateSpecialist(t *testing.T) {
 			setupContext: func() context.Context {
 				return context.Background()
 			},
-			setupMocks: func(mockCommand *mocks.MockSpecialistCreateCommandInterface) {
-				mockCommand.EXPECT().
+			setupMocks: func(mockUseCase *mocks.MockSpecialistCreateUseCaseInterface) {
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					DoAndReturn(func(ctx context.Context, dto application.CreateSpecialistDTO) (*domain.Specialist, error) {
 						assert.Empty(t, dto.Name)
@@ -252,10 +252,10 @@ func TestSpecialistCreateGRPCService_CreateSpecialist(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mockCommand := mocks.NewMockSpecialistCreateCommandInterface(ctrl)
-			tt.setupMocks(mockCommand)
+			mockUseCase := mocks.NewMockSpecialistCreateUseCaseInterface(ctrl)
+			tt.setupMocks(mockUseCase)
 
-			service := NewSpecialistCreateGRPCService(mockCommand)
+			service := NewSpecialistCreateGRPCService(mockUseCase)
 			ctx := tt.setupContext()
 
 			response, err := service.CreateSpecialist(ctx, tt.input)

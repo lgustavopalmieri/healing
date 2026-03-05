@@ -80,17 +80,17 @@ func TestSpecialistSearchHTTPHandler_SearchSpecialists(t *testing.T) {
 	tests := []struct {
 		name           string
 		body           any
-		setupMocks     func(*mocks.MockSpecialistSearchCommandInterface)
+		setupMocks     func(*mocks.MockSpecialistSearchUseCaseInterface)
 		expectedStatus int
 		validateBody   func(*testing.T, map[string]any)
 	}{
 		{
 			name: "success - searches specialists and returns 200 with paginated results",
 			body: searchRequestFactory(),
-			setupMocks: func(mockCommand *mocks.MockSpecialistSearchCommandInterface) {
+			setupMocks: func(mockUseCase *mocks.MockSpecialistSearchUseCaseInterface) {
 				specialists := []*domain.Specialist{specialistFactory()}
 				output := searchOutputFactory(specialists, nil, nil, false, false)
-				mockCommand.EXPECT().
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					Return(output, nil).
 					Times(1)
@@ -115,9 +115,9 @@ func TestSpecialistSearchHTTPHandler_SearchSpecialists(t *testing.T) {
 		{
 			name: "success - returns 200 with empty results when no specialists match",
 			body: searchRequestFactory(),
-			setupMocks: func(mockCommand *mocks.MockSpecialistSearchCommandInterface) {
+			setupMocks: func(mockUseCase *mocks.MockSpecialistSearchUseCaseInterface) {
 				output := searchOutputFactory([]*domain.Specialist{}, nil, nil, false, false)
-				mockCommand.EXPECT().
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					Return(output, nil).
 					Times(1)
@@ -134,11 +134,11 @@ func TestSpecialistSearchHTTPHandler_SearchSpecialists(t *testing.T) {
 		{
 			name: "success - returns 200 with pagination cursors when has more pages",
 			body: searchRequestFactory(),
-			setupMocks: func(mockCommand *mocks.MockSpecialistSearchCommandInterface) {
+			setupMocks: func(mockUseCase *mocks.MockSpecialistSearchUseCaseInterface) {
 				specialists := []*domain.Specialist{specialistFactory()}
 				nextCur := "eyJzb3J0IjpbNC44XX0="
 				output := searchOutputFactory(specialists, &nextCur, nil, true, false)
-				mockCommand.EXPECT().
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					Return(output, nil).
 					Times(1)
@@ -154,8 +154,8 @@ func TestSpecialistSearchHTTPHandler_SearchSpecialists(t *testing.T) {
 		{
 			name: "failure - returns 400 when request body is invalid JSON",
 			body: "not-valid-json{{{",
-			setupMocks: func(mockCommand *mocks.MockSpecialistSearchCommandInterface) {
-				mockCommand.EXPECT().Execute(gomock.Any(), gomock.Any()).Times(0)
+			setupMocks: func(mockUseCase *mocks.MockSpecialistSearchUseCaseInterface) {
+				mockUseCase.EXPECT().Execute(gomock.Any(), gomock.Any()).Times(0)
 			},
 			expectedStatus: http.StatusBadRequest,
 			validateBody: func(t *testing.T, body map[string]any) {
@@ -165,8 +165,8 @@ func TestSpecialistSearchHTTPHandler_SearchSpecialists(t *testing.T) {
 		{
 			name: "failure - returns 422 when command returns ErrSearchExecution",
 			body: searchRequestFactory(),
-			setupMocks: func(mockCommand *mocks.MockSpecialistSearchCommandInterface) {
-				mockCommand.EXPECT().
+			setupMocks: func(mockUseCase *mocks.MockSpecialistSearchUseCaseInterface) {
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					Return(nil, application.ErrSearchExecution).
 					Times(1)
@@ -179,8 +179,8 @@ func TestSpecialistSearchHTTPHandler_SearchSpecialists(t *testing.T) {
 		{
 			name: "failure - returns 422 when command returns ErrInvalidSearchInput",
 			body: searchRequestFactory(),
-			setupMocks: func(mockCommand *mocks.MockSpecialistSearchCommandInterface) {
-				mockCommand.EXPECT().
+			setupMocks: func(mockUseCase *mocks.MockSpecialistSearchUseCaseInterface) {
+				mockUseCase.EXPECT().
 					Execute(gomock.Any(), gomock.Any()).
 					Return(nil, application.ErrInvalidSearchInput).
 					Times(1)
@@ -197,10 +197,10 @@ func TestSpecialistSearchHTTPHandler_SearchSpecialists(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mockCommand := mocks.NewMockSpecialistSearchCommandInterface(ctrl)
-			tt.setupMocks(mockCommand)
+			mockUseCase := mocks.NewMockSpecialistSearchUseCaseInterface(ctrl)
+			tt.setupMocks(mockUseCase)
 
-			handler := NewSpecialistSearchHTTPHandler(mockCommand)
+			handler := NewSpecialistSearchHTTPHandler(mockUseCase)
 			router := setupRouter(handler)
 
 			var bodyBytes []byte

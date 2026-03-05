@@ -11,18 +11,18 @@ import (
 
 var ErrNilRequest = errors.New("request cannot be nil")
 
-type SpecialistSearchCommandInterface interface {
+type SpecialistSearchUseCaseInterface interface {
 	Execute(ctx context.Context, dto *application.SearchSpecialistsDTO) (*searchoutput.ListSearchOutput, error)
 }
 
 type SpecialistSearchGRPCService struct {
 	pb.UnimplementedSearchSpecialistServiceServer
-	command SpecialistSearchCommandInterface
+	useCase SpecialistSearchUseCaseInterface
 }
 
-func NewSpecialistSearchGRPCService(command SpecialistSearchCommandInterface) *SpecialistSearchGRPCService {
+func NewSpecialistSearchGRPCService(useCase SpecialistSearchUseCaseInterface) *SpecialistSearchGRPCService {
 	return &SpecialistSearchGRPCService{
-		command: command,
+		useCase: useCase,
 	}
 }
 
@@ -36,7 +36,7 @@ func (s *SpecialistSearchGRPCService) SearchSpecialists(ctx context.Context, req
 		return nil, err
 	}
 
-	output, err := s.command.Execute(ctx, dto)
+	output, err := s.useCase.Execute(ctx, dto)
 	if err != nil {
 		return nil, err
 	}

@@ -16,7 +16,7 @@ type Dependencies struct {
 func NewSpecialistSearchHandler(deps Dependencies) *SpecialistSearchHTTPHandler {
 	repository := esrepo.NewRepository(deps.ESClient, deps.ESIndexSpecialists, deps.Logger)
 
-	command := application.NewSearchSpecialistsCommand(repository, deps.Logger)
+	useCase := application.NewSearchSpecialistsUseCase(repository, deps.Logger)
 
-	return NewSpecialistSearchHTTPHandler(command)
+	return NewSpecialistSearchHTTPHandler(useCase)
 }

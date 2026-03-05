@@ -29,7 +29,7 @@ func createSpecialistFactory(overrides ...func(*CreateSpecialistDTO)) *CreateSpe
 	return input
 }
 
-func TestCreateSpecialistCommand_Execute(t *testing.T) {
+func TestCreateSpecialistUseCase_Execute(t *testing.T) {
 	tests := []struct {
 		name           string
 		inputOverrides []func(*CreateSpecialistDTO)
@@ -173,14 +173,14 @@ func TestCreateSpecialistCommand_Execute(t *testing.T) {
 
 			tt.setupMocks(mockRepo, mockEventPublisher, mockTracer, mockLogger, mockSpan, *input)
 
-			command := NewCreateSpecialistCommand(
+			useCase := NewCreateSpecialistUseCase(
 				mockRepo,
 				mockEventPublisher,
 				mockTracer,
 				mockLogger,
 			)
 
-			result, err := command.Execute(context.Background(), *input)
+			result, err := useCase.Execute(context.Background(), *input)
 
 			if tt.expectError {
 				assert.Error(t, err)

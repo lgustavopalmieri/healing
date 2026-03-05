@@ -16,7 +16,7 @@ type Dependencies struct {
 func NewSpecialistSearchService(deps Dependencies) *SpecialistSearchGRPCService {
 	repository := esrepo.NewRepository(deps.ESClient, deps.ESIndexSpecialists, deps.Logger)
 
-	command := application.NewSearchSpecialistsCommand(repository, deps.Logger)
+	useCase := application.NewSearchSpecialistsUseCase(repository, deps.Logger)
 
-	return NewSpecialistSearchGRPCService(command)
+	return NewSpecialistSearchGRPCService(useCase)
 }

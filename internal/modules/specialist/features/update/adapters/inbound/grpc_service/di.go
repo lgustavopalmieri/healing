@@ -19,12 +19,12 @@ type Dependencies struct {
 func NewSpecialistUpdateService(deps Dependencies) *SpecialistUpdateGRPCService {
 	repository := database.NewSpecialistUpdateRepository(deps.DB)
 
-	command := application.NewUpdateSpecialistCommand(
+	useCase := application.NewUpdateSpecialistUseCase(
 		repository,
 		deps.EventPublisher,
 		deps.Tracer,
 		deps.Logger,
 	)
 
-	return NewSpecialistUpdateGRPCService(command)
+	return NewSpecialistUpdateGRPCService(useCase)
 }

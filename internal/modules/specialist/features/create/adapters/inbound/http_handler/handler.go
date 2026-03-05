@@ -11,17 +11,17 @@ import (
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/application"
 )
 
-type SpecialistCreateCommandInterface interface {
+type SpecialistCreateUseCaseInterface interface {
 	Execute(ctx context.Context, input application.CreateSpecialistDTO) (*domain.Specialist, error)
 }
 
 type SpecialistCreateHTTPHandler struct {
-	Command SpecialistCreateCommandInterface
+	UseCase SpecialistCreateUseCaseInterface
 }
 
-func NewSpecialistCreateHTTPHandler(command SpecialistCreateCommandInterface) *SpecialistCreateHTTPHandler {
+func NewSpecialistCreateHTTPHandler(useCase SpecialistCreateUseCaseInterface) *SpecialistCreateHTTPHandler {
 	return &SpecialistCreateHTTPHandler{
-		Command: command,
+		UseCase: useCase,
 	}
 }
 
@@ -39,7 +39,7 @@ func (h *SpecialistCreateHTTPHandler) CreateSpecialist(c *gin.Context) {
 	}
 
 	dto := ToCreateSpecialistDTO(req)
-	specialist, err := h.Command.Execute(c.Request.Context(), dto)
+	specialist, err := h.UseCase.Execute(c.Request.Context(), dto)
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
