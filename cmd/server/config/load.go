@@ -11,10 +11,8 @@ import (
 )
 
 func Load() (*Config, error) {
-	// Determine environment (default: development)
 	env := getEnv("APP_ENV", "development")
 
-	// Load environment-specific .env file (ignora erro se não encontrar)
 	_ = loadEnvFile(env)
 
 	cfg := &Config{
@@ -64,12 +62,9 @@ func Load() (*Config, error) {
 	return cfg, nil
 }
 
-// loadEnvFile loads the appropriate .env file based on the environment
 func loadEnvFile(env string) error {
-	// Determine the config directory (cmd/grpcserver)
-	configDir := "cmd/grpcserver"
+	configDir := "cmd/server"
 
-	// Check if we're already in the cmd/grpcserver directory
 	if _, err := os.Stat(".env"); err == nil {
 		configDir = "."
 	}
@@ -80,17 +75,15 @@ func loadEnvFile(env string) error {
 		envFile = filepath.Join(configDir, ".env.test")
 	case "production":
 		envFile = filepath.Join(configDir, ".env.production")
-	default: // development
+	default:
 		envFile = filepath.Join(configDir, ".env")
 	}
 
-	// Check if file exists
 	if _, err := os.Stat(envFile); os.IsNotExist(err) {
 		fmt.Printf("⚠️  Warning: Environment file %s not found, using environment variables only\n", envFile)
 		return nil
 	}
 
-	// Use viper to load the .env file
 	viper.SetConfigFile(envFile)
 	viper.SetConfigType("env")
 
@@ -98,7 +91,6 @@ func loadEnvFile(env string) error {
 		return fmt.Errorf("error reading config file %s: %w", envFile, err)
 	}
 
-	// Set environment variables from viper
 	for _, key := range viper.AllKeys() {
 		value := viper.GetString(key)
 		if err := os.Setenv(key, value); err != nil {

@@ -7,7 +7,7 @@ import (
 	"log"
 
 	"github.com/elastic/go-elasticsearch/v8"
-	"github.com/lgustavopalmieri/healing-specialist/cmd/grpcserver/config"
+	"github.com/lgustavopalmieri/healing-specialist/cmd/server/config"
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
 	validatelicensekafka "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/event_listeners/validate_license/infra/kafka"

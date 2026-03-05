@@ -3,7 +3,7 @@
 # Run locally without Docker
 run:
 	@echo "🚀 Starting server locally in DEVELOPMENT mode..."
-	@export APP_ENV=development && cd cmd/grpcserver && go run main.go
+	@export APP_ENV=development && cd cmd/server && go run main.go
 
 # Run with Docker
 up:

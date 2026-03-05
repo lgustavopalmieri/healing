@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/elastic/go-elasticsearch/v8"
-	"github.com/lgustavopalmieri/healing-specialist/cmd/grpcserver/config"
+	"github.com/lgustavopalmieri/healing-specialist/cmd/server/config"
 	platformES "github.com/lgustavopalmieri/healing-specialist/internal/platform/elasticsearch"
 	"github.com/lgustavopalmieri/healing-specialist/internal/platform/elasticsearch/indexes"
 )

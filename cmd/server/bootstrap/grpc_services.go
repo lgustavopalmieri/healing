@@ -50,5 +50,5 @@ func RegisterServices(grpcServer *server.GRPCServer, deps ServiceDependencies) {
 	})
 	updatepb.RegisterUpdateSpecialistServiceServer(grpcServer.GetServer(), specialistUpdateService)
 
-	log.Println("✅ Services registered successfully")
+	log.Println("✅ gRPC services registered successfully")
 }

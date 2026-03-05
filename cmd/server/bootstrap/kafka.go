@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/lgustavopalmieri/healing-specialist/cmd/grpcserver/config"
+	"github.com/lgustavopalmieri/healing-specialist/cmd/server/config"
 	"github.com/lgustavopalmieri/healing-specialist/internal/platform/kafka"
 )
 

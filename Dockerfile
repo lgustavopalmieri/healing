@@ -13,7 +13,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -ldflags="-s -w" \
     -trimpath \
     -o /healing-specialist \
-    ./cmd/grpcserver
+    ./cmd
 
 FROM scratch
 
@@ -21,7 +21,7 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /healing-specialist /healing-specialist
 
-EXPOSE 50051 4000 4001
+EXPOSE 50051 8080 9090
 
 USER 65534:65534
 
