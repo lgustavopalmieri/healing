@@ -19,11 +19,11 @@ import (
 	postgrestest "github.com/lgustavopalmieri/healing-specialist/internal/commom/tests/database/postgresql"
 	kafkatest "github.com/lgustavopalmieri/healing-specialist/internal/commom/tests/event/kafka"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
-	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/application"
-	vldb "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/event_listeners/validate_license/infra/database"
-	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/event_listeners/validate_license/infra/external"
-	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/event_listeners/validate_license/listener"
 	createdb "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/adapters/outbound/database"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/application"
+	vldb "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/event_listeners/validate_license/adapters/outbound/database"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/event_listeners/validate_license/adapters/outbound/external"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/event_listeners/validate_license/listener"
 	platformkafka "github.com/lgustavopalmieri/healing-specialist/internal/platform/kafka"
 )
 

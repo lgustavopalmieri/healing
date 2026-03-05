@@ -125,7 +125,7 @@ The `adapters/` directory replaces the former `infra/` and is split into:
 - `adapters/inbound/` — driving adapters (HTTP handlers, gRPC services)
 - `adapters/outbound/` — driven adapters (database repositories, Elasticsearch repositories)
 
-Note: `event_listeners/` inside features retain their own `infra/` subdirectory — they were NOT part of this rename.
+Note: `event_listeners/` inside features also use the `adapters/inbound/outbound` structure, matching the feature-level convention.
 
 #### Feature: create
 
@@ -148,10 +148,12 @@ features/create/
 │       │   ├── dto.go
 │       │   ├── constants.go
 │       │   └── mocks/                 # 4 mocks: event_dispatcher, logger, repository, tracer
-│       └── infra/                     # Listener-specific infrastructure (NOT renamed)
-│           ├── database/              # repository.go, new.go, errors.go, repository_test.go
-│           ├── external/              # gateway.go, new.go
-│           └── kafka/                 # manager.go (consumer group management)
+│       └── adapters/
+│           ├── inbound/
+│           │   └── kafka/             # manager.go (consumer group management)
+│           └── outbound/
+│               ├── database/          # repository.go, new.go, errors.go, repository_test.go
+│               └── external/          # gateway.go, new.go
 └── adapters/
     ├── inbound/
     │   ├── http_handler/              # handler.go, handler_test.go, dto.go, di.go, mocks/
@@ -163,7 +165,7 @@ features/create/
 
 Create specifics:
 - Only feature with `event_listeners/` containing fully implemented Kafka listeners
-- `validate_license/` is a mini-module with its own `listener/` + `infra/` (database, external, kafka)
+- `validate_license/` is a mini-module with its own `listener/` + `adapters/` (inbound/kafka, outbound/database, outbound/external)
 - `send_credentials_email/` exists as an empty placeholder
 - `handler_integration_test.go` lives at the `adapters/inbound/` root, not inside `database/` or `http_handler/`
 - `adapters/inbound/` has both `http_handler/` and `grpc_service/` (dual transport)
@@ -322,7 +324,7 @@ update:
 - `usecase.go` + `new_usecase.go` — application layer (logic and constructor separated)
 - `handler.go` + `new_handler.go` — listener layer (same pattern)
 - `repository.go` + `new.go` — adapters/outbound/database and adapters/outbound/elasticsearch
-- `gateway.go` + `new.go` — event_listeners/*/infra/external
+- `gateway.go` + `new.go` — event_listeners/*/adapters/outbound/external
 - `service.go` + `di.go` — adapters/inbound/grpc_service (DI separated from service)
 - `handler.go` + `di.go` — adapters/inbound/http_handler
 - `dto.go` — present in all layers (application, listener, adapters/inbound/grpc_service, adapters/inbound/http_handler, adapters/outbound/elasticsearch)
@@ -344,8 +346,7 @@ features/<feature>/adapters/outbound/ (database, elasticsearch)
 
 features/<feature>/event_listeners/<listener>/listener/ (handler, interfaces, DTOs)
     ↑
-features/<feature>/event_listeners/<listener>/infra/ (database, external, kafka)
+features/<feature>/event_listeners/<listener>/adapters/ (inbound/kafka, outbound/database, outbound/external)
 ```
 
-Event listeners are independent mini-modules within a feature, with their own listener/ + infra/ separation.
-Event listeners retain `infra/` — only the feature-level infrastructure was renamed to `adapters/inbound/outbound`.
+Event listeners are independent mini-modules within a feature, with their own listener/ + adapters/ separation.
