@@ -25,6 +25,18 @@ func NewSpecialistUpdateHTTPHandler(useCase SpecialistUpdateUseCaseInterface) *S
 	}
 }
 
+// UpdateSpecialist godoc
+// @Summary      Update a specialist
+// @Description  Partially updates a specialist's profile data. Only provided fields are updated (PATCH semantics).
+// @Tags         specialists
+// @Accept       json
+// @Produce      json
+// @Param        id      path     string                  true "Specialist UUID"
+// @Param        request body     UpdateSpecialistRequest  true "Fields to update"
+// @Success      200     {object} UpdateSpecialistSuccessResponse
+// @Failure      400     {object} ErrorResponse "Missing ID or invalid request body"
+// @Failure      422     {object} ErrorResponse "Domain validation error"
+// @Router       /api/v1/specialists/{id} [patch]
 func (h *SpecialistUpdateHTTPHandler) UpdateSpecialist(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {

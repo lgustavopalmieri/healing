@@ -25,6 +25,17 @@ func NewSpecialistSearchHTTPHandler(useCase SpecialistSearchUseCaseInterface) *S
 	}
 }
 
+// SearchSpecialists godoc
+// @Summary      Search specialists
+// @Description  Searches specialists using full-text search, filters, sorting and cursor-based pagination. Powered by Elasticsearch.
+// @Tags         specialists
+// @Accept       json
+// @Produce      json
+// @Param        request body     SearchSpecialistsRequest true "Search criteria"
+// @Success      200     {object} SearchSpecialistsResponse
+// @Failure      400     {object} ErrorResponse "Invalid request body or search parameters"
+// @Failure      422     {object} ErrorResponse "Search execution error"
+// @Router       /api/v1/specialists/search [post]
 func (h *SpecialistSearchHTTPHandler) SearchSpecialists(c *gin.Context) {
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {

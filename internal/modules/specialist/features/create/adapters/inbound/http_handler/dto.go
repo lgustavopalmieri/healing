@@ -64,3 +64,11 @@ func ToSpecialistResponse(s *domain.Specialist) SpecialistResponse {
 		UpdatedAt:     s.UpdatedAt.Format(time.RFC3339),
 	}
 }
+
+type CreateSpecialistSuccessResponse struct {
+	Specialist SpecialistResponse `json:"specialist"`
+}
+
+type ErrorResponse struct {
+	Error string `json:"error"`
+}

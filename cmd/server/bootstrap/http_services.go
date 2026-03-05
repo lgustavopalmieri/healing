@@ -3,6 +3,9 @@ package bootstrap
 import (
 	"log"
 
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
+
 	createhttp "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/adapters/inbound/http_handler"
 	searchhttp "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/adapters/inbound/http_handler"
 	updatehttp "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/adapters/inbound/http_handler"
@@ -11,6 +14,8 @@ import (
 
 func RegisterHTTPServices(httpServer *server.HTTPServer, deps ServiceDependencies) {
 	log.Println("🔧 Registering HTTP services...")
+
+	httpServer.Engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	api := httpServer.Engine.Group("/api/v1")
 

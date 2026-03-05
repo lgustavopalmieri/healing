@@ -7,10 +7,18 @@ import (
 
 	"github.com/lgustavopalmieri/healing-specialist/cmd/server/bootstrap"
 	"github.com/lgustavopalmieri/healing-specialist/cmd/server/config"
+	_ "github.com/lgustavopalmieri/healing-specialist/docs"
 	"github.com/lgustavopalmieri/healing-specialist/internal/platform/server"
 	"github.com/lgustavopalmieri/healing-specialist/internal/platform/telemetry"
 	"google.golang.org/grpc"
 )
+
+// @title           Healing Specialist API
+// @version         1.0
+// @description     API for managing healthcare specialists on the Healing platform. Supports registration, search with cursor-based pagination, and profile updates.
+
+// @host      localhost:8080
+// @BasePath  /
 
 func main() {
 	if err := run(); err != nil {

@@ -1,0 +1,493 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "API for managing healthcare specialists on the Healing platform. Supports registration, search with cursor-based pagination, and profile updates.",
+        "title": "Healing Specialist API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {
+        "/api/v1/specialists": {
+            "post": {
+                "description": "Registers a new healthcare specialist on the platform. The specialist starts with pending status and goes through license validation.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "specialists"
+                ],
+                "summary": "Create a new specialist",
+                "parameters": [
+                    {
+                        "description": "Specialist data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_specialist_features_create_adapters_inbound_http_handler.CreateSpecialistRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_specialist_features_create_adapters_inbound_http_handler.CreateSpecialistSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_specialist_features_create_adapters_inbound_http_handler.ErrorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Domain validation error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_specialist_features_create_adapters_inbound_http_handler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/specialists/search": {
+            "post": {
+                "description": "Searches specialists using full-text search, filters, sorting and cursor-based pagination. Powered by Elasticsearch.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "specialists"
+                ],
+                "summary": "Search specialists",
+                "parameters": [
+                    {
+                        "description": "Search criteria",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.SearchSpecialistsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.SearchSpecialistsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or search parameters",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.ErrorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Search execution error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/specialists/{id}": {
+            "patch": {
+                "description": "Partially updates a specialist's profile data. Only provided fields are updated (PATCH semantics).",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "specialists"
+                ],
+                "summary": "Update a specialist",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Specialist UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Fields to update",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_specialist_features_update_adapters_inbound_http_handler.UpdateSpecialistRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_specialist_features_update_adapters_inbound_http_handler.UpdateSpecialistSuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Missing ID or invalid request body",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_specialist_features_update_adapters_inbound_http_handler.ErrorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Domain validation error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_specialist_features_update_adapters_inbound_http_handler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "internal_modules_specialist_features_create_adapters_inbound_http_handler.CreateSpecialistRequest": {
+            "type": "object",
+            "properties": {
+                "agreed_to_share": {
+                    "type": "boolean"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "keywords": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "license_number": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "specialty": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_specialist_features_create_adapters_inbound_http_handler.CreateSpecialistSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "specialist": {
+                    "$ref": "#/definitions/internal_modules_specialist_features_create_adapters_inbound_http_handler.SpecialistResponse"
+                }
+            }
+        },
+        "internal_modules_specialist_features_create_adapters_inbound_http_handler.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_specialist_features_create_adapters_inbound_http_handler.SpecialistResponse": {
+            "type": "object",
+            "properties": {
+                "agreed_to_share": {
+                    "type": "boolean"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "keywords": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "license_number": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "rating": {
+                    "type": "number"
+                },
+                "specialty": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_specialist_features_search_adapters_inbound_http_handler.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_specialist_features_search_adapters_inbound_http_handler.FilterRequest": {
+            "type": "object",
+            "properties": {
+                "field": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_specialist_features_search_adapters_inbound_http_handler.PaginationResponse": {
+            "type": "object",
+            "properties": {
+                "has_next_page": {
+                    "type": "boolean"
+                },
+                "has_previous_page": {
+                    "type": "boolean"
+                },
+                "next_cursor": {
+                    "type": "string"
+                },
+                "previous_cursor": {
+                    "type": "string"
+                },
+                "total_items_in_page": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_modules_specialist_features_search_adapters_inbound_http_handler.SearchSpecialistsRequest": {
+            "type": "object",
+            "properties": {
+                "cursor": {
+                    "type": "string"
+                },
+                "direction": {
+                    "type": "string"
+                },
+                "filters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.FilterRequest"
+                    }
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "search_term": {
+                    "type": "string"
+                },
+                "sort": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.SortRequest"
+                    }
+                }
+            }
+        },
+        "internal_modules_specialist_features_search_adapters_inbound_http_handler.SearchSpecialistsResponse": {
+            "type": "object",
+            "properties": {
+                "pagination": {
+                    "$ref": "#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.PaginationResponse"
+                },
+                "specialists": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.SpecialistResponse"
+                    }
+                }
+            }
+        },
+        "internal_modules_specialist_features_search_adapters_inbound_http_handler.SortRequest": {
+            "type": "object",
+            "properties": {
+                "field": {
+                    "type": "string"
+                },
+                "order": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_specialist_features_search_adapters_inbound_http_handler.SpecialistResponse": {
+            "type": "object",
+            "properties": {
+                "agreed_to_share": {
+                    "type": "boolean"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "keywords": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "license_number": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "rating": {
+                    "type": "number"
+                },
+                "specialty": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_specialist_features_update_adapters_inbound_http_handler.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_specialist_features_update_adapters_inbound_http_handler.SpecialistResponse": {
+            "type": "object",
+            "properties": {
+                "agreed_to_share": {
+                    "type": "boolean"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "keywords": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "license_number": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "rating": {
+                    "type": "number"
+                },
+                "specialty": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_specialist_features_update_adapters_inbound_http_handler.UpdateSpecialistRequest": {
+            "type": "object",
+            "properties": {
+                "agreed_to_share": {
+                    "type": "boolean"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "keywords": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "license_number": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "specialty": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_specialist_features_update_adapters_inbound_http_handler.UpdateSpecialistSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "specialist": {
+                    "$ref": "#/definitions/internal_modules_specialist_features_update_adapters_inbound_http_handler.SpecialistResponse"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,326 @@
+basePath: /
+definitions:
+  internal_modules_specialist_features_create_adapters_inbound_http_handler.CreateSpecialistRequest:
+    properties:
+      agreed_to_share:
+        type: boolean
+      description:
+        type: string
+      email:
+        type: string
+      keywords:
+        items:
+          type: string
+        type: array
+      license_number:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      specialty:
+        type: string
+    type: object
+  internal_modules_specialist_features_create_adapters_inbound_http_handler.CreateSpecialistSuccessResponse:
+    properties:
+      specialist:
+        $ref: '#/definitions/internal_modules_specialist_features_create_adapters_inbound_http_handler.SpecialistResponse'
+    type: object
+  internal_modules_specialist_features_create_adapters_inbound_http_handler.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  internal_modules_specialist_features_create_adapters_inbound_http_handler.SpecialistResponse:
+    properties:
+      agreed_to_share:
+        type: boolean
+      created_at:
+        type: string
+      description:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      keywords:
+        items:
+          type: string
+        type: array
+      license_number:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      rating:
+        type: number
+      specialty:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  internal_modules_specialist_features_search_adapters_inbound_http_handler.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  internal_modules_specialist_features_search_adapters_inbound_http_handler.FilterRequest:
+    properties:
+      field:
+        type: string
+      value:
+        type: string
+    type: object
+  internal_modules_specialist_features_search_adapters_inbound_http_handler.PaginationResponse:
+    properties:
+      has_next_page:
+        type: boolean
+      has_previous_page:
+        type: boolean
+      next_cursor:
+        type: string
+      previous_cursor:
+        type: string
+      total_items_in_page:
+        type: integer
+    type: object
+  internal_modules_specialist_features_search_adapters_inbound_http_handler.SearchSpecialistsRequest:
+    properties:
+      cursor:
+        type: string
+      direction:
+        type: string
+      filters:
+        items:
+          $ref: '#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.FilterRequest'
+        type: array
+      page_size:
+        type: integer
+      search_term:
+        type: string
+      sort:
+        items:
+          $ref: '#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.SortRequest'
+        type: array
+    type: object
+  internal_modules_specialist_features_search_adapters_inbound_http_handler.SearchSpecialistsResponse:
+    properties:
+      pagination:
+        $ref: '#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.PaginationResponse'
+      specialists:
+        items:
+          $ref: '#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.SpecialistResponse'
+        type: array
+    type: object
+  internal_modules_specialist_features_search_adapters_inbound_http_handler.SortRequest:
+    properties:
+      field:
+        type: string
+      order:
+        type: string
+    type: object
+  internal_modules_specialist_features_search_adapters_inbound_http_handler.SpecialistResponse:
+    properties:
+      agreed_to_share:
+        type: boolean
+      created_at:
+        type: string
+      description:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      keywords:
+        items:
+          type: string
+        type: array
+      license_number:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      rating:
+        type: number
+      specialty:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  internal_modules_specialist_features_update_adapters_inbound_http_handler.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  internal_modules_specialist_features_update_adapters_inbound_http_handler.SpecialistResponse:
+    properties:
+      agreed_to_share:
+        type: boolean
+      created_at:
+        type: string
+      description:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      keywords:
+        items:
+          type: string
+        type: array
+      license_number:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      rating:
+        type: number
+      specialty:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  internal_modules_specialist_features_update_adapters_inbound_http_handler.UpdateSpecialistRequest:
+    properties:
+      agreed_to_share:
+        type: boolean
+      description:
+        type: string
+      email:
+        type: string
+      keywords:
+        items:
+          type: string
+        type: array
+      license_number:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      specialty:
+        type: string
+      status:
+        type: string
+    type: object
+  internal_modules_specialist_features_update_adapters_inbound_http_handler.UpdateSpecialistSuccessResponse:
+    properties:
+      specialist:
+        $ref: '#/definitions/internal_modules_specialist_features_update_adapters_inbound_http_handler.SpecialistResponse'
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API for managing healthcare specialists on the Healing platform. Supports
+    registration, search with cursor-based pagination, and profile updates.
+  title: Healing Specialist API
+  version: "1.0"
+paths:
+  /api/v1/specialists:
+    post:
+      consumes:
+      - application/json
+      description: Registers a new healthcare specialist on the platform. The specialist
+        starts with pending status and goes through license validation.
+      parameters:
+      - description: Specialist data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_specialist_features_create_adapters_inbound_http_handler.CreateSpecialistRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_modules_specialist_features_create_adapters_inbound_http_handler.CreateSpecialistSuccessResponse'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/internal_modules_specialist_features_create_adapters_inbound_http_handler.ErrorResponse'
+        "422":
+          description: Domain validation error
+          schema:
+            $ref: '#/definitions/internal_modules_specialist_features_create_adapters_inbound_http_handler.ErrorResponse'
+      summary: Create a new specialist
+      tags:
+      - specialists
+  /api/v1/specialists/{id}:
+    patch:
+      consumes:
+      - application/json
+      description: Partially updates a specialist's profile data. Only provided fields
+        are updated (PATCH semantics).
+      parameters:
+      - description: Specialist UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_specialist_features_update_adapters_inbound_http_handler.UpdateSpecialistRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_specialist_features_update_adapters_inbound_http_handler.UpdateSpecialistSuccessResponse'
+        "400":
+          description: Missing ID or invalid request body
+          schema:
+            $ref: '#/definitions/internal_modules_specialist_features_update_adapters_inbound_http_handler.ErrorResponse'
+        "422":
+          description: Domain validation error
+          schema:
+            $ref: '#/definitions/internal_modules_specialist_features_update_adapters_inbound_http_handler.ErrorResponse'
+      summary: Update a specialist
+      tags:
+      - specialists
+  /api/v1/specialists/search:
+    post:
+      consumes:
+      - application/json
+      description: Searches specialists using full-text search, filters, sorting and
+        cursor-based pagination. Powered by Elasticsearch.
+      parameters:
+      - description: Search criteria
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.SearchSpecialistsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.SearchSpecialistsResponse'
+        "400":
+          description: Invalid request body or search parameters
+          schema:
+            $ref: '#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.ErrorResponse'
+        "422":
+          description: Search execution error
+          schema:
+            $ref: '#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.ErrorResponse'
+      summary: Search specialists
+      tags:
+      - specialists
+swagger: "2.0"
