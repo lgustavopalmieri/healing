@@ -1,11 +1,12 @@
 .@guides/
-.kiro/
+# .kiro/
 .vscode/
 
 # Environment files (ignore all except example)
 .env
 .env.*
 !.env.docker.example
+@docs/
 
 # Binaries
 bin/
