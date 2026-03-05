@@ -3,7 +3,7 @@ package grpcservice
 import (
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/application"
-	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/infra/grpc_service/pb"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/adapters/inbound/grpc_service/pb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

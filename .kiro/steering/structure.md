@@ -119,7 +119,13 @@ Domain layer specifics:
 
 ### Features Layer
 
-Each feature follows the `application/ + infra/` structure, with variations per feature:
+Each feature follows the `application/ + adapters/` structure (Clean Architecture / Hexagonal), with variations per feature.
+
+The `adapters/` directory replaces the former `infra/` and is split into:
+- `adapters/inbound/` — driving adapters (HTTP handlers, gRPC services)
+- `adapters/outbound/` — driven adapters (database repositories, Elasticsearch repositories)
+
+Note: `event_listeners/` inside features retain their own `infra/` subdirectory — they were NOT part of this rename.
 
 #### Feature: create
 
@@ -142,23 +148,25 @@ features/create/
 │       │   ├── dto.go
 │       │   ├── constants.go
 │       │   └── mocks/                 # 4 mocks: event_dispatcher, logger, repository, tracer
-│       └── infra/                     # Listener-specific infrastructure
+│       └── infra/                     # Listener-specific infrastructure (NOT renamed)
 │           ├── database/              # repository.go, new.go, errors.go, repository_test.go
 │           ├── external/              # gateway.go, new.go
 │           └── kafka/                 # manager.go (consumer group management)
-└── infra/
-    ├── database/                      # repository.go, new.go, errors.go, repository_test.go
-    ├── http_handler/                  # handler.go, handler_test.go, dto.go, di.go, mocks/
-    ├── grpc_service/                  # service.go, service_test.go, dto.go, di.go, mocks/, pb/, proto/
-    └── handler_integration_test.go    # Integration test (file at infra/ root, not inside a sub-folder)
+└── adapters/
+    ├── inbound/
+    │   ├── http_handler/              # handler.go, handler_test.go, dto.go, di.go, mocks/
+    │   ├── grpc_service/              # service.go, service_test.go, dto.go, di.go, mocks/, pb/, proto/
+    │   └── handler_integration_test.go  # Integration test (at inbound/ root, not inside a sub-folder)
+    └── outbound/
+        └── database/                  # repository.go, new.go, errors.go, repository_test.go
 ```
 
 Create specifics:
 - Only feature with `event_listeners/` containing fully implemented Kafka listeners
 - `validate_license/` is a mini-module with its own `listener/` + `infra/` (database, external, kafka)
 - `send_credentials_email/` exists as an empty placeholder
-- `handler_integration_test.go` lives at the `infra/` root, not inside `database/` or `http_handler/`
-- `infra/` has both `http_handler/` and `grpc_service/` (dual transport)
+- `handler_integration_test.go` lives at the `adapters/inbound/` root, not inside `database/` or `http_handler/`
+- `adapters/inbound/` has both `http_handler/` and `grpc_service/` (dual transport)
 
 #### Feature: search
 
@@ -171,21 +179,23 @@ features/search/
 │   ├── dto.go
 │   ├── constants.go
 │   └── mocks/                         # 1 mock: repository_mock (no logger/tracer mocks)
-└── infra/
-    ├── elasticsearch/                 # Elasticsearch repository (does not use database/)
-    │   ├── repository.go / repository_test.go
-    │   ├── new.go / errors.go
-    │   ├── builders.go                # Query builders
-    │   ├── mappers.go                 # Response mappers
-    │   ├── dto.go                     # ES-specific DTOs
-    │   └── README.md
-    ├── http_handler/                  # handler.go, handler_test.go, dto.go, di.go, mocks/
-    └── grpc_service/                  # service.go, service_test.go, dto.go, di.go, mocks/, pb/, proto/
+└── adapters/
+    ├── inbound/
+    │   ├── http_handler/              # handler.go, handler_test.go, dto.go, di.go, mocks/
+    │   └── grpc_service/              # service.go, service_test.go, dto.go, di.go, mocks/, pb/, proto/
+    └── outbound/
+        └── elasticsearch/             # Elasticsearch repository (does not use database/)
+            ├── repository.go / repository_test.go
+            ├── new.go / errors.go
+            ├── builders.go            # Query builders
+            ├── mappers.go             # Response mappers
+            ├── dto.go                 # ES-specific DTOs
+            └── README.md
 ```
 
 Search specifics:
 - No `event_listeners/`
-- `infra/` uses `elasticsearch/` instead of `database/` — read repository
+- `adapters/outbound/` uses `elasticsearch/` instead of `database/` — read repository
 - `elasticsearch/` has extra files: `builders.go`, `mappers.go` (query construction + response mapping)
 - `application/mocks/` has only `repository_mock.go` (fewer dependencies than create/update)
 
@@ -206,17 +216,19 @@ features/update/
 │       ├── command/                   # (empty — placeholder)
 │       └── repositories/
 │           └── elasticsearch/         # errors.go, new.go, repository.go
-└── infra/
-    ├── database/                      # repository.go, new.go, errors.go, repository_test.go
-    ├── http_handler/                  # handler.go, handler_test.go, dto.go, di.go, mocks/
-    └── grpc_service/                  # service.go, service_test.go, dto.go, di.go, mocks/, pb/, proto/
+└── adapters/
+    ├── inbound/
+    │   ├── http_handler/              # handler.go, handler_test.go, dto.go, di.go, mocks/
+    │   └── grpc_service/              # service.go, service_test.go, dto.go, di.go, mocks/, pb/, proto/
+    └── outbound/
+        └── database/                  # repository.go, new.go, errors.go, repository_test.go
 ```
 
 Update specifics:
 - `event_listeners/` has a different structure from create: `update_data_repositories/` uses `repositories/` (not `infra/`)
 - `update_data_repositories/command/` is empty (placeholder)
 - `send_status_email/` is empty (placeholder)
-- No `handler_integration_test.go` at the `infra/` root
+- No `handler_integration_test.go` at the `adapters/inbound/` root
 
 ## internal/platform/ — Infrastructure Adapters
 
@@ -276,30 +288,30 @@ tests/k6/
 ```yaml
 create:
   event_listeners: yes (validate_license fully implemented, send_credentials_email empty)
-  infra/database: yes
-  infra/elasticsearch: no
-  infra/http_handler: yes
-  infra/grpc_service: yes
-  handler_integration_test: yes (at infra/ root)
+  adapters/outbound/database: yes
+  adapters/outbound/elasticsearch: no
+  adapters/inbound/http_handler: yes
+  adapters/inbound/grpc_service: yes
+  handler_integration_test: yes (at adapters/inbound/ root)
   application/mocks: 4 (event_dispatcher, logger, repository, tracer)
   domain sub-packages: create/ (with separate uniqueness_errors)
 
 search:
   event_listeners: no
-  infra/database: no
-  infra/elasticsearch: yes (with builders, mappers, own dto)
-  infra/http_handler: yes
-  infra/grpc_service: yes
+  adapters/outbound/database: no
+  adapters/outbound/elasticsearch: yes (with builders, mappers, own dto)
+  adapters/inbound/http_handler: yes
+  adapters/inbound/grpc_service: yes
   handler_integration_test: no
   application/mocks: 1 (repository)
   domain sub-packages: search_input/ + search_output/ (value objects as sub-packages)
 
 update:
   event_listeners: yes (update_data_repositories partial, send_status_email empty)
-  infra/database: yes
-  infra/elasticsearch: no
-  infra/http_handler: yes
-  infra/grpc_service: yes
+  adapters/outbound/database: yes
+  adapters/outbound/elasticsearch: no
+  adapters/inbound/http_handler: yes
+  adapters/inbound/grpc_service: yes
   handler_integration_test: no
   application/mocks: 4 (event_dispatcher, logger, repository, tracer)
   domain sub-packages: update/ (with validators separate from update.go)
@@ -309,13 +321,13 @@ update:
 
 - `command.go` + `new_command.go` — application layer (logic and constructor separated)
 - `handler.go` + `new_handler.go` — listener layer (same pattern)
-- `repository.go` + `new.go` — infra/database and infra/elasticsearch
-- `gateway.go` + `new.go` — infra/external
-- `service.go` + `di.go` — infra/grpc_service (DI separated from service)
-- `handler.go` + `di.go` — infra/http_handler
-- `dto.go` — present in all layers (application, listener, infra/grpc_service, infra/http_handler, infra/elasticsearch)
+- `repository.go` + `new.go` — adapters/outbound/database and adapters/outbound/elasticsearch
+- `gateway.go` + `new.go` — event_listeners/*/infra/external
+- `service.go` + `di.go` — adapters/inbound/grpc_service (DI separated from service)
+- `handler.go` + `di.go` — adapters/inbound/http_handler
+- `dto.go` — present in all layers (application, listener, adapters/inbound/grpc_service, adapters/inbound/http_handler, adapters/outbound/elasticsearch)
 - `constants.go` — application and listener (span names, event names, error messages)
-- `errors.go` — domain, application (via constants.go), infra/database, infra/elasticsearch
+- `errors.go` — domain, application (via constants.go), adapters/outbound/database, adapters/outbound/elasticsearch
 - `interface.go` — application and listener (dependency contracts)
 
 ## Package Dependencies Flow
@@ -327,7 +339,8 @@ domain/<feature>/ (factory, validation, feature-specific errors)
     ↑
 features/<feature>/application/ (command orchestration, interfaces, DTOs)
     ↑
-features/<feature>/infra/ (database, grpc_service, http_handler, elasticsearch)
+features/<feature>/adapters/inbound/ (grpc_service, http_handler)
+features/<feature>/adapters/outbound/ (database, elasticsearch)
 
 features/<feature>/event_listeners/<listener>/listener/ (handler, interfaces, DTOs)
     ↑
@@ -335,3 +348,4 @@ features/<feature>/event_listeners/<listener>/infra/ (database, external, kafka)
 ```
 
 Event listeners are independent mini-modules within a feature, with their own listener/ + infra/ separation.
+Event listeners retain `infra/` — only the feature-level infrastructure was renamed to `adapters/inbound/outbound`.

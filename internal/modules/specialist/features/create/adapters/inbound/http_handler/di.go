@@ -6,7 +6,7 @@ import (
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/application"
-	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/infra/database"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/adapters/outbound/database"
 )
 
 type Dependencies struct {

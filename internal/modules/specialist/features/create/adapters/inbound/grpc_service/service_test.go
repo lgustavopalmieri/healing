@@ -11,14 +11,14 @@ import (
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/create"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/application"
-	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/infra/grpc_service/mocks"
-	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/infra/grpc_service/pb"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/adapters/inbound/grpc_service/mocks"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/adapters/inbound/grpc_service/pb"
 )
 
 //go:generate mockgen -source=service.go -destination=mocks/command_mock.go -package=mocks
 
-// go test ./internal/modules/specialist/features/create/infra/grpc_service/ -v
-// go test ./internal/modules/specialist/features/create/infra/grpc_service/ -cover
+// go test ./internal/modules/specialist/features/create/adapters/inbound/grpc_service/ -v
+// go test ./internal/modules/specialist/features/create/adapters/inbound/grpc_service/ -cover
 func createSpecialistRequestFactory(overrides ...func(*pb.CreateSpecialistRequest)) *pb.CreateSpecialistRequest {
 	req := &pb.CreateSpecialistRequest{
 		Name:          "Dr. João Silva",

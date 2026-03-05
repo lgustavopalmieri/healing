@@ -12,7 +12,7 @@ import (
 
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/tests/database/postgresql"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
-	createdb "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/infra/database"
+	createdb "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/adapters/outbound/database"
 )
 
 var testHelper = postgresql.NewTestHelper()

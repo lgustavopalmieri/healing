@@ -7,12 +7,12 @@ import (
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
-	creategrpc "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/infra/grpc_service"
-	createpb "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/infra/grpc_service/pb"
-	searchgrpc "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/infra/grpc_service"
-	searchpb "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/infra/grpc_service/pb"
-	updategrpc "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/infra/grpc_service"
-	updatepb "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/infra/grpc_service/pb"
+	creategrpc "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/adapters/inbound/grpc_service"
+	createpb "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/adapters/inbound/grpc_service/pb"
+	searchgrpc "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/adapters/inbound/grpc_service"
+	searchpb "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/adapters/inbound/grpc_service/pb"
+	updategrpc "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/adapters/inbound/grpc_service"
+	updatepb "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/adapters/inbound/grpc_service/pb"
 	"github.com/lgustavopalmieri/healing-specialist/internal/platform/server"
 )
 

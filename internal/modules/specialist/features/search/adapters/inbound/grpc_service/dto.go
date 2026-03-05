@@ -6,7 +6,7 @@ import (
 	searchinput "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/search/search_input"
 	searchoutput "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/search/search_output"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/application"
-	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/infra/grpc_service/pb"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/adapters/inbound/grpc_service/pb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

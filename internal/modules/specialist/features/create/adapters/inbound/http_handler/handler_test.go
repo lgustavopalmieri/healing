@@ -13,7 +13,7 @@ import (
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/create"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/application"
-	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/infra/http_handler/mocks"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/adapters/inbound/http_handler/mocks"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )

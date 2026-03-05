@@ -23,7 +23,7 @@ import (
 	vldb "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/event_listeners/validate_license/infra/database"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/event_listeners/validate_license/infra/external"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/event_listeners/validate_license/listener"
-	createdb "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/infra/database"
+	createdb "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/adapters/outbound/database"
 	platformkafka "github.com/lgustavopalmieri/healing-specialist/internal/platform/kafka"
 )
 

@@ -13,7 +13,7 @@ import (
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
 	searchoutput "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/search/search_output"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/application"
-	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/infra/http_handler/mocks"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/adapters/inbound/http_handler/mocks"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )

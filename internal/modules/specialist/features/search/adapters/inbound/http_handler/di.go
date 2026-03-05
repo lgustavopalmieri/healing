@@ -4,7 +4,7 @@ import (
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/application"
-	esrepo "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/infra/elasticsearch"
+	esrepo "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/adapters/outbound/elasticsearch"
 )
 
 type Dependencies struct {

@@ -15,7 +15,7 @@ import (
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/application"
 )
 
-// go test ./internal/modules/specialist/features/create/infra/database/... -v
+// go test ./internal/modules/specialist/features/create/adapters/outbound/database/... -v
 
 var testHelper = postgresql.NewTestHelper()
 

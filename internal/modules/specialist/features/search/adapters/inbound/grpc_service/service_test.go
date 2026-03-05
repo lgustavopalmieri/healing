@@ -9,8 +9,8 @@ import (
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
 	searchoutput "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/search/search_output"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/application"
-	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/infra/grpc_service/mocks"
-	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/infra/grpc_service/pb"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/adapters/inbound/grpc_service/mocks"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/adapters/inbound/grpc_service/pb"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
