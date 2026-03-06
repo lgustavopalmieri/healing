@@ -10,7 +10,7 @@ import (
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/application"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/event_listeners/update_data_repositories/adapters/outbound/database"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/event_listeners/update_data_repositories/adapters/outbound/elasticsearch"
-	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/event_listeners/update_data_repositories/command"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/event_listeners/update_data_repositories/listener"
 	platformkafka "github.com/lgustavopalmieri/healing-specialist/internal/platform/kafka"
 )
 
@@ -29,11 +29,11 @@ func NewUpdateDataRepositoriesKafkaManager(ctx context.Context, deps ManagerDepe
 
 	esRepo := elasticsearch.NewRepository(deps.ESClient, deps.ESIndexSpecialists, deps.Logger, deps.EventDispatcher)
 
-	dataRepositories := []command.DataRepository{
+	dataRepositories := []listener.DataRepository{
 		esRepo,
 	}
 
-	handler := command.NewUpdateDataRepositoriesHandler(
+	handler := listener.NewUpdateDataRepositoriesHandler(
 		sourceRepo,
 		dataRepositories,
 		deps.Tracer,

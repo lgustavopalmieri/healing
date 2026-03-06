@@ -1,4 +1,4 @@
-package command
+package listener
 
 import (
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
