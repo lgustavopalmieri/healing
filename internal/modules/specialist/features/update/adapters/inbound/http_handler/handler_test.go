@@ -10,8 +10,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
-	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/application"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/adapters/inbound/http_handler/mocks"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/application"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -98,15 +98,14 @@ func TestSpecialistUpdateHTTPHandler_UpdateSpecialist(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			validateBody: func(t *testing.T, body map[string]any) {
-				specialist := body["specialist"].(map[string]any)
-				assert.Equal(t, "550e8400-e29b-41d4-a716-446655440000", specialist["id"])
-				assert.Equal(t, "Dr. Maria Santos", specialist["name"])
-				assert.Equal(t, "maria@example.com", specialist["email"])
-				assert.Equal(t, "Neurology", specialist["specialty"])
-				assert.Equal(t, "active", specialist["status"])
-				assert.Equal(t, 4.8, specialist["rating"])
-				assert.NotEmpty(t, specialist["created_at"])
-				assert.NotEmpty(t, specialist["updated_at"])
+				assert.Equal(t, "550e8400-e29b-41d4-a716-446655440000", body["id"])
+				assert.Equal(t, "Dr. Maria Santos", body["name"])
+				assert.Equal(t, "maria@example.com", body["email"])
+				assert.Equal(t, "Neurology", body["specialty"])
+				assert.Equal(t, "active", body["status"])
+				assert.Equal(t, 4.8, body["rating"])
+				assert.NotEmpty(t, body["created_at"])
+				assert.NotEmpty(t, body["updated_at"])
 			},
 		},
 		{
@@ -143,8 +142,7 @@ func TestSpecialistUpdateHTTPHandler_UpdateSpecialist(t *testing.T) {
 			},
 			expectedStatus: http.StatusOK,
 			validateBody: func(t *testing.T, body map[string]any) {
-				specialist := body["specialist"].(map[string]any)
-				assert.Equal(t, "Dr. Maria Santos", specialist["name"])
+				assert.Equal(t, "Dr. Maria Santos", body["name"])
 			},
 		},
 		{

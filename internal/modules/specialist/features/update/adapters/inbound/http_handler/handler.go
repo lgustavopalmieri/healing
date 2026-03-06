@@ -33,7 +33,7 @@ func NewSpecialistUpdateHTTPHandler(useCase SpecialistUpdateUseCaseInterface) *S
 // @Produce      json
 // @Param        id      path     string                  true "Specialist UUID"
 // @Param        request body     UpdateSpecialistRequest  true "Fields to update"
-// @Success      200     {object} UpdateSpecialistSuccessResponse
+// @Success      200     {object} SpecialistResponse
 // @Failure      400     {object} ErrorResponse "Missing ID or invalid request body"
 // @Failure      422     {object} ErrorResponse "Domain validation error"
 // @Router       /api/v1/specialists/{id} [patch]
@@ -63,7 +63,7 @@ func (h *SpecialistUpdateHTTPHandler) UpdateSpecialist(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"specialist": ToSpecialistResponse(specialist)})
+	c.JSON(http.StatusOK, ToSpecialistResponse(specialist))
 }
 
 func (h *SpecialistUpdateHTTPHandler) RegisterRoutes(router *gin.RouterGroup) {

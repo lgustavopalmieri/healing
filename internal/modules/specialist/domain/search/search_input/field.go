@@ -14,13 +14,15 @@ const (
 	FieldDescription SearchableField = "description"
 	FieldKeywords    SearchableField = "keywords"
 	FieldRating      SearchableField = "rating"
+	FieldStatus      SearchableField = "status"
 	FieldCreatedAt   SearchableField = "created_at"
 	FieldUpdatedAt   SearchableField = "updated_at"
 )
 
 type Filter struct {
-	Field SearchableField
-	Value string
+	Field  SearchableField
+	Value  string
+	Values []string
 }
 
 func (l *ListSearchInput) validateFilters() error {
@@ -35,7 +37,10 @@ func (l *ListSearchInput) validateFilters() error {
 			return search.NewErrInvalidSearchField(string(filter.Field))
 		}
 
-		if strings.TrimSpace(filter.Value) == "" {
+		hasValue := strings.TrimSpace(filter.Value) != ""
+		hasValues := len(filter.Values) > 0
+
+		if !hasValue && !hasValues {
 			return search.NewErrEmptyFilterValue(string(filter.Field))
 		}
 
@@ -51,7 +56,7 @@ func (l *ListSearchInput) validateFilters() error {
 func (s SearchableField) IsValid() bool {
 	switch s {
 	case FieldName, FieldSpecialty, FieldDescription,
-		FieldKeywords, FieldRating, FieldCreatedAt, FieldUpdatedAt:
+		FieldKeywords, FieldRating, FieldStatus, FieldCreatedAt, FieldUpdatedAt:
 		return true
 	default:
 		return false

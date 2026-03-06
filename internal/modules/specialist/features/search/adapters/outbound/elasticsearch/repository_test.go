@@ -125,6 +125,15 @@ func TestSearchRepository_Search(t *testing.T) {
 					}),
 					estest.SpecialistDocumentFactory(func(d *estest.SpecialistDocument) {
 						d.ID = uuid.New().String()
+						d.Name = "Dr. Licenciado"
+						d.Specialty = "Cardiologia"
+						d.Status = "authorized_license"
+						d.Rating = 4.2
+						d.CreatedAt = now
+						d.UpdatedAt = now
+					}),
+					estest.SpecialistDocumentFactory(func(d *estest.SpecialistDocument) {
+						d.ID = uuid.New().String()
 						d.Name = "Dr. Inativo"
 						d.Specialty = "Cardiologia"
 						d.Status = "deleted"
@@ -218,9 +227,13 @@ func TestSearchRepository_Search(t *testing.T) {
 				assert.Nil(t, result.LastSortValues)
 
 			case "success - returns only active specialists ignoring inactive status":
-				require.Len(t, result.Specialists, 1)
-				assert.Equal(t, "Dr. Ativo", result.Specialists[0].Name)
-				assert.Equal(t, "active", string(result.Specialists[0].Status))
+				require.Len(t, result.Specialists, 2)
+				statuses := map[string]bool{}
+				for _, s := range result.Specialists {
+					statuses[string(s.Status)] = true
+				}
+				assert.True(t, statuses["active"])
+				assert.True(t, statuses["authorized_license"])
 
 			case "success - returns specialists matching combined search term and filter":
 				require.NotEmpty(t, result.Specialists)

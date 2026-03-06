@@ -27,12 +27,6 @@ func (r *Repository) buildQuery(input *searchinput.ListSearchInput) (map[string]
 func (r *Repository) buildBoolQuery(input *searchinput.ListSearchInput) map[string]any {
 	must := make([]any, 0)
 
-	must = append(must, map[string]any{
-		"term": map[string]any{
-			"status": "active",
-		},
-	})
-
 	if input.HasSearchTerm() {
 		searchTerm := *input.SearchTerm
 
@@ -111,6 +105,19 @@ func (r *Repository) buildFilterQuery(filter searchinput.Filter) map[string]any 
 		return map[string]any{
 			"term": map[string]any{
 				"keywords": filter.Value,
+			},
+		}
+	case searchinput.FieldStatus:
+		if len(filter.Values) > 0 {
+			return map[string]any{
+				"terms": map[string]any{
+					"status": filter.Values,
+				},
+			}
+		}
+		return map[string]any{
+			"term": map[string]any{
+				"status": filter.Value,
 			},
 		}
 	case searchinput.FieldSpecialty:

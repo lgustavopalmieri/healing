@@ -32,7 +32,7 @@ func NewSpecialistCreateHTTPHandler(useCase SpecialistCreateUseCaseInterface) *S
 // @Accept       json
 // @Produce      json
 // @Param        request body     CreateSpecialistRequest true "Specialist data"
-// @Success      201     {object} CreateSpecialistSuccessResponse
+// @Success      201     {object} SpecialistResponse
 // @Failure      400     {object} ErrorResponse "Invalid request body"
 // @Failure      422     {object} ErrorResponse "Domain validation error"
 // @Router       /api/v1/specialists [post]
@@ -56,7 +56,7 @@ func (h *SpecialistCreateHTTPHandler) CreateSpecialist(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"specialist": ToSpecialistResponse(specialist)})
+	c.JSON(http.StatusCreated, ToSpecialistResponse(specialist))
 }
 
 func (h *SpecialistCreateHTTPHandler) RegisterRoutes(router *gin.RouterGroup) {

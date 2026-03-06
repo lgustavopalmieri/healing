@@ -65,10 +65,6 @@ func ToSpecialistResponse(s *domain.Specialist) SpecialistResponse {
 	}
 }
 
-type CreateSpecialistSuccessResponse struct {
-	Specialist SpecialistResponse `json:"specialist"`
-}
-
 type ErrorResponse struct {
 	Error string `json:"error"`
 }

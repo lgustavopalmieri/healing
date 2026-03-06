@@ -3,6 +3,7 @@ package searchinput
 import (
 	"strings"
 
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/search"
 )
 
@@ -85,7 +86,21 @@ func (l *ListSearchInput) normalize() {
 		l.Filters[i].Value = strings.TrimSpace(l.Filters[i].Value)
 	}
 
+	l.ensureSearchableStatusFilter()
 	l.ensureDefaultSort()
+}
+
+func (l *ListSearchInput) ensureSearchableStatusFilter() {
+	for _, f := range l.Filters {
+		if f.Field == FieldStatus {
+			return
+		}
+	}
+
+	l.Filters = append(l.Filters, Filter{
+		Field:  FieldStatus,
+		Values: domain.SearchableStatuses(),
+	})
 }
 
 func (l *ListSearchInput) ensureDefaultSort() {

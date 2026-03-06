@@ -12,5 +12,9 @@ const (
 )
 
 func (s SpecialistStatus) IsSearchable() bool {
-	return s == StatusActive
+	return s == StatusActive || s == StatusAuthorizedLicense
+}
+
+func SearchableStatuses() []string {
+	return []string{string(StatusActive), string(StatusAuthorizedLicense)}
 }

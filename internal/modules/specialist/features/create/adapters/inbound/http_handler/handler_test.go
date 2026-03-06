@@ -12,8 +12,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/create"
-	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/application"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/adapters/inbound/http_handler/mocks"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/application"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -97,18 +97,17 @@ func TestSpecialistCreateHTTPHandler_CreateSpecialist(t *testing.T) {
 			},
 			expectedStatus: http.StatusCreated,
 			validateBody: func(t *testing.T, body map[string]any) {
-				specialist := body["specialist"].(map[string]any)
-				assert.Equal(t, "550e8400-e29b-41d4-a716-446655440000", specialist["id"])
-				assert.Equal(t, "Dr. João Silva", specialist["name"])
-				assert.Equal(t, "joao@exemplo.com", specialist["email"])
-				assert.Equal(t, "+5511999999999", specialist["phone"])
-				assert.Equal(t, "Cardiology", specialist["specialty"])
-				assert.Equal(t, "CRM-123456", specialist["license_number"])
-				assert.Equal(t, "Experienced cardiologist", specialist["description"])
-				assert.Equal(t, true, specialist["agreed_to_share"])
-				assert.Equal(t, "pending", specialist["status"])
-				assert.NotEmpty(t, specialist["created_at"])
-				assert.NotEmpty(t, specialist["updated_at"])
+				assert.Equal(t, "550e8400-e29b-41d4-a716-446655440000", body["id"])
+				assert.Equal(t, "Dr. João Silva", body["name"])
+				assert.Equal(t, "joao@exemplo.com", body["email"])
+				assert.Equal(t, "+5511999999999", body["phone"])
+				assert.Equal(t, "Cardiology", body["specialty"])
+				assert.Equal(t, "CRM-123456", body["license_number"])
+				assert.Equal(t, "Experienced cardiologist", body["description"])
+				assert.Equal(t, true, body["agreed_to_share"])
+				assert.Equal(t, "pending", body["status"])
+				assert.NotEmpty(t, body["created_at"])
+				assert.NotEmpty(t, body["updated_at"])
 			},
 		},
 		{

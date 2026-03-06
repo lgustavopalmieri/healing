@@ -111,7 +111,9 @@ func TestNewListSearchInput(t *testing.T) {
 			validateResult: func(t *testing.T, input *ListSearchInput, err error) {
 				require.NotNil(t, input)
 				assert.Equal(t, "cardiologia", *input.SearchTerm)
-				assert.Empty(t, input.Filters)
+				require.Len(t, input.Filters, 1)
+				assert.Equal(t, FieldStatus, input.Filters[0].Field)
+				assert.Equal(t, []string{"active", "authorized_license"}, input.Filters[0].Values)
 				assert.NotEmpty(t, input.Sort)
 			},
 		},
@@ -127,8 +129,10 @@ func TestNewListSearchInput(t *testing.T) {
 			validateResult: func(t *testing.T, input *ListSearchInput, err error) {
 				require.NotNil(t, input)
 				assert.Nil(t, input.SearchTerm)
-				require.Len(t, input.Filters, 1)
+				require.Len(t, input.Filters, 2)
 				assert.Equal(t, FieldSpecialty, input.Filters[0].Field)
+				assert.Equal(t, FieldStatus, input.Filters[1].Field)
+				assert.Equal(t, []string{"active", "authorized_license"}, input.Filters[1].Values)
 			},
 		},
 		{
@@ -143,7 +147,10 @@ func TestNewListSearchInput(t *testing.T) {
 			validateResult: func(t *testing.T, input *ListSearchInput, err error) {
 				require.NotNil(t, input)
 				assert.Equal(t, "coração", *input.SearchTerm)
-				require.Len(t, input.Filters, 1)
+				require.Len(t, input.Filters, 2)
+				assert.Equal(t, FieldSpecialty, input.Filters[0].Field)
+				assert.Equal(t, FieldStatus, input.Filters[1].Field)
+				assert.Equal(t, []string{"active", "authorized_license"}, input.Filters[1].Values)
 			},
 		},
 		{
