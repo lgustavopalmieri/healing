@@ -11,6 +11,7 @@ import (
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
 	validatelicensekafka "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/event_listeners/validate_license/adapters/inbound/kafka"
+	updatedatareposkafka "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/event_listeners/update_data_repositories/adapters/inbound/kafka"
 )
 
 type ConsumerDependencies struct {
@@ -36,6 +37,19 @@ func InitKafkaConsumers(ctx context.Context, deps ConsumerDependencies) error {
 	})
 	if err != nil {
 		return fmt.Errorf("failed to initialize validate license kafka consumer: %w", err)
+	}
+
+	err = updatedatareposkafka.NewUpdateDataRepositoriesKafkaManager(ctx, updatedatareposkafka.ManagerDependencies{
+		DB:                 deps.DB,
+		ESClient:           deps.ESClient,
+		ESIndexSpecialists: deps.ESIndexSpecialists,
+		Tracer:             deps.Tracer,
+		Logger:             deps.Logger,
+		EventDispatcher:    deps.EventPublisher,
+		BootstrapServers:   deps.Config.Kafka.BootstrapServers,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to initialize update data repositories kafka consumer: %w", err)
 	}
 
 	log.Println("✅ Kafka consumers initialized successfully")
