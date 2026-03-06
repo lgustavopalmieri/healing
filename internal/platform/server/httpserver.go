@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -30,6 +31,13 @@ func NewHTTPServer(cfg HTTPConfig) *HTTPServer {
 
 	engine := gin.New()
 	engine.Use(gin.Recovery())
+	engine.Use(cors.New(cors.Config{
+		AllowAllOrigins:  true,
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: false,
+	}))
 
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.Port),

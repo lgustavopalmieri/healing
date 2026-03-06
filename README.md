@@ -44,3 +44,9 @@ make run
 # Run tests
 go test ./...
 ```
+
+## Swagger
+
+http://localhost:8080/swagger/index.html (local)
+
+http://localhost:4000/swagger/index.html (Docker)

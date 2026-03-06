@@ -217,7 +217,6 @@ definitions:
       specialist:
         $ref: '#/definitions/internal_modules_specialist_features_update_adapters_inbound_http_handler.SpecialistResponse'
     type: object
-host: localhost:8080
 info:
   contact: {}
   description: API for managing healthcare specialists on the Healing platform. Supports

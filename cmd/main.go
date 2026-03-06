@@ -17,7 +17,6 @@ import (
 // @version         1.0
 // @description     API for managing healthcare specialists on the Healing platform. Supports registration, search with cursor-based pagination, and profile updates.
 
-// @host      localhost:8080
 // @BasePath  /
 
 func main() {
