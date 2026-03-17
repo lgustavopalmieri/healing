@@ -1,0 +1,16 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: healing-specialist
+  namespace: healing
+  labels:
+    app.kubernetes.io/name: healing-specialist
+    app.kubernetes.io/component: backend
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: healing-specialist
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 15s

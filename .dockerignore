@@ -12,6 +12,6 @@ coverage.out
 e2e/
 .@guides/
 Makefile
-test
+tests
 @docs/
 .github
