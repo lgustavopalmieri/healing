@@ -11,7 +11,7 @@ import (
 )
 
 func Load() (*Config, error) {
-	env := getEnv("APP_ENV", "development")
+	env := getEnv("APP_ENV", "production")
 
 	_ = loadEnvFile(env)
 
@@ -19,17 +19,22 @@ func Load() (*Config, error) {
 		Server: ServerConfig{
 			GRPCPort:          getEnvAsInt("SERVER_GRPC_PORT", 50051),
 			HTTPPort:          getEnvAsInt("SERVER_HTTP_PORT", 8080),
+			MetricsPort:       getEnvAsInt("SERVER_METRICS_PORT", 9090),
 			ShutdownTimeout:   getEnvAsDuration("SERVER_SHUTDOWN_TIMEOUT", 30*time.Second),
 			MaxConnections:    getEnvAsInt("SERVER_MAX_CONNECTIONS", 1000),
 			ConnectionTimeout: getEnvAsDuration("SERVER_CONNECTION_TIMEOUT", 10*time.Second),
 		},
 		Database: DatabaseConfig{
-			Host:     getEnv("POSTGRES_HOST", "localhost"),
-			Port:     getEnvAsInt("POSTGRES_PORT", 5432),
-			User:     getEnv("POSTGRES_USER", ""),
-			Password: getEnv("POSTGRES_PASSWORD", ""),
-			Database: getEnv("POSTGRES_DB", ""),
-			SSLMode:  getEnv("POSTGRES_SSLMODE", "require"),
+			Host:            getEnv("POSTGRES_HOST", ""),
+			Port:            getEnvAsInt("POSTGRES_PORT", 5432),
+			User:            getEnv("POSTGRES_USER", ""),
+			Password:        getEnv("POSTGRES_PASSWORD", ""),
+			Database:        getEnv("POSTGRES_DB", ""),
+			SSLMode:         getEnv("POSTGRES_SSLMODE", "require"),
+			MaxOpenConns:    getEnvAsInt("POSTGRES_MAX_OPEN_CONNS", 25),
+			MaxIdleConns:    getEnvAsInt("POSTGRES_MAX_IDLE_CONNS", 5),
+			ConnMaxLifetime: getEnvAsDuration("POSTGRES_CONN_MAX_LIFETIME", 5*time.Minute),
+			ConnMaxIdleTime: getEnvAsDuration("POSTGRES_CONN_MAX_IDLE_TIME", 10*time.Minute),
 		},
 		Kafka: KafkaConfig{
 			BootstrapServers: getEnv("KAFKA_BOOTSTRAP_SERVERS", ""),
@@ -37,19 +42,19 @@ func Load() (*Config, error) {
 		},
 		Observability: ObservabilityConfig{
 			ServiceName:    getEnv("OTEL_SERVICE_NAME", ""),
-			ServiceVersion: getEnv("OTEL_SERVICE_VERSION", "1.0.0"),
+			ServiceVersion: getEnv("OTEL_SERVICE_VERSION", ""),
 			Environment:    getEnv("OTEL_ENVIRONMENT", env),
 			OTLPEndpoint:   getEnv("OTEL_EXPORTER_OTLP_GRPC_ENDPOINT", ""),
 			OTLPProtocol:   getEnv("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc"),
 		},
 		Elasticsearch: ElasticsearchConfig{
-			Addresses:        getEnvAsSlice("ELASTICSEARCH_ADDRESSES", []string{"http://localhost:9200"}),
+			Addresses:        getEnvAsSlice("ELASTICSEARCH_ADDRESSES", nil),
 			IndexSpecialists: getEnv("ELASTICSEARCH_INDEX_SPECIALISTS", "specialists"),
 			MaxRetries:       getEnvAsInt("ELASTICSEARCH_MAX_RETRIES", 3),
 			RetryBackoff:     getEnvAsDuration("ELASTICSEARCH_RETRY_BACKOFF", 1*time.Second),
 		},
 		External: ExternalConfig{
-			LicenseBaseURL: getEnv("LICENSE_VALIDATION_BASE_URL", "http://localhost:8080"),
+			LicenseBaseURL: getEnv("LICENSE_VALIDATION_BASE_URL", ""),
 		},
 	}
 
@@ -57,30 +62,43 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("invalid configuration: %w", err)
 	}
 
-	log.Printf("✅ Configuration loaded successfully (Environment: %s)", cfg.Observability.Environment)
+	log.Printf("Configuration loaded (env=%s, service=%s, version=%s)",
+		cfg.Observability.Environment,
+		cfg.Observability.ServiceName,
+		cfg.Observability.ServiceVersion,
+	)
 
 	return cfg, nil
 }
 
 func loadEnvFile(env string) error {
-	configDir := "cmd/server"
+	envDir := getEnv("ENV_DIR", "")
 
-	if _, err := os.Stat(".env"); err == nil {
-		configDir = "."
+	if envDir == "" {
+		candidates := []string{".", "cmd/server"}
+		for _, dir := range candidates {
+			if _, err := os.Stat(filepath.Join(dir, ".env")); err == nil {
+				envDir = dir
+				break
+			}
+		}
+	}
+
+	if envDir == "" {
+		return nil
 	}
 
 	var envFile string
 	switch env {
 	case "test":
-		envFile = filepath.Join(configDir, ".env.test")
+		envFile = filepath.Join(envDir, ".env.test")
 	case "production":
-		envFile = filepath.Join(configDir, ".env.production")
+		envFile = filepath.Join(envDir, ".env.production")
 	default:
-		envFile = filepath.Join(configDir, ".env")
+		envFile = filepath.Join(envDir, ".env")
 	}
 
 	if _, err := os.Stat(envFile); os.IsNotExist(err) {
-		fmt.Printf("⚠️  Warning: Environment file %s not found, using environment variables only\n", envFile)
 		return nil
 	}
 
@@ -93,11 +111,13 @@ func loadEnvFile(env string) error {
 
 	for _, key := range viper.AllKeys() {
 		value := viper.GetString(key)
-		if err := os.Setenv(key, value); err != nil {
-			return fmt.Errorf("error setting env var %s: %w", key, err)
+		if os.Getenv(key) == "" {
+			if err := os.Setenv(key, value); err != nil {
+				return fmt.Errorf("error setting env var %s: %w", key, err)
+			}
 		}
 	}
 
-	fmt.Printf("✅ Loaded configuration from: %s (Environment: %s)\n", envFile, env)
+	log.Printf("Loaded env file: %s", envFile)
 	return nil
 }

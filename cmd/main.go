@@ -74,7 +74,7 @@ func run() error {
 	})
 
 	metricsServer := server.NewMetricsServer(server.MetricsConfig{
-		Port:           9090,
+		Port:           cfg.Server.MetricsPort,
 		MetricsHandler: obs.Provider.MetricsHandler(),
 	})
 

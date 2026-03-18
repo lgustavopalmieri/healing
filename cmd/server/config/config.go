@@ -16,18 +16,23 @@ type Config struct {
 type ServerConfig struct {
 	GRPCPort          int
 	HTTPPort          int
+	MetricsPort       int
 	ShutdownTimeout   time.Duration
 	MaxConnections    int
 	ConnectionTimeout time.Duration
 }
 
 type DatabaseConfig struct {
-	Host     string
-	Port     int
-	User     string
-	Password string
-	Database string
-	SSLMode  string
+	Host            string
+	Port            int
+	User            string
+	Password        string
+	Database        string
+	SSLMode         string
+	MaxOpenConns    int
+	MaxIdleConns    int
+	ConnMaxLifetime time.Duration
+	ConnMaxIdleTime time.Duration
 }
 
 type KafkaConfig struct {
