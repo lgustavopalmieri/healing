@@ -5,14 +5,13 @@ import (
 	"log/slog"
 	"os"
 
-"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
-
+	"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
 	"go.opentelemetry.io/otel/trace"
 )
 
 type SlogLogger struct {
-	logger      *slog.Logger
-	serviceName string
+	Logger      *slog.Logger
+	ServiceName string
 }
 
 func NewSlogLogger(serviceName string) *SlogLogger {
@@ -20,11 +19,9 @@ func NewSlogLogger(serviceName string) *SlogLogger {
 		Level: slog.LevelDebug,
 	})
 
-	logger := slog.New(handler)
-
 	return &SlogLogger{
-		logger:      logger,
-		serviceName: serviceName,
+		Logger:      slog.New(handler),
+		ServiceName: serviceName,
 	}
 }
 
@@ -46,11 +43,8 @@ func (l *SlogLogger) Error(ctx context.Context, msg string, fields ...observabil
 
 func (l *SlogLogger) log(ctx context.Context, level slog.Level, msg string, fields ...observability.Field) {
 	attrs := make([]slog.Attr, 0, len(fields)+3)
+	attrs = append(attrs, slog.String("service", l.ServiceName))
 
-	// Add service name
-	attrs = append(attrs, slog.String("service", l.serviceName))
-
-	// Extract trace context if present
 	span := trace.SpanFromContext(ctx)
 	if span.SpanContext().IsValid() {
 		attrs = append(attrs,
@@ -59,10 +53,9 @@ func (l *SlogLogger) log(ctx context.Context, level slog.Level, msg string, fiel
 		)
 	}
 
-	// Add custom fields
 	for _, field := range fields {
 		attrs = append(attrs, slog.String(field.Key, field.Value))
 	}
 
-	l.logger.LogAttrs(ctx, level, msg, attrs...)
+	l.Logger.LogAttrs(ctx, level, msg, attrs...)
 }

@@ -14,13 +14,12 @@ import (
 	"github.com/lgustavopalmieri/healing-specialist/internal/platform/kafka"
 	"github.com/lgustavopalmieri/healing-specialist/internal/platform/server"
 	"github.com/lgustavopalmieri/healing-specialist/internal/platform/telemetry"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
 type ShutdownManager struct {
-	timeout time.Duration
-	signals chan os.Signal
-	done    chan struct{}
+	Timeout time.Duration
+	Signals chan os.Signal
+	Done    chan struct{}
 }
 
 func NewShutdownManager(timeout time.Duration) *ShutdownManager {
@@ -28,26 +27,26 @@ func NewShutdownManager(timeout time.Duration) *ShutdownManager {
 	signal.Notify(signals, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 
 	return &ShutdownManager{
-		timeout: timeout,
-		signals: signals,
-		done:    make(chan struct{}),
+		Timeout: timeout,
+		Signals: signals,
+		Done:    make(chan struct{}),
 	}
 }
 
 func (sm *ShutdownManager) Wait() {
-	<-sm.signals
+	<-sm.Signals
 	log.Println("Shutdown signal received, starting graceful shutdown...")
 }
 
 func (sm *ShutdownManager) Shutdown(
 	grpcServer *server.GRPCServer,
 	db *sql.DB,
-	tracerProvider *sdktrace.TracerProvider,
+	provider *telemetry.Provider,
 	kafkaProducer *kafka.KafkaProducer,
 ) error {
-	log.Println("🛑 Shutdown signal received, gracefully shutting down...")
+	log.Println("Shutdown signal received, gracefully shutting down...")
 
-	ctx, cancel := context.WithTimeout(context.Background(), sm.timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), sm.Timeout)
 	defer cancel()
 
 	var wg sync.WaitGroup
@@ -78,9 +77,12 @@ func (sm *ShutdownManager) Shutdown(
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		log.Println("Shutting down tracer provider...")
-		telemetry.ShutdownTracer(ctx, tracerProvider)
-		log.Println("Tracer provider stopped")
+		log.Println("Shutting down OTel provider...")
+		if err := provider.Shutdown(ctx); err != nil {
+			errChan <- fmt.Errorf("otel provider shutdown: %w", err)
+			return
+		}
+		log.Println("OTel provider stopped")
 	}()
 
 	if kafkaProducer != nil {
@@ -109,7 +111,7 @@ func (sm *ShutdownManager) Shutdown(
 		if len(errs) > 0 {
 			return fmt.Errorf("shutdown errors: %v", errs)
 		}
-		log.Println("👋 Graceful shutdown completed successfully")
+		log.Println("Graceful shutdown completed successfully")
 		return nil
 
 	case <-ctx.Done():

@@ -9,7 +9,7 @@ import (
 	"github.com/lgustavopalmieri/healing-specialist/cmd/server/config"
 	_ "github.com/lgustavopalmieri/healing-specialist/docs"
 	"github.com/lgustavopalmieri/healing-specialist/internal/platform/server"
-	"github.com/lgustavopalmieri/healing-specialist/internal/platform/telemetry"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 )
 
@@ -28,15 +28,14 @@ func main() {
 func run() error {
 	ctx := context.Background()
 
-	log.Println("🚀 Starting Healing Specialist Service...")
-	log.Println("📋 Loading configuration...")
+	log.Println("Starting Healing Specialist Service...")
 
 	cfg, err := config.Load()
 	if err != nil {
 		return err
 	}
 
-	observability, err := bootstrap.InitObservability(ctx, cfg)
+	obs, err := bootstrap.InitObservability(ctx, cfg)
 	if err != nil {
 		return err
 	}
@@ -60,7 +59,11 @@ func run() error {
 		Port:              cfg.Server.GRPCPort,
 		MaxConnections:    cfg.Server.MaxConnections,
 		ConnectionTimeout: cfg.Server.ConnectionTimeout,
-		Interceptors:      []grpc.UnaryServerInterceptor{observability.GRPCMetrics.UnaryServerInterceptor()},
+		Interceptors: []grpc.UnaryServerInterceptor{
+			obs.GRPCMetrics.UnaryServerInterceptor(),
+		},
+		StreamInterceptors: []grpc.StreamServerInterceptor{},
+		StatsHandler:       otelgrpc.NewServerHandler(),
 	})
 	if err != nil {
 		return err
@@ -71,16 +74,15 @@ func run() error {
 	})
 
 	metricsServer := server.NewMetricsServer(server.MetricsConfig{
-		Port:     9090,
-		Registry: observability.Metrics.(*telemetry.PrometheusMetrics).Registry(),
+		Port:           9090,
+		MetricsHandler: obs.Provider.MetricsHandler(),
 	})
 
 	serviceDeps := bootstrap.ServiceDependencies{
 		DB:                 db,
 		ESClient:           esClient,
 		EventPublisher:     kafkaProducer,
-		Tracer:             observability.Tracer,
-		Logger:             observability.Logger,
+		Factory:            obs.Factory,
 		ESIndexSpecialists: cfg.Elasticsearch.IndexSpecialists,
 	}
 
@@ -91,8 +93,7 @@ func run() error {
 		DB:                 db,
 		ESClient:           esClient,
 		ESIndexSpecialists: cfg.Elasticsearch.IndexSpecialists,
-		Tracer:             observability.Tracer,
-		Logger:             observability.Logger,
+		Factory:            obs.Factory,
 		EventPublisher:     kafkaProducer,
 		Config:             cfg,
 	}); err != nil {
@@ -104,12 +105,12 @@ func run() error {
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				log.Printf("🔥 gRPC server panic recovered: %v", r)
+				log.Printf("gRPC server panic recovered: %v", r)
 			}
 		}()
-		log.Println("🚀 gRPC server starting...")
+		log.Println("gRPC server starting...")
 		if err := grpcServer.Start(); err != nil {
-			log.Printf("❌ gRPC server error: %v", err)
+			log.Printf("gRPC server error: %v", err)
 			serverErrors <- err
 		}
 	}()
@@ -117,12 +118,12 @@ func run() error {
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				log.Printf("🔥 HTTP server panic recovered: %v", r)
+				log.Printf("HTTP server panic recovered: %v", r)
 			}
 		}()
-		log.Println("🌐 HTTP server starting...")
+		log.Println("HTTP server starting...")
 		if err := httpServer.Start(); err != nil {
-			log.Printf("❌ HTTP server error: %v", err)
+			log.Printf("HTTP server error: %v", err)
 			serverErrors <- err
 		}
 	}()
@@ -130,11 +131,11 @@ func run() error {
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				log.Printf("🔥 Metrics server panic recovered: %v", r)
+				log.Printf("Metrics server panic recovered: %v", r)
 			}
 		}()
 		if err := metricsServer.Start(); err != nil {
-			log.Printf("❌ Metrics server error: %v", err)
+			log.Printf("Metrics server error: %v", err)
 			serverErrors <- err
 		}
 	}()
@@ -142,22 +143,22 @@ func run() error {
 	shutdownManager := bootstrap.NewShutdownManager(cfg.Server.ShutdownTimeout)
 	shutdownManager.Wait()
 
-	log.Println("🛑 Initiating graceful shutdown...")
-	observability.GRPCMetrics.SetUnhealthy()
+	log.Println("Initiating graceful shutdown...")
+	obs.GRPCMetrics.SetUnhealthy()
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), cfg.Server.ShutdownTimeout)
 	defer cancel()
 
 	if err := httpServer.Shutdown(shutdownCtx); err != nil {
-		log.Printf("⚠️ HTTP server shutdown error: %v", err)
+		log.Printf("HTTP server shutdown error: %v", err)
 	}
 
 	if err := metricsServer.Shutdown(shutdownCtx); err != nil {
-		log.Printf("⚠️ Metrics server shutdown error: %v", err)
+		log.Printf("Metrics server shutdown error: %v", err)
 	}
 
-	if err := shutdownManager.Shutdown(grpcServer, db, observability.TracerProvider, kafkaProducer); err != nil {
-		log.Printf("❌ Shutdown error: %v", err)
+	if err := shutdownManager.Shutdown(grpcServer, db, obs.Provider, kafkaProducer); err != nil {
+		log.Printf("Shutdown error: %v", err)
 		os.Exit(1)
 	}
 

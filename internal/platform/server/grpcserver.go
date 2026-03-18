@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/grpc/stats"
 )
 
 const (
@@ -23,17 +24,18 @@ const (
 )
 
 type GRPCServer struct {
-	server       *grpc.Server
-	listener     net.Listener
-	port         int
-	interceptors []grpc.UnaryServerInterceptor
+	Server   *grpc.Server
+	Listener net.Listener
+	Port     int
 }
 
 type Config struct {
-	Port              int
-	MaxConnections    int
-	ConnectionTimeout time.Duration
-	Interceptors      []grpc.UnaryServerInterceptor
+	Port               int
+	MaxConnections     int
+	ConnectionTimeout  time.Duration
+	Interceptors       []grpc.UnaryServerInterceptor
+	StreamInterceptors []grpc.StreamServerInterceptor
+	StatsHandler       stats.Handler
 }
 
 func NewGRPCServer(cfg Config) (*GRPCServer, error) {
@@ -58,9 +60,16 @@ func NewGRPCServer(cfg Config) (*GRPCServer, error) {
 		}),
 	}
 
-	// Add interceptors if provided
 	if len(cfg.Interceptors) > 0 {
 		opts = append(opts, grpc.ChainUnaryInterceptor(cfg.Interceptors...))
+	}
+
+	if len(cfg.StreamInterceptors) > 0 {
+		opts = append(opts, grpc.ChainStreamInterceptor(cfg.StreamInterceptors...))
+	}
+
+	if cfg.StatsHandler != nil {
+		opts = append(opts, grpc.StatsHandler(cfg.StatsHandler))
 	}
 
 	server := grpc.NewServer(opts...)
@@ -71,30 +80,24 @@ func NewGRPCServer(cfg Config) (*GRPCServer, error) {
 
 	reflection.Register(server)
 
-	log.Printf("🌐 Initializing gRPC server (Port: %d)...", cfg.Port)
+	log.Printf("Initializing gRPC server (Port: %d)...", cfg.Port)
 
 	return &GRPCServer{
-		server:       server,
-		listener:     listener,
-		port:         cfg.Port,
-		interceptors: cfg.Interceptors,
+		Server:   server,
+		Listener: listener,
+		Port:     cfg.Port,
 	}, nil
 }
 
 func (s *GRPCServer) RegisterService(desc *grpc.ServiceDesc, impl interface{}) {
-	s.server.RegisterService(desc, impl)
+	s.Server.RegisterService(desc, impl)
 }
 
 func (s *GRPCServer) Start() error {
-	log.Printf("Starting gRPC server on port %d...", s.port)
-	if err := s.server.Serve(s.listener); err != nil {
+	log.Printf("Starting gRPC server on port %d...", s.Port)
+	if err := s.Server.Serve(s.Listener); err != nil {
 		return fmt.Errorf("failed to serve: %w", err)
 	}
-
-	log.Println("✨ Application started successfully!")
-	log.Printf("🎯 gRPC Server listening on port %d", s.port)
-	log.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-
 	return nil
 }
 
@@ -102,7 +105,7 @@ func (s *GRPCServer) Shutdown(ctx context.Context) error {
 	done := make(chan struct{})
 
 	go func() {
-		s.server.GracefulStop()
+		s.Server.GracefulStop()
 		close(done)
 	}()
 
@@ -110,11 +113,11 @@ func (s *GRPCServer) Shutdown(ctx context.Context) error {
 	case <-done:
 		return nil
 	case <-ctx.Done():
-		s.server.Stop()
+		s.Server.Stop()
 		return fmt.Errorf("forced shutdown due to timeout")
 	}
 }
 
 func (s *GRPCServer) GetServer() *grpc.Server {
-	return s.server
+	return s.Server
 }

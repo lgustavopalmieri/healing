@@ -6,50 +6,39 @@ import (
 	"log"
 
 	"github.com/lgustavopalmieri/healing-specialist/cmd/server/config"
-	"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
 	"github.com/lgustavopalmieri/healing-specialist/internal/platform/telemetry"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
 type ObservabilityComponents struct {
-	TracerProvider *sdktrace.TracerProvider
-	Tracer         observability.Tracer
-	Logger         observability.Logger
-	Metrics        observability.Metrics
-	GRPCMetrics    *telemetry.GRPCMetrics
+	Provider    *telemetry.Provider
+	Factory     *telemetry.Factory
+	GRPCMetrics *telemetry.GRPCMetrics
 }
 
 func InitObservability(ctx context.Context, cfg *config.Config) (*ObservabilityComponents, error) {
-	log.Println("📊 Initializing observability (Tracing, Logging, Metrics)...")
+	log.Println("Initializing observability (Tracing, Logging, Metrics)...")
 
-	tracerProvider, err := telemetry.NewTracerProvider(
-		ctx,
-		cfg.Observability.ServiceName,
-		cfg.Observability.OTLPEndpoint,
-	)
+	provider, err := telemetry.NewProvider(ctx, telemetry.ProviderConfig{
+		ServiceName:    cfg.Observability.ServiceName,
+		ServiceVersion: cfg.Observability.ServiceVersion,
+		Environment:    cfg.Observability.Environment,
+		OTLPEndpoint:   cfg.Observability.OTLPEndpoint,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize tracer provider: %w", err)
+		return nil, fmt.Errorf("failed to initialize otel provider: %w", err)
 	}
 
-	otelTracer := telemetry.GetTracer(cfg.Observability.ServiceName)
-	tracer := telemetry.NewOtelTracer(otelTracer)
+	factory := telemetry.NewFactory(cfg.Observability.ServiceName)
+	grpcMetrics := telemetry.NewGRPCMetrics(cfg.Observability.ServiceName)
 
-	logger := telemetry.NewSlogLogger(cfg.Observability.ServiceName)
-
-	prometheusMetrics := telemetry.NewPrometheusMetrics()
-
-	grpcMetrics := telemetry.NewGRPCMetrics(prometheusMetrics.Registry())
-
-	log.Printf("✅ Observability initialized (Service: %s, Endpoint: %s)",
+	log.Printf("Observability initialized (Service: %s, OTLP: %s)",
 		cfg.Observability.ServiceName,
 		cfg.Observability.OTLPEndpoint,
 	)
 
 	return &ObservabilityComponents{
-		TracerProvider: tracerProvider,
-		Tracer:         tracer,
-		Logger:         logger,
-		Metrics:        prometheusMetrics,
-		GRPCMetrics:    grpcMetrics,
+		Provider:    provider,
+		Factory:     factory,
+		GRPCMetrics: grpcMetrics,
 	}, nil
 }
