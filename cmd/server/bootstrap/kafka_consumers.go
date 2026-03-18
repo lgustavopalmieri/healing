@@ -6,21 +6,20 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/lgustavopalmieri/healing-specialist/cmd/server/config"
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
 	validatelicensekafka "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/event_listeners/validate_license/adapters/inbound/kafka"
 	updatedatareposkafka "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/event_listeners/update_data_repositories/adapters/inbound/kafka"
+	platformES "github.com/lgustavopalmieri/healing-specialist/internal/platform/elasticsearch"
 	"github.com/lgustavopalmieri/healing-specialist/internal/platform/telemetry"
 )
 
 type ConsumerDependencies struct {
-	DB                 *sql.DB
-	ESClient           *elasticsearch.Client
-	ESIndexSpecialists string
-	Factory            *telemetry.Factory
-	EventPublisher     event.EventDispatcher
-	Config             *config.Config
+	DB             *sql.DB
+	ESFactory      *platformES.Factory
+	Factory        *telemetry.Factory
+	EventPublisher event.EventDispatcher
+	Config         *config.Config
 }
 
 func InitKafkaConsumers(ctx context.Context, deps ConsumerDependencies) error {
@@ -40,8 +39,8 @@ func InitKafkaConsumers(ctx context.Context, deps ConsumerDependencies) error {
 
 	err = updatedatareposkafka.NewUpdateDataRepositoriesKafkaManager(ctx, updatedatareposkafka.ManagerDependencies{
 		DB:                 deps.DB,
-		ESClient:           deps.ESClient,
-		ESIndexSpecialists: deps.ESIndexSpecialists,
+		ESClient:           deps.ESFactory.Client,
+		ESIndexSpecialists: deps.ESFactory.Indexes.Specialists,
 		Tracer:             deps.Factory.Tracer("specialist.update.update-data-repositories"),
 		Logger:             deps.Factory.Logger("specialist.update.update-data-repositories"),
 		EventDispatcher:    deps.EventPublisher,

@@ -45,7 +45,7 @@ func run() error {
 		return err
 	}
 
-	esClient, err := bootstrap.InitElasticsearch(cfg)
+	esFactory, err := bootstrap.InitElasticsearch(cfg)
 	if err != nil {
 		return err
 	}
@@ -79,23 +79,21 @@ func run() error {
 	})
 
 	serviceDeps := bootstrap.ServiceDependencies{
-		DB:                 db,
-		ESClient:           esClient,
-		EventPublisher:     kafkaProducer,
-		Factory:            obs.Factory,
-		ESIndexSpecialists: cfg.Elasticsearch.IndexSpecialists,
+		DB:             db,
+		ESFactory:      esFactory,
+		EventPublisher: kafkaProducer,
+		Factory:        obs.Factory,
 	}
 
 	bootstrap.RegisterServices(grpcServer, serviceDeps)
 	bootstrap.RegisterHTTPServices(httpServer, serviceDeps)
 
 	if err := bootstrap.InitKafkaConsumers(ctx, bootstrap.ConsumerDependencies{
-		DB:                 db,
-		ESClient:           esClient,
-		ESIndexSpecialists: cfg.Elasticsearch.IndexSpecialists,
-		Factory:            obs.Factory,
-		EventPublisher:     kafkaProducer,
-		Config:             cfg,
+		DB:             db,
+		ESFactory:      esFactory,
+		Factory:        obs.Factory,
+		EventPublisher: kafkaProducer,
+		Config:         cfg,
 	}); err != nil {
 		return err
 	}
