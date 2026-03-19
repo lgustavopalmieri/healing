@@ -62,12 +62,8 @@ func loadEnvFile(env string) error {
 	envDir := getEnv("ENV_DIR", "")
 
 	if envDir == "" {
-		candidates := []string{".", "cmd/server"}
-		for _, dir := range candidates {
-			if _, err := os.Stat(filepath.Join(dir, ".env")); err == nil {
-				envDir = dir
-				break
-			}
+		if _, err := os.Stat(".env"); err == nil {
+			envDir = "."
 		}
 	}
 
