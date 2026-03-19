@@ -26,8 +26,7 @@ func RegisterHTTPServices(httpServer *server.HTTPServer, deps ServiceDependencie
 	createHandler.RegisterRoutes(api)
 
 	searchHandler := searchhttp.NewSpecialistSearchHandler(searchhttp.Dependencies{
-		ESClient:           deps.ESFactory.Client,
-		ESIndexSpecialists: deps.ESFactory.Indexes.Specialists,
+		ESClient: deps.ESFactory.Client,
 	})
 	searchHandler.RegisterRoutes(api)
 

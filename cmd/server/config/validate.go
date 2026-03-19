@@ -35,10 +35,6 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("ELASTICSEARCH_ADDRESSES is required")
 	}
 
-	if c.Elasticsearch.IndexSpecialists == "" {
-		return fmt.Errorf("ELASTICSEARCH_INDEX_SPECIALISTS is required")
-	}
-
 	if c.External.LicenseBaseURL == "" {
 		return fmt.Errorf("LICENSE_VALIDATION_BASE_URL is required")
 	}

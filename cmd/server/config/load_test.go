@@ -17,7 +17,6 @@ func setAllRequiredEnvVars(t *testing.T) {
 	t.Setenv("POSTGRES_SSLMODE", "require")
 	t.Setenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
 	t.Setenv("ELASTICSEARCH_ADDRESSES", "http://es:9200")
-	t.Setenv("ELASTICSEARCH_INDEX_SPECIALISTS", "specialists")
 	t.Setenv("LICENSE_VALIDATION_BASE_URL", "http://license-service:8080")
 	t.Setenv("ENV_DIR", "/nonexistent")
 }

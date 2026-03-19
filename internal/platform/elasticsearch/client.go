@@ -9,10 +9,9 @@ import (
 )
 
 type Config struct {
-	Addresses        []string
-	MaxRetries       int
-	RetryBackoff     time.Duration
-	IndexSpecialists string
+	Addresses    []string
+	MaxRetries   int
+	RetryBackoff time.Duration
 }
 
 func NewClient(cfg Config) (*elasticsearch.Client, error) {

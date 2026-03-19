@@ -10,21 +10,21 @@ import (
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/event_listeners/update_data_repositories/adapters/outbound/database"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/event_listeners/update_data_repositories/adapters/outbound/elasticsearch"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/event_listeners/update_data_repositories/listener"
+	"github.com/lgustavopalmieri/healing-specialist/internal/platform/elasticsearch/indexes"
 	platformkafka "github.com/lgustavopalmieri/healing-specialist/internal/platform/kafka"
 )
 
 type ManagerDependencies struct {
-	DB                 *sql.DB
-	ESClient           *goelasticsearch.Client
-	ESIndexSpecialists string
-	EventDispatcher    event.EventDispatcher
-	BootstrapServers   string
+	DB               *sql.DB
+	ESClient         *goelasticsearch.Client
+	EventDispatcher  event.EventDispatcher
+	BootstrapServers string
 }
 
 func NewUpdateDataRepositoriesKafkaManager(ctx context.Context, deps ManagerDependencies) error {
 	sourceRepo := database.NewSourceRepository(deps.DB)
 
-	esRepo := elasticsearch.NewRepository(deps.ESClient, deps.ESIndexSpecialists, deps.EventDispatcher)
+	esRepo := elasticsearch.NewRepository(deps.ESClient, indexes.SpecialistsIndex, deps.EventDispatcher)
 
 	dataRepositories := []listener.DataRepository{
 		esRepo,

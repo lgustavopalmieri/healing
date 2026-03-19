@@ -39,10 +39,9 @@ type KafkaConfig struct {
 }
 
 type ElasticsearchConfig struct {
-	Addresses        []string
-	IndexSpecialists string
-	MaxRetries       int
-	RetryBackoff     time.Duration
+	Addresses    []string
+	MaxRetries   int
+	RetryBackoff time.Duration
 }
 
 type ExternalConfig struct {

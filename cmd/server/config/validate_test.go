@@ -33,10 +33,9 @@ func validConfigFactory(overrides ...func(*Config)) *Config {
 			AutoOffsetReset:  "earliest",
 		},
 		Elasticsearch: ElasticsearchConfig{
-			Addresses:        []string{"http://elasticsearch.healing.svc.cluster.local:9200"},
-			IndexSpecialists: "specialists",
-			MaxRetries:       3,
-			RetryBackoff:     1 * time.Second,
+			Addresses:    []string{"http://elasticsearch.healing.svc.cluster.local:9200"},
+			MaxRetries:   3,
+			RetryBackoff: 1 * time.Second,
 		},
 		External: ExternalConfig{
 			LicenseBaseURL: "http://license-service.healing.svc.cluster.local:8080",
@@ -115,12 +114,6 @@ func TestValidate(t *testing.T) {
 			override:    func(c *Config) { c.Elasticsearch.Addresses = nil },
 			expectError: true,
 			expectedMsg: "ELASTICSEARCH_ADDRESSES is required",
-		},
-		{
-			name:        "failure - returns error when ELASTICSEARCH_INDEX_SPECIALISTS is empty",
-			override:    func(c *Config) { c.Elasticsearch.IndexSpecialists = "" },
-			expectError: true,
-			expectedMsg: "ELASTICSEARCH_INDEX_SPECIALISTS is required",
 		},
 		{
 			name:        "failure - returns error when LICENSE_VALIDATION_BASE_URL is empty",

@@ -34,11 +34,10 @@ func InitKafkaConsumers(ctx context.Context, deps ConsumerDependencies) error {
 	}
 
 	err = updatedatareposkafka.NewUpdateDataRepositoriesKafkaManager(ctx, updatedatareposkafka.ManagerDependencies{
-		DB:                 deps.DB,
-		ESClient:           deps.ESFactory.Client,
-		ESIndexSpecialists: deps.ESFactory.Indexes.Specialists,
-		EventDispatcher:    deps.EventPublisher,
-		BootstrapServers:   deps.Config.Kafka.BootstrapServers,
+		DB:               deps.DB,
+		ESClient:         deps.ESFactory.Client,
+		EventDispatcher:  deps.EventPublisher,
+		BootstrapServers: deps.Config.Kafka.BootstrapServers,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to initialize update data repositories kafka consumer: %w", err)

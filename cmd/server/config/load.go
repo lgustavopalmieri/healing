@@ -40,10 +40,9 @@ func Load() (*Config, error) {
 			AutoOffsetReset:  getEnv("KAFKA_AUTO_OFFSET_RESET", "earliest"),
 		},
 		Elasticsearch: ElasticsearchConfig{
-			Addresses:        getEnvAsSlice("ELASTICSEARCH_ADDRESSES", nil),
-			IndexSpecialists: getEnv("ELASTICSEARCH_INDEX_SPECIALISTS", "specialists"),
-			MaxRetries:       getEnvAsInt("ELASTICSEARCH_MAX_RETRIES", 3),
-			RetryBackoff:     getEnvAsDuration("ELASTICSEARCH_RETRY_BACKOFF", 1*time.Second),
+			Addresses:    getEnvAsSlice("ELASTICSEARCH_ADDRESSES", nil),
+			MaxRetries:   getEnvAsInt("ELASTICSEARCH_MAX_RETRIES", 3),
+			RetryBackoff: getEnvAsDuration("ELASTICSEARCH_RETRY_BACKOFF", 1*time.Second),
 		},
 		External: ExternalConfig{
 			LicenseBaseURL: getEnv("LICENSE_VALIDATION_BASE_URL", ""),

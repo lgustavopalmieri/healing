@@ -30,8 +30,7 @@ func RegisterServices(grpcServer *server.GRPCServer, deps ServiceDependencies) {
 	createpb.RegisterSpecialistServiceServer(grpcServer.GetServer(), specialistCreateService)
 
 	specialistSearchService := searchgrpc.NewSpecialistSearchService(searchgrpc.Dependencies{
-		ESClient:           deps.ESFactory.Client,
-		ESIndexSpecialists: deps.ESFactory.Indexes.Specialists,
+		ESClient: deps.ESFactory.Client,
 	})
 	searchpb.RegisterSearchSpecialistServiceServer(grpcServer.GetServer(), specialistSearchService)
 
