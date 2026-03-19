@@ -19,7 +19,6 @@ func Load() (*Config, error) {
 		Server: ServerConfig{
 			GRPCPort:          getEnvAsInt("SERVER_GRPC_PORT", 50051),
 			HTTPPort:          getEnvAsInt("SERVER_HTTP_PORT", 8080),
-			MetricsPort:       getEnvAsInt("SERVER_METRICS_PORT", 9090),
 			ShutdownTimeout:   getEnvAsDuration("SERVER_SHUTDOWN_TIMEOUT", 30*time.Second),
 			MaxConnections:    getEnvAsInt("SERVER_MAX_CONNECTIONS", 1000),
 			ConnectionTimeout: getEnvAsDuration("SERVER_CONNECTION_TIMEOUT", 10*time.Second),
@@ -40,13 +39,6 @@ func Load() (*Config, error) {
 			BootstrapServers: getEnv("KAFKA_BOOTSTRAP_SERVERS", ""),
 			AutoOffsetReset:  getEnv("KAFKA_AUTO_OFFSET_RESET", "earliest"),
 		},
-		Observability: ObservabilityConfig{
-			ServiceName:    getEnv("OTEL_SERVICE_NAME", ""),
-			ServiceVersion: getEnv("OTEL_SERVICE_VERSION", ""),
-			Environment:    getEnv("OTEL_ENVIRONMENT", env),
-			OTLPEndpoint:   getEnv("OTEL_EXPORTER_OTLP_GRPC_ENDPOINT", ""),
-			OTLPProtocol:   getEnv("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc"),
-		},
 		Elasticsearch: ElasticsearchConfig{
 			Addresses:        getEnvAsSlice("ELASTICSEARCH_ADDRESSES", nil),
 			IndexSpecialists: getEnv("ELASTICSEARCH_INDEX_SPECIALISTS", "specialists"),
@@ -62,11 +54,7 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("invalid configuration: %w", err)
 	}
 
-	log.Printf("Configuration loaded (env=%s, service=%s, version=%s)",
-		cfg.Observability.Environment,
-		cfg.Observability.ServiceName,
-		cfg.Observability.ServiceVersion,
-	)
+	log.Printf("Configuration loaded (env=%s)", env)
 
 	return cfg, nil
 }

@@ -12,7 +12,6 @@ func validConfigFactory(overrides ...func(*Config)) *Config {
 		Server: ServerConfig{
 			GRPCPort:          50051,
 			HTTPPort:          8080,
-			MetricsPort:       9090,
 			ShutdownTimeout:   30 * time.Second,
 			MaxConnections:    1000,
 			ConnectionTimeout: 10 * time.Second,
@@ -32,13 +31,6 @@ func validConfigFactory(overrides ...func(*Config)) *Config {
 		Kafka: KafkaConfig{
 			BootstrapServers: "kafka.healing.svc.cluster.local:9092",
 			AutoOffsetReset:  "earliest",
-		},
-		Observability: ObservabilityConfig{
-			ServiceName:    "healing-specialist",
-			ServiceVersion: "1.0.0",
-			Environment:    "production",
-			OTLPEndpoint:   "otel-collector.observability.svc.cluster.local:4317",
-			OTLPProtocol:   "grpc",
 		},
 		Elasticsearch: ElasticsearchConfig{
 			Addresses:        []string{"http://elasticsearch.healing.svc.cluster.local:9200"},
@@ -89,12 +81,6 @@ func TestValidate(t *testing.T) {
 			expectedMsg: "invalid HTTP port: 0",
 		},
 		{
-			name:        "failure - returns error when metrics port is zero",
-			override:    func(c *Config) { c.Server.MetricsPort = 0 },
-			expectError: true,
-			expectedMsg: "invalid metrics port: 0",
-		},
-		{
 			name:        "failure - returns error when POSTGRES_HOST is empty",
 			override:    func(c *Config) { c.Database.Host = "" },
 			expectError: true,
@@ -123,24 +109,6 @@ func TestValidate(t *testing.T) {
 			override:    func(c *Config) { c.Kafka.BootstrapServers = "" },
 			expectError: true,
 			expectedMsg: "KAFKA_BOOTSTRAP_SERVERS is required",
-		},
-		{
-			name:        "failure - returns error when OTEL_SERVICE_NAME is empty",
-			override:    func(c *Config) { c.Observability.ServiceName = "" },
-			expectError: true,
-			expectedMsg: "OTEL_SERVICE_NAME is required",
-		},
-		{
-			name:        "failure - returns error when OTEL_SERVICE_VERSION is empty",
-			override:    func(c *Config) { c.Observability.ServiceVersion = "" },
-			expectError: true,
-			expectedMsg: "OTEL_SERVICE_VERSION is required",
-		},
-		{
-			name:        "failure - returns error when OTEL_EXPORTER_OTLP_GRPC_ENDPOINT is empty",
-			override:    func(c *Config) { c.Observability.OTLPEndpoint = "" },
-			expectError: true,
-			expectedMsg: "OTEL_EXPORTER_OTLP_GRPC_ENDPOINT is required",
 		},
 		{
 			name:        "failure - returns error when ELASTICSEARCH_ADDRESSES is empty",

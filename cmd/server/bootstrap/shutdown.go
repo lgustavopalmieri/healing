@@ -13,7 +13,6 @@ import (
 
 	"github.com/lgustavopalmieri/healing-specialist/internal/platform/kafka"
 	"github.com/lgustavopalmieri/healing-specialist/internal/platform/server"
-	"github.com/lgustavopalmieri/healing-specialist/internal/platform/telemetry"
 )
 
 type ShutdownManager struct {
@@ -41,7 +40,6 @@ func (sm *ShutdownManager) Wait() {
 func (sm *ShutdownManager) Shutdown(
 	grpcServer *server.GRPCServer,
 	db *sql.DB,
-	provider *telemetry.Provider,
 	kafkaProducer *kafka.KafkaProducer,
 ) error {
 	log.Println("Shutdown signal received, gracefully shutting down...")
@@ -50,7 +48,7 @@ func (sm *ShutdownManager) Shutdown(
 	defer cancel()
 
 	var wg sync.WaitGroup
-	errChan := make(chan error, 4)
+	errChan := make(chan error, 3)
 
 	wg.Add(1)
 	go func() {
@@ -72,17 +70,6 @@ func (sm *ShutdownManager) Shutdown(
 			return
 		}
 		log.Println("Database connections closed")
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		log.Println("Shutting down OTel provider...")
-		if err := provider.Shutdown(ctx); err != nil {
-			errChan <- fmt.Errorf("otel provider shutdown: %w", err)
-			return
-		}
-		log.Println("OTel provider stopped")
 	}()
 
 	if kafkaProducer != nil {

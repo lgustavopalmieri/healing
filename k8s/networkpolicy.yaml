@@ -19,8 +19,6 @@ spec:
           protocol: TCP
         - port: 8080
           protocol: TCP
-        - port: 9090
-          protocol: TCP
   egress:
     - ports:
         - port: 5432
@@ -28,8 +26,6 @@ spec:
         - port: 9092
           protocol: TCP
         - port: 9200
-          protocol: TCP
-        - port: 4317
           protocol: TCP
         - port: 53
           protocol: UDP

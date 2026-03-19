@@ -63,7 +63,7 @@ func TestUpdateDataRepositoriesHandler_Handle(t *testing.T) {
 	tests := []struct {
 		name        string
 		event       event.Event
-		setupMocks  func(*mocks.MockSourceRepository, *mocks.MockDataRepository, *mocks.MockTracer, *mocks.MockLogger, *mocks.MockSpan)
+		setupMocks  func(*mocks.MockSourceRepository, *mocks.MockDataRepository)
 		repoCount   int
 		expectError bool
 		expectedErr error
@@ -72,33 +72,19 @@ func TestUpdateDataRepositoriesHandler_Handle(t *testing.T) {
 			name:      "success - fetches specialist and updates single data repository",
 			event:     makeEvent(payloadFactory()),
 			repoCount: 1,
-			setupMocks: func(mockSource *mocks.MockSourceRepository, mockData *mocks.MockDataRepository, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan) {
-				ctx := context.Background()
+			setupMocks: func(mockSource *mocks.MockSourceRepository, mockData *mocks.MockDataRepository) {
 				specialist := specialistFactory()
 
-				mockTracer.EXPECT().Start(gomock.Any(), UpdateDataRepositoriesSpanName).Return(ctx, mockSpan).Times(1)
-				mockSpan.EXPECT().End().Times(1)
-
 				mockSource.EXPECT().FindByID(gomock.Any(), "specialist-123").Return(specialist, nil).Times(1)
-				mockLogger.EXPECT().Info(gomock.Any(), StartingDataRepositoriesUpdateMessage, gomock.Any()).Times(1)
-
 				mockData.EXPECT().Update(gomock.Any(), specialist).Return(nil).Times(1)
-				mockLogger.EXPECT().Info(gomock.Any(), RepositoryUpdateSucceededMessage, gomock.Any()).Times(1)
-
 				mockData.EXPECT().PublishDLQ(gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
-
-				mockLogger.EXPECT().Info(gomock.Any(), DataRepositoriesUpdatedSuccessMessage, gomock.Any()).Times(1)
 			},
 			expectError: false,
 		},
 		{
 			name:  "failure - returns error when payload is invalid JSON",
 			event: event.NewEvent("specialist.updated", []byte("invalid-json")),
-			setupMocks: func(mockSource *mocks.MockSourceRepository, mockData *mocks.MockDataRepository, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan) {
-				ctx := context.Background()
-				mockTracer.EXPECT().Start(gomock.Any(), UpdateDataRepositoriesSpanName).Return(ctx, mockSpan).Times(1)
-				mockSpan.EXPECT().End().Times(1)
-
+			setupMocks: func(mockSource *mocks.MockSourceRepository, mockData *mocks.MockDataRepository) {
 				mockSource.EXPECT().FindByID(gomock.Any(), gomock.Any()).Times(0)
 				mockData.EXPECT().Update(gomock.Any(), gomock.Any()).Times(0)
 				mockData.EXPECT().PublishDLQ(gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
@@ -109,16 +95,8 @@ func TestUpdateDataRepositoriesHandler_Handle(t *testing.T) {
 			name:      "failure - returns ErrSpecialistNotFound when source repository FindByID fails",
 			event:     makeEvent(payloadFactory()),
 			repoCount: 1,
-			setupMocks: func(mockSource *mocks.MockSourceRepository, mockData *mocks.MockDataRepository, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan) {
-				ctx := context.Background()
-
-				mockTracer.EXPECT().Start(gomock.Any(), UpdateDataRepositoriesSpanName).Return(ctx, mockSpan).Times(1)
-				mockSpan.EXPECT().End().Times(1)
-
+			setupMocks: func(mockSource *mocks.MockSourceRepository, mockData *mocks.MockDataRepository) {
 				mockSource.EXPECT().FindByID(gomock.Any(), "specialist-123").Return(nil, errors.New("not found")).Times(1)
-				mockSpan.EXPECT().RecordError(gomock.Any()).Times(1)
-				mockLogger.EXPECT().Error(gomock.Any(), ErrSpecialistNotFoundMessage, gomock.Any(), gomock.Any()).Times(1)
-
 				mockData.EXPECT().Update(gomock.Any(), gomock.Any()).Times(0)
 				mockData.EXPECT().PublishDLQ(gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
 			},
@@ -129,21 +107,11 @@ func TestUpdateDataRepositoriesHandler_Handle(t *testing.T) {
 			name:      "failure - returns ErrUpdateDataRepositories when repository update fails after retries and publishes DLQ",
 			event:     makeEvent(payloadFactory()),
 			repoCount: 1,
-			setupMocks: func(mockSource *mocks.MockSourceRepository, mockData *mocks.MockDataRepository, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan) {
-				ctx := context.Background()
+			setupMocks: func(mockSource *mocks.MockSourceRepository, mockData *mocks.MockDataRepository) {
 				specialist := specialistFactory()
 
-				mockTracer.EXPECT().Start(gomock.Any(), UpdateDataRepositoriesSpanName).Return(ctx, mockSpan).Times(1)
-				mockSpan.EXPECT().End().Times(1)
-
 				mockSource.EXPECT().FindByID(gomock.Any(), "specialist-123").Return(specialist, nil).Times(1)
-				mockLogger.EXPECT().Info(gomock.Any(), StartingDataRepositoriesUpdateMessage, gomock.Any()).Times(1)
-
 				mockData.EXPECT().Update(gomock.Any(), specialist).Return(errors.New("es unavailable")).Times(3)
-
-				mockSpan.EXPECT().RecordError(gomock.Any()).Times(1)
-				mockLogger.EXPECT().Error(gomock.Any(), RepositoryUpdateFailedMessage, gomock.Any(), gomock.Any()).Times(1)
-
 				mockData.EXPECT().PublishDLQ(gomock.Any(), specialist, gomock.Any()).Return(nil).Times(1)
 			},
 			expectError: true,
@@ -153,23 +121,12 @@ func TestUpdateDataRepositoriesHandler_Handle(t *testing.T) {
 			name:      "failure - returns ErrUpdateDataRepositories when repository update fails and DLQ publish also fails",
 			event:     makeEvent(payloadFactory()),
 			repoCount: 1,
-			setupMocks: func(mockSource *mocks.MockSourceRepository, mockData *mocks.MockDataRepository, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan) {
-				ctx := context.Background()
+			setupMocks: func(mockSource *mocks.MockSourceRepository, mockData *mocks.MockDataRepository) {
 				specialist := specialistFactory()
 
-				mockTracer.EXPECT().Start(gomock.Any(), UpdateDataRepositoriesSpanName).Return(ctx, mockSpan).Times(1)
-				mockSpan.EXPECT().End().Times(1)
-
 				mockSource.EXPECT().FindByID(gomock.Any(), "specialist-123").Return(specialist, nil).Times(1)
-				mockLogger.EXPECT().Info(gomock.Any(), StartingDataRepositoriesUpdateMessage, gomock.Any()).Times(1)
-
 				mockData.EXPECT().Update(gomock.Any(), specialist).Return(errors.New("es unavailable")).Times(3)
-
-				mockSpan.EXPECT().RecordError(gomock.Any()).Times(2)
-				mockLogger.EXPECT().Error(gomock.Any(), RepositoryUpdateFailedMessage, gomock.Any(), gomock.Any()).Times(1)
-
 				mockData.EXPECT().PublishDLQ(gomock.Any(), specialist, gomock.Any()).Return(errors.New("kafka down")).Times(1)
-				mockLogger.EXPECT().Error(gomock.Any(), DLQPublishFailedMessage, gomock.Any(), gomock.Any()).Times(1)
 			},
 			expectError: true,
 			expectedErr: ErrUpdateDataRepositories,
@@ -178,15 +135,10 @@ func TestUpdateDataRepositoriesHandler_Handle(t *testing.T) {
 			name:      "success - succeeds when all repositories update successfully after initial retry failures",
 			event:     makeEvent(payloadFactory()),
 			repoCount: 1,
-			setupMocks: func(mockSource *mocks.MockSourceRepository, mockData *mocks.MockDataRepository, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan) {
-				ctx := context.Background()
+			setupMocks: func(mockSource *mocks.MockSourceRepository, mockData *mocks.MockDataRepository) {
 				specialist := specialistFactory()
 
-				mockTracer.EXPECT().Start(gomock.Any(), UpdateDataRepositoriesSpanName).Return(ctx, mockSpan).Times(1)
-				mockSpan.EXPECT().End().Times(1)
-
 				mockSource.EXPECT().FindByID(gomock.Any(), "specialist-123").Return(specialist, nil).Times(1)
-				mockLogger.EXPECT().Info(gomock.Any(), StartingDataRepositoriesUpdateMessage, gomock.Any()).Times(1)
 
 				callCount := 0
 				mockData.EXPECT().Update(gomock.Any(), specialist).DoAndReturn(func(ctx context.Context, s *domain.Specialist) error {
@@ -198,9 +150,6 @@ func TestUpdateDataRepositoriesHandler_Handle(t *testing.T) {
 				}).Times(3)
 
 				mockData.EXPECT().PublishDLQ(gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
-
-				mockLogger.EXPECT().Info(gomock.Any(), RepositoryUpdateSucceededMessage, gomock.Any()).Times(1)
-				mockLogger.EXPECT().Info(gomock.Any(), DataRepositoriesUpdatedSuccessMessage, gomock.Any()).Times(1)
 			},
 			expectError: false,
 		},
@@ -213,11 +162,8 @@ func TestUpdateDataRepositoriesHandler_Handle(t *testing.T) {
 
 			mockSource := mocks.NewMockSourceRepository(ctrl)
 			mockData := mocks.NewMockDataRepository(ctrl)
-			mockTracer := mocks.NewMockTracer(ctrl)
-			mockLogger := mocks.NewMockLogger(ctrl)
-			mockSpan := mocks.NewMockSpan(ctrl)
 
-			tt.setupMocks(mockSource, mockData, mockTracer, mockLogger, mockSpan)
+			tt.setupMocks(mockSource, mockData)
 
 			dataRepos := []DataRepository{}
 			for range tt.repoCount {
@@ -227,8 +173,6 @@ func TestUpdateDataRepositoriesHandler_Handle(t *testing.T) {
 			handler := NewUpdateDataRepositoriesHandler(
 				mockSource,
 				dataRepos,
-				mockTracer,
-				mockLogger,
 			).WithRetryConfig(zeroDelayRetryConfig())
 
 			err := handler.Handle(context.Background(), tt.event)

@@ -5,9 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 
-	"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
 )
 
@@ -40,19 +38,11 @@ func (r *Repository) Update(ctx context.Context, specialist *domain.Specialist) 
 		r.Client.Index.WithDocumentID(specialist.ID),
 	)
 	if err != nil {
-		r.Logger.Error(ctx, "elasticsearch index request failed",
-			observability.Field{Key: "id", Value: specialist.ID},
-			observability.Field{Key: "error", Value: err.Error()})
 		return fmt.Errorf(FailedToIndexErr, err)
 	}
 	defer res.Body.Close()
 
 	if res.IsError() {
-		respBody, _ := io.ReadAll(res.Body)
-		r.Logger.Error(ctx, "elasticsearch returned error on index",
-			observability.Field{Key: "id", Value: specialist.ID},
-			observability.Field{Key: "status", Value: res.Status()},
-			observability.Field{Key: "body", Value: string(respBody)})
 		return fmt.Errorf(IndexErrorResponseErr, res.Status())
 	}
 

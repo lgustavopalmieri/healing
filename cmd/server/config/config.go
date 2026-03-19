@@ -8,7 +8,6 @@ type Config struct {
 	Server        ServerConfig
 	Database      DatabaseConfig
 	Kafka         KafkaConfig
-	Observability ObservabilityConfig
 	Elasticsearch ElasticsearchConfig
 	External      ExternalConfig
 }
@@ -16,7 +15,6 @@ type Config struct {
 type ServerConfig struct {
 	GRPCPort          int
 	HTTPPort          int
-	MetricsPort       int
 	ShutdownTimeout   time.Duration
 	MaxConnections    int
 	ConnectionTimeout time.Duration
@@ -38,14 +36,6 @@ type DatabaseConfig struct {
 type KafkaConfig struct {
 	BootstrapServers string
 	AutoOffsetReset  string
-}
-
-type ObservabilityConfig struct {
-	ServiceName    string
-	ServiceVersion string
-	Environment    string
-	OTLPEndpoint   string
-	OTLPProtocol   string
 }
 
 type ElasticsearchConfig struct {

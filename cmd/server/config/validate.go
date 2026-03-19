@@ -11,10 +11,6 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("invalid HTTP port: %d", c.Server.HTTPPort)
 	}
 
-	if c.Server.MetricsPort <= 0 || c.Server.MetricsPort > 65535 {
-		return fmt.Errorf("invalid metrics port: %d", c.Server.MetricsPort)
-	}
-
 	if c.Database.Host == "" {
 		return fmt.Errorf("POSTGRES_HOST is required")
 	}
@@ -33,18 +29,6 @@ func (c *Config) Validate() error {
 
 	if c.Kafka.BootstrapServers == "" {
 		return fmt.Errorf("KAFKA_BOOTSTRAP_SERVERS is required")
-	}
-
-	if c.Observability.ServiceName == "" {
-		return fmt.Errorf("OTEL_SERVICE_NAME is required")
-	}
-
-	if c.Observability.ServiceVersion == "" {
-		return fmt.Errorf("OTEL_SERVICE_VERSION is required")
-	}
-
-	if c.Observability.OTLPEndpoint == "" {
-		return fmt.Errorf("OTEL_EXPORTER_OTLP_GRPC_ENDPOINT is required")
 	}
 
 	if len(c.Elasticsearch.Addresses) == 0 {

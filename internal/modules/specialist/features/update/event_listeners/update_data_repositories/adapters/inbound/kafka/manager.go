@@ -6,7 +6,6 @@ import (
 
 	goelasticsearch "github.com/elastic/go-elasticsearch/v8"
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
-	"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/application"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/event_listeners/update_data_repositories/adapters/outbound/database"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/event_listeners/update_data_repositories/adapters/outbound/elasticsearch"
@@ -18,8 +17,6 @@ type ManagerDependencies struct {
 	DB                 *sql.DB
 	ESClient           *goelasticsearch.Client
 	ESIndexSpecialists string
-	Tracer             observability.Tracer
-	Logger             observability.Logger
 	EventDispatcher    event.EventDispatcher
 	BootstrapServers   string
 }
@@ -27,7 +24,7 @@ type ManagerDependencies struct {
 func NewUpdateDataRepositoriesKafkaManager(ctx context.Context, deps ManagerDependencies) error {
 	sourceRepo := database.NewSourceRepository(deps.DB)
 
-	esRepo := elasticsearch.NewRepository(deps.ESClient, deps.ESIndexSpecialists, deps.Logger, deps.EventDispatcher)
+	esRepo := elasticsearch.NewRepository(deps.ESClient, deps.ESIndexSpecialists, deps.EventDispatcher)
 
 	dataRepositories := []listener.DataRepository{
 		esRepo,
@@ -36,8 +33,6 @@ func NewUpdateDataRepositoriesKafkaManager(ctx context.Context, deps ManagerDepe
 	handler := listener.NewUpdateDataRepositoriesHandler(
 		sourceRepo,
 		dataRepositories,
-		deps.Tracer,
-		deps.Logger,
 	)
 
 	manager := event.NewListenerManager()

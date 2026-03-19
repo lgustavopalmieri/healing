@@ -5,11 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"go.uber.org/mock/gomock"
-
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/google/uuid"
-	loggerMocks "github.com/lgustavopalmieri/healing-specialist/internal/commom/observability/mocks"
 	estest "github.com/lgustavopalmieri/healing-specialist/internal/commom/tests/elasticsearch"
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/value-objects/pagination/cursor"
 	searchinput "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/search/search_input"
@@ -24,12 +21,9 @@ func TestMain(m *testing.M) {
 	testHelper.RunTestMain(m)
 }
 
-func setupTestRepo(t *testing.T, ctrl *gomock.Controller) (*Repository, string, func()) {
+func setupTestRepo(t *testing.T) (*Repository, string, func()) {
 	client, indexName, cleanup := testHelper.SetupTestIndex(t, indexes.CreateSpecialistsIndex)
-	logger := loggerMocks.NewMockLogger(ctrl)
-	logger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	logger.EXPECT().Info(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	repo := NewRepository(client, indexName, logger)
+	repo := NewRepository(client, indexName)
 	return repo, indexName, cleanup
 }
 
@@ -181,10 +175,7 @@ func TestSearchRepository_Search(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-
-			repo, indexName, cleanup := setupTestRepo(t, ctrl)
+			repo, indexName, cleanup := setupTestRepo(t)
 			defer cleanup()
 
 			docs := tt.seedData()
@@ -292,10 +283,7 @@ func TestSearchRepository_Search_Sorting(t *testing.T) {
 	}
 
 	t.Run("success - default sort orders by rating desc then updated_at desc", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		repo, indexName, cleanup := setupTestRepo(t, ctrl)
+		repo, indexName, cleanup := setupTestRepo(t)
 		defer cleanup()
 
 		seedSpecialists(t, repo.client, indexName, sortableDocs)
@@ -312,10 +300,7 @@ func TestSearchRepository_Search_Sorting(t *testing.T) {
 	})
 
 	t.Run("success - custom sort rating asc is respected with default updated_at appended", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		repo, indexName, cleanup := setupTestRepo(t, ctrl)
+		repo, indexName, cleanup := setupTestRepo(t)
 		defer cleanup()
 
 		seedSpecialists(t, repo.client, indexName, sortableDocs)
@@ -341,10 +326,7 @@ func TestSearchRepository_Search_Sorting(t *testing.T) {
 	})
 
 	t.Run("success - sort by updated_at asc returns chronological order", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		repo, indexName, cleanup := setupTestRepo(t, ctrl)
+		repo, indexName, cleanup := setupTestRepo(t)
 		defer cleanup()
 
 		seedSpecialists(t, repo.client, indexName, sortableDocs)
@@ -365,10 +347,7 @@ func TestSearchRepository_Search_Sorting(t *testing.T) {
 	})
 
 	t.Run("success - tiebreaker by rating desc when updated_at is equal", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		repo, indexName, cleanup := setupTestRepo(t, ctrl)
+		repo, indexName, cleanup := setupTestRepo(t)
 		defer cleanup()
 
 		sameTime := time.Date(2025, 6, 1, 12, 0, 0, 0, time.UTC)

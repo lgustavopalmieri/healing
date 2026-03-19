@@ -3,13 +3,7 @@ package listener
 import "errors"
 
 const (
-	ValidateLicenseSpanName = "ValidateLicenseHandler.Handle"
-
 	SpecialistUpdatedEventName = "specialist.updated"
-
-	StartingLicenseValidationMessage = "Starting license validation"
-	LicenseValidatedSuccessMessage   = "License validated successfully"
-	SpecialistStatusUpdatedMessage   = "Specialist status updated to active"
 
 	ErrSpecialistNotFoundMessage      = "Specialist not found for license validation"
 	ErrLicenseValidationMessage       = "Failed to validate license with external service"

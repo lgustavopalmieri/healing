@@ -9,7 +9,6 @@ services:
     ports:
       - "50051:50051"
       - "4000:8080"
-      - "4001:9090"
     env_file:
       - ${ENV_FILE:-.env}
     environment:

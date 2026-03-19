@@ -33,7 +33,7 @@ func TestCreateSpecialistUseCase_Execute(t *testing.T) {
 	tests := []struct {
 		name           string
 		inputOverrides []func(*CreateSpecialistDTO)
-		setupMocks     func(*mocks.MockSpecialistCreateRepositoryInterface, *mocks.MockEventDispatcher, *mocks.MockTracer, *mocks.MockLogger, *mocks.MockSpan, CreateSpecialistDTO)
+		setupMocks     func(*mocks.MockSpecialistCreateRepositoryInterface, *mocks.MockEventDispatcher, CreateSpecialistDTO)
 		expectError    bool
 		expectedErr    error
 		validateResult func(*testing.T, *domain.Specialist)
@@ -41,12 +41,7 @@ func TestCreateSpecialistUseCase_Execute(t *testing.T) {
 		{
 			name:           "creates specialist with status pending and publishes event",
 			inputOverrides: nil,
-			setupMocks: func(mockRepo *mocks.MockSpecialistCreateRepositoryInterface, mockEventPublisher *mocks.MockEventDispatcher, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan, input CreateSpecialistDTO) {
-				ctx := context.Background()
-
-				mockTracer.EXPECT().Start(gomock.Any(), CreateSpecialistSpanName).Return(ctx, mockSpan).Times(1)
-				mockSpan.EXPECT().End().Times(1)
-
+			setupMocks: func(mockRepo *mocks.MockSpecialistCreateRepositoryInterface, mockEventPublisher *mocks.MockEventDispatcher, input CreateSpecialistDTO) {
 				mockRepo.EXPECT().ValidateUniqueness(gomock.Any(), gomock.Any(), input.Email, input.LicenseNumber).Return(nil).Times(1)
 
 				mockRepo.EXPECT().Save(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, specialist *domain.Specialist) (*domain.Specialist, error) {
@@ -78,14 +73,7 @@ func TestCreateSpecialistUseCase_Execute(t *testing.T) {
 			inputOverrides: []func(*CreateSpecialistDTO){
 				func(dto *CreateSpecialistDTO) { dto.Name = "" },
 			},
-			setupMocks: func(mockRepo *mocks.MockSpecialistCreateRepositoryInterface, mockEventPublisher *mocks.MockEventDispatcher, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan, input CreateSpecialistDTO) {
-				ctx := context.Background()
-
-				mockTracer.EXPECT().Start(gomock.Any(), CreateSpecialistSpanName).Return(ctx, mockSpan).Times(1)
-				mockSpan.EXPECT().End().Times(1)
-				mockSpan.EXPECT().RecordError(create.ErrInvalidName).Times(1)
-				mockLogger.EXPECT().Error(gomock.Any(), create.ErrInvalidName.Error(), gomock.Any()).Times(1)
-
+			setupMocks: func(mockRepo *mocks.MockSpecialistCreateRepositoryInterface, mockEventPublisher *mocks.MockEventDispatcher, input CreateSpecialistDTO) {
 				mockRepo.EXPECT().ValidateUniqueness(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
 				mockRepo.EXPECT().Save(gomock.Any(), gomock.Any()).Times(0)
 				mockEventPublisher.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Times(0)
@@ -96,15 +84,8 @@ func TestCreateSpecialistUseCase_Execute(t *testing.T) {
 		{
 			name:           "returns error when uniqueness validation fails",
 			inputOverrides: nil,
-			setupMocks: func(mockRepo *mocks.MockSpecialistCreateRepositoryInterface, mockEventPublisher *mocks.MockEventDispatcher, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan, input CreateSpecialistDTO) {
-				ctx := context.Background()
-
-				mockTracer.EXPECT().Start(gomock.Any(), CreateSpecialistSpanName).Return(ctx, mockSpan).Times(1)
-				mockSpan.EXPECT().End().Times(1)
-
+			setupMocks: func(mockRepo *mocks.MockSpecialistCreateRepositoryInterface, mockEventPublisher *mocks.MockEventDispatcher, input CreateSpecialistDTO) {
 				mockRepo.EXPECT().ValidateUniqueness(gomock.Any(), gomock.Any(), input.Email, input.LicenseNumber).Return(create.ErrDuplicateEmail).Times(1)
-				mockSpan.EXPECT().RecordError(create.ErrDuplicateEmail).Times(1)
-				mockLogger.EXPECT().Error(gomock.Any(), ErrUniquenessValidationMessage, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1)
 
 				mockRepo.EXPECT().Save(gomock.Any(), gomock.Any()).Times(0)
 				mockEventPublisher.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Times(0)
@@ -115,17 +96,10 @@ func TestCreateSpecialistUseCase_Execute(t *testing.T) {
 		{
 			name:           "returns error when repository save fails",
 			inputOverrides: nil,
-			setupMocks: func(mockRepo *mocks.MockSpecialistCreateRepositoryInterface, mockEventPublisher *mocks.MockEventDispatcher, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan, input CreateSpecialistDTO) {
-				ctx := context.Background()
-
-				mockTracer.EXPECT().Start(gomock.Any(), CreateSpecialistSpanName).Return(ctx, mockSpan).Times(1)
-				mockSpan.EXPECT().End().Times(1)
-
+			setupMocks: func(mockRepo *mocks.MockSpecialistCreateRepositoryInterface, mockEventPublisher *mocks.MockEventDispatcher, input CreateSpecialistDTO) {
 				mockRepo.EXPECT().ValidateUniqueness(gomock.Any(), gomock.Any(), input.Email, input.LicenseNumber).Return(nil).Times(1)
 
 				mockRepo.EXPECT().Save(gomock.Any(), gomock.Any()).Return(nil, errors.New("db connection lost")).Times(1)
-				mockSpan.EXPECT().RecordError(gomock.Any()).Times(1)
-				mockLogger.EXPECT().Error(gomock.Any(), ErrSaveSpecialistMessage, gomock.Any(), gomock.Any()).Times(1)
 
 				mockEventPublisher.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Times(0)
 			},
@@ -135,12 +109,7 @@ func TestCreateSpecialistUseCase_Execute(t *testing.T) {
 		{
 			name:           "still succeeds when event publish fails",
 			inputOverrides: nil,
-			setupMocks: func(mockRepo *mocks.MockSpecialistCreateRepositoryInterface, mockEventPublisher *mocks.MockEventDispatcher, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan, input CreateSpecialistDTO) {
-				ctx := context.Background()
-
-				mockTracer.EXPECT().Start(gomock.Any(), CreateSpecialistSpanName).Return(ctx, mockSpan).Times(1)
-				mockSpan.EXPECT().End().Times(1)
-
+			setupMocks: func(mockRepo *mocks.MockSpecialistCreateRepositoryInterface, mockEventPublisher *mocks.MockEventDispatcher, input CreateSpecialistDTO) {
 				mockRepo.EXPECT().ValidateUniqueness(gomock.Any(), gomock.Any(), input.Email, input.LicenseNumber).Return(nil).Times(1)
 
 				mockRepo.EXPECT().Save(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, specialist *domain.Specialist) (*domain.Specialist, error) {
@@ -148,7 +117,6 @@ func TestCreateSpecialistUseCase_Execute(t *testing.T) {
 				}).Times(1)
 
 				mockEventPublisher.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Return(errors.New("kafka unavailable")).Times(1)
-				mockLogger.EXPECT().Warn(gomock.Any(), ErrEventPublishMessage, gomock.Any(), gomock.Any()).Times(1)
 			},
 			expectError: false,
 			validateResult: func(t *testing.T, specialist *domain.Specialist) {
@@ -167,17 +135,12 @@ func TestCreateSpecialistUseCase_Execute(t *testing.T) {
 
 			mockRepo := mocks.NewMockSpecialistCreateRepositoryInterface(ctrl)
 			mockEventPublisher := mocks.NewMockEventDispatcher(ctrl)
-			mockTracer := mocks.NewMockTracer(ctrl)
-			mockLogger := mocks.NewMockLogger(ctrl)
-			mockSpan := mocks.NewMockSpan(ctrl)
 
-			tt.setupMocks(mockRepo, mockEventPublisher, mockTracer, mockLogger, mockSpan, *input)
+			tt.setupMocks(mockRepo, mockEventPublisher, *input)
 
 			useCase := NewCreateSpecialistUseCase(
 				mockRepo,
 				mockEventPublisher,
-				mockTracer,
-				mockLogger,
 			)
 
 			result, err := useCase.Execute(context.Background(), *input)

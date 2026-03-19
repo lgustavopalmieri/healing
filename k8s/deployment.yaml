@@ -22,10 +22,6 @@ spec:
       labels:
         app.kubernetes.io/name: healing-specialist
         app.kubernetes.io/component: backend
-      annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "9090"
-        prometheus.io/path: "/metrics"
     spec:
       terminationGracePeriodSeconds: 35
       securityContext:
@@ -44,9 +40,6 @@ spec:
             - name: http
               containerPort: 8080
               protocol: TCP
-            - name: metrics
-              containerPort: 9090
-              protocol: TCP
           envFrom:
             - configMapRef:
                 name: healing-specialist
@@ -55,7 +48,7 @@ spec:
           readinessProbe:
             httpGet:
               path: /health
-              port: metrics
+              port: http
             initialDelaySeconds: 5
             periodSeconds: 10
             timeoutSeconds: 3
@@ -63,7 +56,7 @@ spec:
           livenessProbe:
             httpGet:
               path: /health
-              port: metrics
+              port: http
             initialDelaySeconds: 10
             periodSeconds: 15
             timeoutSeconds: 3
@@ -71,7 +64,7 @@ spec:
           startupProbe:
             httpGet:
               path: /health
-              port: metrics
+              port: http
             initialDelaySeconds: 3
             periodSeconds: 5
             failureThreshold: 10

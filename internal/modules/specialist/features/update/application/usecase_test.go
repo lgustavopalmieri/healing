@@ -54,7 +54,7 @@ func TestUpdateSpecialistUseCase_Execute(t *testing.T) {
 	tests := []struct {
 		name           string
 		input          UpdateSpecialistDTO
-		setupMocks     func(*mocks.MockSpecialistUpdateRepositoryInterface, *mocks.MockEventDispatcher, *mocks.MockTracer, *mocks.MockLogger, *mocks.MockSpan)
+		setupMocks     func(*mocks.MockSpecialistUpdateRepositoryInterface, *mocks.MockEventDispatcher)
 		expectError    bool
 		expectedErr    error
 		validateResult func(*testing.T, *domain.Specialist)
@@ -62,11 +62,7 @@ func TestUpdateSpecialistUseCase_Execute(t *testing.T) {
 		{
 			name:  "success - updates specialist name and returns updated entity",
 			input: updateDTOFactory(),
-			setupMocks: func(mockRepo *mocks.MockSpecialistUpdateRepositoryInterface, mockEvent *mocks.MockEventDispatcher, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan) {
-				ctx := context.Background()
-				mockTracer.EXPECT().Start(gomock.Any(), UpdateSpecialistSpanName).Return(ctx, mockSpan).Times(1)
-				mockSpan.EXPECT().End().Times(1)
-
+			setupMocks: func(mockRepo *mocks.MockSpecialistUpdateRepositoryInterface, mockEvent *mocks.MockEventDispatcher) {
 				existing := existingSpecialistFactory()
 				mockRepo.EXPECT().FindByID(gomock.Any(), "550e8400-e29b-41d4-a716-446655440000").Return(existing, nil).Times(1)
 
@@ -92,11 +88,7 @@ func TestUpdateSpecialistUseCase_Execute(t *testing.T) {
 				dto.Specialty = strPtr("Neurologia")
 				dto.Status = statusPtr(domain.StatusUnavailable)
 			}),
-			setupMocks: func(mockRepo *mocks.MockSpecialistUpdateRepositoryInterface, mockEvent *mocks.MockEventDispatcher, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan) {
-				ctx := context.Background()
-				mockTracer.EXPECT().Start(gomock.Any(), UpdateSpecialistSpanName).Return(ctx, mockSpan).Times(1)
-				mockSpan.EXPECT().End().Times(1)
-
+			setupMocks: func(mockRepo *mocks.MockSpecialistUpdateRepositoryInterface, mockEvent *mocks.MockEventDispatcher) {
 				existing := existingSpecialistFactory()
 				mockRepo.EXPECT().FindByID(gomock.Any(), "550e8400-e29b-41d4-a716-446655440000").Return(existing, nil).Times(1)
 
@@ -117,11 +109,7 @@ func TestUpdateSpecialistUseCase_Execute(t *testing.T) {
 		{
 			name:  "success - still succeeds when event publish fails",
 			input: updateDTOFactory(),
-			setupMocks: func(mockRepo *mocks.MockSpecialistUpdateRepositoryInterface, mockEvent *mocks.MockEventDispatcher, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan) {
-				ctx := context.Background()
-				mockTracer.EXPECT().Start(gomock.Any(), UpdateSpecialistSpanName).Return(ctx, mockSpan).Times(1)
-				mockSpan.EXPECT().End().Times(1)
-
+			setupMocks: func(mockRepo *mocks.MockSpecialistUpdateRepositoryInterface, mockEvent *mocks.MockEventDispatcher) {
 				existing := existingSpecialistFactory()
 				mockRepo.EXPECT().FindByID(gomock.Any(), "550e8400-e29b-41d4-a716-446655440000").Return(existing, nil).Times(1)
 
@@ -130,7 +118,6 @@ func TestUpdateSpecialistUseCase_Execute(t *testing.T) {
 				}).Times(1)
 
 				mockEvent.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Return(errors.New("kafka unavailable")).Times(1)
-				mockLogger.EXPECT().Warn(gomock.Any(), ErrEventPublishMessage, gomock.Any(), gomock.Any()).Times(1)
 			},
 			expectError: false,
 			validateResult: func(t *testing.T, s *domain.Specialist) {
@@ -141,14 +128,8 @@ func TestUpdateSpecialistUseCase_Execute(t *testing.T) {
 		{
 			name:  "failure - returns ErrSpecialistNotFound when repository FindByID fails",
 			input: updateDTOFactory(),
-			setupMocks: func(mockRepo *mocks.MockSpecialistUpdateRepositoryInterface, mockEvent *mocks.MockEventDispatcher, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan) {
-				ctx := context.Background()
-				mockTracer.EXPECT().Start(gomock.Any(), UpdateSpecialistSpanName).Return(ctx, mockSpan).Times(1)
-				mockSpan.EXPECT().End().Times(1)
-
+			setupMocks: func(mockRepo *mocks.MockSpecialistUpdateRepositoryInterface, mockEvent *mocks.MockEventDispatcher) {
 				mockRepo.EXPECT().FindByID(gomock.Any(), "550e8400-e29b-41d4-a716-446655440000").Return(nil, errors.New("not found")).Times(1)
-				mockSpan.EXPECT().RecordError(gomock.Any()).Times(1)
-				mockLogger.EXPECT().Error(gomock.Any(), ErrSpecialistNotFoundMessage, gomock.Any(), gomock.Any()).Times(1)
 
 				mockRepo.EXPECT().Update(gomock.Any(), gomock.Any()).Times(0)
 				mockEvent.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Times(0)
@@ -161,16 +142,9 @@ func TestUpdateSpecialistUseCase_Execute(t *testing.T) {
 			input: updateDTOFactory(func(dto *UpdateSpecialistDTO) {
 				dto.Name = strPtr("")
 			}),
-			setupMocks: func(mockRepo *mocks.MockSpecialistUpdateRepositoryInterface, mockEvent *mocks.MockEventDispatcher, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan) {
-				ctx := context.Background()
-				mockTracer.EXPECT().Start(gomock.Any(), UpdateSpecialistSpanName).Return(ctx, mockSpan).Times(1)
-				mockSpan.EXPECT().End().Times(1)
-
+			setupMocks: func(mockRepo *mocks.MockSpecialistUpdateRepositoryInterface, mockEvent *mocks.MockEventDispatcher) {
 				existing := existingSpecialistFactory()
 				mockRepo.EXPECT().FindByID(gomock.Any(), "550e8400-e29b-41d4-a716-446655440000").Return(existing, nil).Times(1)
-
-				mockSpan.EXPECT().RecordError(domain.ErrInvalidName).Times(1)
-				mockLogger.EXPECT().Error(gomock.Any(), domain.ErrInvalidName.Error(), gomock.Any()).Times(1)
 
 				mockRepo.EXPECT().Update(gomock.Any(), gomock.Any()).Times(0)
 				mockEvent.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Times(0)
@@ -184,16 +158,9 @@ func TestUpdateSpecialistUseCase_Execute(t *testing.T) {
 				dto.Name = nil
 				dto.Email = strPtr("invalid-email")
 			}),
-			setupMocks: func(mockRepo *mocks.MockSpecialistUpdateRepositoryInterface, mockEvent *mocks.MockEventDispatcher, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan) {
-				ctx := context.Background()
-				mockTracer.EXPECT().Start(gomock.Any(), UpdateSpecialistSpanName).Return(ctx, mockSpan).Times(1)
-				mockSpan.EXPECT().End().Times(1)
-
+			setupMocks: func(mockRepo *mocks.MockSpecialistUpdateRepositoryInterface, mockEvent *mocks.MockEventDispatcher) {
 				existing := existingSpecialistFactory()
 				mockRepo.EXPECT().FindByID(gomock.Any(), "550e8400-e29b-41d4-a716-446655440000").Return(existing, nil).Times(1)
-
-				mockSpan.EXPECT().RecordError(domain.ErrInvalidEmail).Times(1)
-				mockLogger.EXPECT().Error(gomock.Any(), domain.ErrInvalidEmail.Error(), gomock.Any()).Times(1)
 
 				mockRepo.EXPECT().Update(gomock.Any(), gomock.Any()).Times(0)
 				mockEvent.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Times(0)
@@ -207,16 +174,9 @@ func TestUpdateSpecialistUseCase_Execute(t *testing.T) {
 				dto.Name = nil
 				dto.Status = statusPtr(domain.SpecialistStatus("invalid"))
 			}),
-			setupMocks: func(mockRepo *mocks.MockSpecialistUpdateRepositoryInterface, mockEvent *mocks.MockEventDispatcher, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan) {
-				ctx := context.Background()
-				mockTracer.EXPECT().Start(gomock.Any(), UpdateSpecialistSpanName).Return(ctx, mockSpan).Times(1)
-				mockSpan.EXPECT().End().Times(1)
-
+			setupMocks: func(mockRepo *mocks.MockSpecialistUpdateRepositoryInterface, mockEvent *mocks.MockEventDispatcher) {
 				existing := existingSpecialistFactory()
 				mockRepo.EXPECT().FindByID(gomock.Any(), "550e8400-e29b-41d4-a716-446655440000").Return(existing, nil).Times(1)
-
-				mockSpan.EXPECT().RecordError(domain.ErrInvalidStatus).Times(1)
-				mockLogger.EXPECT().Error(gomock.Any(), domain.ErrInvalidStatus.Error(), gomock.Any()).Times(1)
 
 				mockRepo.EXPECT().Update(gomock.Any(), gomock.Any()).Times(0)
 				mockEvent.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Times(0)
@@ -227,17 +187,11 @@ func TestUpdateSpecialistUseCase_Execute(t *testing.T) {
 		{
 			name:  "failure - returns ErrUpdateSpecialist when repository Update fails",
 			input: updateDTOFactory(),
-			setupMocks: func(mockRepo *mocks.MockSpecialistUpdateRepositoryInterface, mockEvent *mocks.MockEventDispatcher, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan) {
-				ctx := context.Background()
-				mockTracer.EXPECT().Start(gomock.Any(), UpdateSpecialistSpanName).Return(ctx, mockSpan).Times(1)
-				mockSpan.EXPECT().End().Times(1)
-
+			setupMocks: func(mockRepo *mocks.MockSpecialistUpdateRepositoryInterface, mockEvent *mocks.MockEventDispatcher) {
 				existing := existingSpecialistFactory()
 				mockRepo.EXPECT().FindByID(gomock.Any(), "550e8400-e29b-41d4-a716-446655440000").Return(existing, nil).Times(1)
 
 				mockRepo.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil, errors.New("db connection lost")).Times(1)
-				mockSpan.EXPECT().RecordError(gomock.Any()).Times(1)
-				mockLogger.EXPECT().Error(gomock.Any(), ErrUpdateSpecialistMessage, gomock.Any(), gomock.Any()).Times(1)
 
 				mockEvent.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Times(0)
 			},
@@ -250,16 +204,9 @@ func TestUpdateSpecialistUseCase_Execute(t *testing.T) {
 				dto.Name = nil
 				dto.AgreedToShare = boolPtr(false)
 			}),
-			setupMocks: func(mockRepo *mocks.MockSpecialistUpdateRepositoryInterface, mockEvent *mocks.MockEventDispatcher, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan) {
-				ctx := context.Background()
-				mockTracer.EXPECT().Start(gomock.Any(), UpdateSpecialistSpanName).Return(ctx, mockSpan).Times(1)
-				mockSpan.EXPECT().End().Times(1)
-
+			setupMocks: func(mockRepo *mocks.MockSpecialistUpdateRepositoryInterface, mockEvent *mocks.MockEventDispatcher) {
 				existing := existingSpecialistFactory()
 				mockRepo.EXPECT().FindByID(gomock.Any(), "550e8400-e29b-41d4-a716-446655440000").Return(existing, nil).Times(1)
-
-				mockSpan.EXPECT().RecordError(domain.ErrMustAgreeToShare).Times(1)
-				mockLogger.EXPECT().Error(gomock.Any(), domain.ErrMustAgreeToShare.Error(), gomock.Any()).Times(1)
 
 				mockRepo.EXPECT().Update(gomock.Any(), gomock.Any()).Times(0)
 				mockEvent.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Times(0)
@@ -276,13 +223,10 @@ func TestUpdateSpecialistUseCase_Execute(t *testing.T) {
 
 			mockRepo := mocks.NewMockSpecialistUpdateRepositoryInterface(ctrl)
 			mockEvent := mocks.NewMockEventDispatcher(ctrl)
-			mockTracer := mocks.NewMockTracer(ctrl)
-			mockLogger := mocks.NewMockLogger(ctrl)
-			mockSpan := mocks.NewMockSpan(ctrl)
 
-			tt.setupMocks(mockRepo, mockEvent, mockTracer, mockLogger, mockSpan)
+			tt.setupMocks(mockRepo, mockEvent)
 
-			useCase := NewUpdateSpecialistUseCase(mockRepo, mockEvent, mockTracer, mockLogger)
+			useCase := NewUpdateSpecialistUseCase(mockRepo, mockEvent)
 
 			result, err := useCase.Execute(context.Background(), tt.input)
 

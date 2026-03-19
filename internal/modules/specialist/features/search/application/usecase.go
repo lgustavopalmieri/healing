@@ -3,7 +3,6 @@ package application
 import (
 	"context"
 
-	"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
 	cursor "github.com/lgustavopalmieri/healing-specialist/internal/commom/value-objects/pagination/cursor"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/search"
 	searchinput "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/search/search_input"
@@ -12,26 +11,19 @@ import (
 
 func (c *SearchSpecialistsUseCase) Execute(ctx context.Context, dto *SearchSpecialistsDTO) (*searchoutput.ListSearchOutput, error) {
 	if dto == nil {
-		c.logger.Error(ctx, ErrInvalidSearchInputMessage)
 		return nil, ErrInvalidSearchInput
 	}
 
 	input, err := searchinput.NewListSearchInput(dto.SearchTerm, dto.Filters, dto.Sort, dto.Pagination)
 	if err != nil {
-		c.logger.Error(ctx, ErrInvalidSearchInputMessage,
-			observability.Field{Key: "error", Value: err.Error()})
-
 		if search.IsListSearchDomainError(err) {
 			return nil, ErrInvalidSearchInput
 		}
-
 		return nil, ErrInvalidSearchInput
 	}
 
 	result, err := c.repository.Search(ctx, input)
 	if err != nil {
-		c.logger.Error(ctx, ErrSearchExecutionMessage,
-			observability.Field{Key: "error", Value: err.Error()})
 		return nil, ErrSearchExecution
 	}
 

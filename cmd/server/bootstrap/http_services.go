@@ -22,23 +22,18 @@ func RegisterHTTPServices(httpServer *server.HTTPServer, deps ServiceDependencie
 	createHandler := createhttp.NewSpecialistCreateHandler(createhttp.Dependencies{
 		DB:             deps.DB,
 		EventPublisher: deps.EventPublisher,
-		Tracer:         deps.Factory.Tracer("specialist.create"),
-		Logger:         deps.Factory.Logger("specialist.create"),
 	})
 	createHandler.RegisterRoutes(api)
 
 	searchHandler := searchhttp.NewSpecialistSearchHandler(searchhttp.Dependencies{
 		ESClient:           deps.ESFactory.Client,
 		ESIndexSpecialists: deps.ESFactory.Indexes.Specialists,
-		Logger:             deps.Factory.Logger("specialist.search"),
 	})
 	searchHandler.RegisterRoutes(api)
 
 	updateHandler := updatehttp.NewSpecialistUpdateHandler(updatehttp.Dependencies{
 		DB:             deps.DB,
 		EventPublisher: deps.EventPublisher,
-		Tracer:         deps.Factory.Tracer("specialist.update"),
-		Logger:         deps.Factory.Logger("specialist.update"),
 	})
 	updateHandler.RegisterRoutes(api)
 

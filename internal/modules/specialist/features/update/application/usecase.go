@@ -4,21 +4,13 @@ import (
 	"context"
 
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
-	"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/update"
 )
 
-func (c *UpdateSpecialistUseCase) Execute(contx context.Context, input UpdateSpecialistDTO) (*domain.Specialist, error) {
-	ctx, span := c.tracer.Start(contx, UpdateSpecialistSpanName)
-	defer span.End()
-
+func (c *UpdateSpecialistUseCase) Execute(ctx context.Context, input UpdateSpecialistDTO) (*domain.Specialist, error) {
 	existing, err := c.repository.FindByID(ctx, input.ID)
 	if err != nil {
-		span.RecordError(err)
-		c.logger.Error(ctx, ErrSpecialistNotFoundMessage,
-			observability.Field{Key: "id", Value: input.ID},
-			observability.Field{Key: "error", Value: err.Error()})
 		return nil, ErrSpecialistNotFound
 	}
 
@@ -36,17 +28,11 @@ func (c *UpdateSpecialistUseCase) Execute(contx context.Context, input UpdateSpe
 	})
 
 	if err != nil {
-		span.RecordError(err)
-		c.logger.Error(ctx, err.Error(), observability.Field{Key: "error", Value: err.Error()})
 		return nil, err
 	}
 
 	saved, err := c.repository.Update(ctx, updated)
 	if err != nil {
-		span.RecordError(err)
-		c.logger.Error(ctx, ErrUpdateSpecialistMessage,
-			observability.Field{Key: "id", Value: updated.ID},
-			observability.Field{Key: "error", Value: err.Error()})
 		return nil, ErrUpdateSpecialist
 	}
 
@@ -63,9 +49,5 @@ func (c *UpdateSpecialistUseCase) publishSpecialistUpdatedEvent(ctx context.Cont
 		"specialty":     specialist.Specialty,
 	})
 
-	if err := c.eventPublisher.Dispatch(ctx, specialistUpdatedEvent); err != nil {
-		c.logger.Warn(ctx, ErrEventPublishMessage,
-			observability.Field{Key: "id", Value: specialist.ID},
-			observability.Field{Key: "error", Value: err.Error()})
-	}
+	c.eventPublisher.Dispatch(ctx, specialistUpdatedEvent)
 }

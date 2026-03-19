@@ -60,26 +60,19 @@ func TestValidateLicenseHandler_Handle(t *testing.T) {
 	tests := []struct {
 		name        string
 		event       event.Event
-		setupMocks  func(*mocks.MockValidateLicenseRepositoryInterface, *mocks.MockLicenseGatewayInterface, *mocks.MockEventDispatcher, *mocks.MockTracer, *mocks.MockLogger, *mocks.MockSpan)
+		setupMocks  func(*mocks.MockValidateLicenseRepositoryInterface, *mocks.MockLicenseGatewayInterface, *mocks.MockEventDispatcher)
 		expectError bool
 		expectedErr error
 	}{
 		{
 			name:  "success - validates license and updates status to authorized_license",
 			event: makeEvent(payloadFactory()),
-			setupMocks: func(mockRepo *mocks.MockValidateLicenseRepositoryInterface, mockGateway *mocks.MockLicenseGatewayInterface, mockEvent *mocks.MockEventDispatcher, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan) {
-				ctx := context.Background()
+			setupMocks: func(mockRepo *mocks.MockValidateLicenseRepositoryInterface, mockGateway *mocks.MockLicenseGatewayInterface, mockEvent *mocks.MockEventDispatcher) {
 				specialist := specialistFactory()
 
-				mockTracer.EXPECT().Start(gomock.Any(), ValidateLicenseSpanName).Return(ctx, mockSpan).Times(1)
-				mockSpan.EXPECT().End().Times(1)
-
 				mockRepo.EXPECT().FindByID(gomock.Any(), "specialist-123").Return(specialist, nil).Times(1)
-
 				mockGateway.EXPECT().Validate(gomock.Any(), "CRM123456").Return(true, nil).Times(1)
-
 				mockRepo.EXPECT().UpdateStatus(gomock.Any(), "specialist-123", domain.StatusAuthorizedLicense).Return(nil).Times(1)
-
 				mockEvent.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 			},
 			expectError: false,
@@ -87,11 +80,7 @@ func TestValidateLicenseHandler_Handle(t *testing.T) {
 		{
 			name:  "failure - returns error when payload is invalid JSON",
 			event: event.NewEvent("specialist.created", []byte("invalid-json")),
-			setupMocks: func(mockRepo *mocks.MockValidateLicenseRepositoryInterface, mockGateway *mocks.MockLicenseGatewayInterface, mockEvent *mocks.MockEventDispatcher, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan) {
-				ctx := context.Background()
-				mockTracer.EXPECT().Start(gomock.Any(), ValidateLicenseSpanName).Return(ctx, mockSpan).Times(1)
-				mockSpan.EXPECT().End().Times(1)
-
+			setupMocks: func(mockRepo *mocks.MockValidateLicenseRepositoryInterface, mockGateway *mocks.MockLicenseGatewayInterface, mockEvent *mocks.MockEventDispatcher) {
 				mockRepo.EXPECT().FindByID(gomock.Any(), gomock.Any()).Times(0)
 				mockGateway.EXPECT().Validate(gomock.Any(), gomock.Any()).Times(0)
 				mockRepo.EXPECT().UpdateStatus(gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
@@ -102,15 +91,8 @@ func TestValidateLicenseHandler_Handle(t *testing.T) {
 		{
 			name:  "failure - returns ErrSpecialistNotFound when repository FindByID fails",
 			event: makeEvent(payloadFactory()),
-			setupMocks: func(mockRepo *mocks.MockValidateLicenseRepositoryInterface, mockGateway *mocks.MockLicenseGatewayInterface, mockEvent *mocks.MockEventDispatcher, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan) {
-				ctx := context.Background()
-
-				mockTracer.EXPECT().Start(gomock.Any(), ValidateLicenseSpanName).Return(ctx, mockSpan).Times(1)
-				mockSpan.EXPECT().End().Times(1)
-
+			setupMocks: func(mockRepo *mocks.MockValidateLicenseRepositoryInterface, mockGateway *mocks.MockLicenseGatewayInterface, mockEvent *mocks.MockEventDispatcher) {
 				mockRepo.EXPECT().FindByID(gomock.Any(), "specialist-123").Return(nil, errors.New("not found")).Times(1)
-				mockSpan.EXPECT().RecordError(gomock.Any()).Times(1)
-				mockLogger.EXPECT().Error(gomock.Any(), ErrSpecialistNotFoundMessage, gomock.Any(), gomock.Any()).Times(1)
 
 				mockGateway.EXPECT().Validate(gomock.Any(), gomock.Any()).Times(0)
 				mockRepo.EXPECT().UpdateStatus(gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
@@ -122,18 +104,11 @@ func TestValidateLicenseHandler_Handle(t *testing.T) {
 		{
 			name:  "failure - returns ErrLicenseValidation when gateway returns error",
 			event: makeEvent(payloadFactory()),
-			setupMocks: func(mockRepo *mocks.MockValidateLicenseRepositoryInterface, mockGateway *mocks.MockLicenseGatewayInterface, mockEvent *mocks.MockEventDispatcher, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan) {
-				ctx := context.Background()
+			setupMocks: func(mockRepo *mocks.MockValidateLicenseRepositoryInterface, mockGateway *mocks.MockLicenseGatewayInterface, mockEvent *mocks.MockEventDispatcher) {
 				specialist := specialistFactory()
 
-				mockTracer.EXPECT().Start(gomock.Any(), ValidateLicenseSpanName).Return(ctx, mockSpan).Times(1)
-				mockSpan.EXPECT().End().Times(1)
-
 				mockRepo.EXPECT().FindByID(gomock.Any(), "specialist-123").Return(specialist, nil).Times(1)
-
 				mockGateway.EXPECT().Validate(gomock.Any(), "CRM123456").Return(false, errors.New("service unavailable")).Times(1)
-				mockSpan.EXPECT().RecordError(gomock.Any()).Times(1)
-				mockLogger.EXPECT().Error(gomock.Any(), ErrLicenseValidationMessage, gomock.Any(), gomock.Any(), gomock.Any()).Times(1)
 
 				mockRepo.EXPECT().UpdateStatus(gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
 				mockEvent.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Times(0)
@@ -144,18 +119,11 @@ func TestValidateLicenseHandler_Handle(t *testing.T) {
 		{
 			name:  "failure - returns ErrInvalidLicense when gateway returns false",
 			event: makeEvent(payloadFactory()),
-			setupMocks: func(mockRepo *mocks.MockValidateLicenseRepositoryInterface, mockGateway *mocks.MockLicenseGatewayInterface, mockEvent *mocks.MockEventDispatcher, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan) {
-				ctx := context.Background()
+			setupMocks: func(mockRepo *mocks.MockValidateLicenseRepositoryInterface, mockGateway *mocks.MockLicenseGatewayInterface, mockEvent *mocks.MockEventDispatcher) {
 				specialist := specialistFactory()
 
-				mockTracer.EXPECT().Start(gomock.Any(), ValidateLicenseSpanName).Return(ctx, mockSpan).Times(1)
-				mockSpan.EXPECT().End().Times(1)
-
 				mockRepo.EXPECT().FindByID(gomock.Any(), "specialist-123").Return(specialist, nil).Times(1)
-
 				mockGateway.EXPECT().Validate(gomock.Any(), "CRM123456").Return(false, nil).Times(1)
-				mockSpan.EXPECT().RecordError(ErrInvalidLicense).Times(1)
-				mockLogger.EXPECT().Error(gomock.Any(), ErrInvalidLicenseMessage, gomock.Any(), gomock.Any()).Times(1)
 
 				mockRepo.EXPECT().UpdateStatus(gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
 				mockEvent.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Times(0)
@@ -166,21 +134,13 @@ func TestValidateLicenseHandler_Handle(t *testing.T) {
 		{
 			name:  "failure - returns ErrInvalidStatusTransition when specialist is not pending",
 			event: makeEvent(payloadFactory()),
-			setupMocks: func(mockRepo *mocks.MockValidateLicenseRepositoryInterface, mockGateway *mocks.MockLicenseGatewayInterface, mockEvent *mocks.MockEventDispatcher, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan) {
-				ctx := context.Background()
+			setupMocks: func(mockRepo *mocks.MockValidateLicenseRepositoryInterface, mockGateway *mocks.MockLicenseGatewayInterface, mockEvent *mocks.MockEventDispatcher) {
 				specialist := specialistFactory(func(s *domain.Specialist) {
 					s.Status = domain.StatusActive
 				})
 
-				mockTracer.EXPECT().Start(gomock.Any(), ValidateLicenseSpanName).Return(ctx, mockSpan).Times(1)
-				mockSpan.EXPECT().End().Times(1)
-
 				mockRepo.EXPECT().FindByID(gomock.Any(), "specialist-123").Return(specialist, nil).Times(1)
-
 				mockGateway.EXPECT().Validate(gomock.Any(), "CRM123456").Return(true, nil).Times(1)
-
-				mockSpan.EXPECT().RecordError(gomock.Any()).Times(1)
-				mockLogger.EXPECT().Error(gomock.Any(), ErrInvalidStatusTransitionMessage, gomock.Any(), gomock.Any(), gomock.Any()).Times(1)
 
 				mockRepo.EXPECT().UpdateStatus(gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
 				mockEvent.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Times(0)
@@ -191,20 +151,12 @@ func TestValidateLicenseHandler_Handle(t *testing.T) {
 		{
 			name:  "failure - returns ErrUpdateStatus when repository UpdateStatus fails",
 			event: makeEvent(payloadFactory()),
-			setupMocks: func(mockRepo *mocks.MockValidateLicenseRepositoryInterface, mockGateway *mocks.MockLicenseGatewayInterface, mockEvent *mocks.MockEventDispatcher, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan) {
-				ctx := context.Background()
+			setupMocks: func(mockRepo *mocks.MockValidateLicenseRepositoryInterface, mockGateway *mocks.MockLicenseGatewayInterface, mockEvent *mocks.MockEventDispatcher) {
 				specialist := specialistFactory()
 
-				mockTracer.EXPECT().Start(gomock.Any(), ValidateLicenseSpanName).Return(ctx, mockSpan).Times(1)
-				mockSpan.EXPECT().End().Times(1)
-
 				mockRepo.EXPECT().FindByID(gomock.Any(), "specialist-123").Return(specialist, nil).Times(1)
-
 				mockGateway.EXPECT().Validate(gomock.Any(), "CRM123456").Return(true, nil).Times(1)
-
 				mockRepo.EXPECT().UpdateStatus(gomock.Any(), "specialist-123", domain.StatusAuthorizedLicense).Return(errors.New("db error")).Times(1)
-				mockSpan.EXPECT().RecordError(gomock.Any()).Times(1)
-				mockLogger.EXPECT().Error(gomock.Any(), ErrUpdateStatusMessage, gomock.Any(), gomock.Any()).Times(1)
 
 				mockEvent.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Times(0)
 			},
@@ -214,21 +166,13 @@ func TestValidateLicenseHandler_Handle(t *testing.T) {
 		{
 			name:  "success - still succeeds when event publish fails",
 			event: makeEvent(payloadFactory()),
-			setupMocks: func(mockRepo *mocks.MockValidateLicenseRepositoryInterface, mockGateway *mocks.MockLicenseGatewayInterface, mockEvent *mocks.MockEventDispatcher, mockTracer *mocks.MockTracer, mockLogger *mocks.MockLogger, mockSpan *mocks.MockSpan) {
-				ctx := context.Background()
+			setupMocks: func(mockRepo *mocks.MockValidateLicenseRepositoryInterface, mockGateway *mocks.MockLicenseGatewayInterface, mockEvent *mocks.MockEventDispatcher) {
 				specialist := specialistFactory()
 
-				mockTracer.EXPECT().Start(gomock.Any(), ValidateLicenseSpanName).Return(ctx, mockSpan).Times(1)
-				mockSpan.EXPECT().End().Times(1)
-
 				mockRepo.EXPECT().FindByID(gomock.Any(), "specialist-123").Return(specialist, nil).Times(1)
-
 				mockGateway.EXPECT().Validate(gomock.Any(), "CRM123456").Return(true, nil).Times(1)
-
 				mockRepo.EXPECT().UpdateStatus(gomock.Any(), "specialist-123", domain.StatusAuthorizedLicense).Return(nil).Times(1)
-
 				mockEvent.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Return(errors.New("kafka unavailable")).Times(1)
-				mockLogger.EXPECT().Warn(gomock.Any(), ErrEventPublishMessage, gomock.Any(), gomock.Any()).Times(1)
 			},
 			expectError: false,
 		},
@@ -242,13 +186,10 @@ func TestValidateLicenseHandler_Handle(t *testing.T) {
 			mockRepo := mocks.NewMockValidateLicenseRepositoryInterface(ctrl)
 			mockGateway := mocks.NewMockLicenseGatewayInterface(ctrl)
 			mockEvent := mocks.NewMockEventDispatcher(ctrl)
-			mockTracer := mocks.NewMockTracer(ctrl)
-			mockLogger := mocks.NewMockLogger(ctrl)
-			mockSpan := mocks.NewMockSpan(ctrl)
 
-			tt.setupMocks(mockRepo, mockGateway, mockEvent, mockTracer, mockLogger, mockSpan)
+			tt.setupMocks(mockRepo, mockGateway, mockEvent)
 
-			handler := NewValidateLicenseHandler(mockRepo, mockGateway, mockEvent, mockTracer, mockLogger)
+			handler := NewValidateLicenseHandler(mockRepo, mockGateway, mockEvent)
 
 			err := handler.Handle(context.Background(), tt.event)
 

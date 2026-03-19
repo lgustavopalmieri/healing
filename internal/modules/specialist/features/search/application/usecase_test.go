@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
-	loggerMocks "github.com/lgustavopalmieri/healing-specialist/internal/commom/observability/mocks"
 	cursor "github.com/lgustavopalmieri/healing-specialist/internal/commom/value-objects/pagination/cursor"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
 	searchoutput "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/search/search_output"
@@ -81,7 +80,7 @@ func TestSearchSpecialistsUseCase_Execute(t *testing.T) {
 	tests := []struct {
 		name           string
 		input          *SearchSpecialistsDTO
-		setupMocks     func(*mocks.MockSpecialistSearchRepositoryInterface, *loggerMocks.MockLogger)
+		setupMocks     func(*mocks.MockSpecialistSearchRepositoryInterface)
 		expectError    bool
 		expectedErr    error
 		validateResult func(*testing.T, *searchoutput.ListSearchOutput)
@@ -89,7 +88,7 @@ func TestSearchSpecialistsUseCase_Execute(t *testing.T) {
 		{
 			name:  "success - returns specialists with pagination built by command",
 			input: searchDTOFactory(),
-			setupMocks: func(repo *mocks.MockSpecialistSearchRepositoryInterface, logger *loggerMocks.MockLogger) {
+			setupMocks: func(repo *mocks.MockSpecialistSearchRepositoryInterface) {
 				repo.EXPECT().Search(gomock.Any(), gomock.Any()).Return(searchResultFactory(), nil).Times(1)
 			},
 			expectError: false,
@@ -109,7 +108,7 @@ func TestSearchSpecialistsUseCase_Execute(t *testing.T) {
 		{
 			name:  "success - builds next cursor when repository signals has next page",
 			input: searchDTOFactory(),
-			setupMocks: func(repo *mocks.MockSpecialistSearchRepositoryInterface, logger *loggerMocks.MockLogger) {
+			setupMocks: func(repo *mocks.MockSpecialistSearchRepositoryInterface) {
 				result := searchResultFactory(func(r *searchoutput.SearchResult) {
 					r.HasNextPage = true
 					r.LastSortValues = []any{4.8, "2025-01-01T00:00:00Z", "last-id"}
@@ -140,7 +139,7 @@ func TestSearchSpecialistsUseCase_Execute(t *testing.T) {
 					Pagination: pagination,
 				}
 			}(),
-			setupMocks: func(repo *mocks.MockSpecialistSearchRepositoryInterface, logger *loggerMocks.MockLogger) {
+			setupMocks: func(repo *mocks.MockSpecialistSearchRepositoryInterface) {
 				result := searchResultFactory(func(r *searchoutput.SearchResult) {
 					r.HasNextPage = false
 					r.FirstSortValues = []any{4.2, "2025-01-02T00:00:00Z", "first-id"}
@@ -162,7 +161,7 @@ func TestSearchSpecialistsUseCase_Execute(t *testing.T) {
 		{
 			name:  "success - returns empty output when no specialists match",
 			input: searchDTOFactory(),
-			setupMocks: func(repo *mocks.MockSpecialistSearchRepositoryInterface, logger *loggerMocks.MockLogger) {
+			setupMocks: func(repo *mocks.MockSpecialistSearchRepositoryInterface) {
 				repo.EXPECT().Search(gomock.Any(), gomock.Any()).Return(emptySearchResult(), nil).Times(1)
 			},
 			expectError: false,
@@ -180,7 +179,7 @@ func TestSearchSpecialistsUseCase_Execute(t *testing.T) {
 		{
 			name:  "success - does not generate next cursor when hasNext but no sort values",
 			input: searchDTOFactory(),
-			setupMocks: func(repo *mocks.MockSpecialistSearchRepositoryInterface, logger *loggerMocks.MockLogger) {
+			setupMocks: func(repo *mocks.MockSpecialistSearchRepositoryInterface) {
 				result := searchResultFactory(func(r *searchoutput.SearchResult) {
 					r.HasNextPage = true
 					r.LastSortValues = nil
@@ -198,8 +197,7 @@ func TestSearchSpecialistsUseCase_Execute(t *testing.T) {
 		{
 			name:  "failure - returns ErrInvalidSearchInput when dto is nil",
 			input: nil,
-			setupMocks: func(repo *mocks.MockSpecialistSearchRepositoryInterface, logger *loggerMocks.MockLogger) {
-				logger.EXPECT().Error(gomock.Any(), ErrInvalidSearchInputMessage).Times(1)
+			setupMocks: func(repo *mocks.MockSpecialistSearchRepositoryInterface) {
 				repo.EXPECT().Search(gomock.Any(), gomock.Any()).Times(0)
 			},
 			expectError: true,
@@ -219,8 +217,7 @@ func TestSearchSpecialistsUseCase_Execute(t *testing.T) {
 					Pagination: pagination,
 				}
 			}(),
-			setupMocks: func(repo *mocks.MockSpecialistSearchRepositoryInterface, logger *loggerMocks.MockLogger) {
-				logger.EXPECT().Error(gomock.Any(), ErrInvalidSearchInputMessage, gomock.Any()).Times(1)
+			setupMocks: func(repo *mocks.MockSpecialistSearchRepositoryInterface) {
 				repo.EXPECT().Search(gomock.Any(), gomock.Any()).Times(0)
 			},
 			expectError: true,
@@ -232,9 +229,8 @@ func TestSearchSpecialistsUseCase_Execute(t *testing.T) {
 		{
 			name:  "failure - returns ErrSearchExecution when repository returns infrastructure error",
 			input: searchDTOFactory(),
-			setupMocks: func(repo *mocks.MockSpecialistSearchRepositoryInterface, logger *loggerMocks.MockLogger) {
+			setupMocks: func(repo *mocks.MockSpecialistSearchRepositoryInterface) {
 				repo.EXPECT().Search(gomock.Any(), gomock.Any()).Return(nil, errors.New("connection refused")).Times(1)
-				logger.EXPECT().Error(gomock.Any(), ErrSearchExecutionMessage, gomock.Any()).Times(1)
 			},
 			expectError: true,
 			expectedErr: ErrSearchExecution,
@@ -250,11 +246,10 @@ func TestSearchSpecialistsUseCase_Execute(t *testing.T) {
 			defer ctrl.Finish()
 
 			mockRepo := mocks.NewMockSpecialistSearchRepositoryInterface(ctrl)
-			mockLogger := loggerMocks.NewMockLogger(ctrl)
 
-			tt.setupMocks(mockRepo, mockLogger)
+			tt.setupMocks(mockRepo)
 
-			useCase := NewSearchSpecialistsUseCase(mockRepo, mockLogger)
+			useCase := NewSearchSpecialistsUseCase(mockRepo)
 
 			output, err := useCase.Execute(context.Background(), tt.input)
 

@@ -3,8 +3,6 @@ package application
 import "errors"
 
 const (
-	SearchSpecialistsSpanName = "SearchSpecialistsUseCase.Execute"
-
 	ErrSearchExecutionMessage    = "Failed to execute search"
 	ErrInvalidSearchInputMessage = "Invalid search input parameters"
 )

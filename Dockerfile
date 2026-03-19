@@ -21,7 +21,7 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /healing-specialist /healing-specialist
 
-EXPOSE 50051 8080 9090
+EXPOSE 50051 8080
 
 USER 65534:65534
 

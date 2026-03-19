@@ -39,6 +39,10 @@ func NewHTTPServer(cfg HTTPConfig) *HTTPServer {
 		AllowCredentials: false,
 	}))
 
+	engine.GET("/health", func(c *gin.Context) {
+		c.String(http.StatusOK, "OK")
+	})
+
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.Port),
 		Handler:      engine,

@@ -15,7 +15,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
-	"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
 	postgrestest "github.com/lgustavopalmieri/healing-specialist/internal/commom/tests/database/postgresql"
 	kafkatest "github.com/lgustavopalmieri/healing-specialist/internal/commom/tests/event/kafka"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
@@ -49,25 +48,6 @@ func TestMain(m *testing.M) {
 	}
 	os.Exit(code)
 }
-
-type noopSpan struct{}
-
-func (s *noopSpan) End()                                                     {}
-func (s *noopSpan) RecordError(err error)                                    {}
-func (s *noopSpan) SetAttribute(key string, attr ...observability.Attribute) {}
-
-type noopTracer struct{}
-
-func (t *noopTracer) Start(ctx context.Context, name string) (context.Context, observability.Span) {
-	return ctx, &noopSpan{}
-}
-
-type noopLogger struct{}
-
-func (l *noopLogger) Debug(ctx context.Context, msg string, fields ...observability.Field) {}
-func (l *noopLogger) Info(ctx context.Context, msg string, fields ...observability.Field)  {}
-func (l *noopLogger) Warn(ctx context.Context, msg string, fields ...observability.Field)  {}
-func (l *noopLogger) Error(ctx context.Context, msg string, fields ...observability.Field) {}
 
 func specialistIntegrationFactory(overrides ...func(*domain.Specialist)) *domain.Specialist {
 	now := time.Now().UTC()
@@ -109,9 +89,7 @@ func setupMockLicenseServer(valid bool) *httptest.Server {
 func setupHandler(db *sql.DB, licenseServerURL string, eventPublisher event.EventDispatcher) *listener.ValidateLicenseHandler {
 	repository := vldb.NewValidateLicenseRepository(db)
 	gateway := external.NewLicenseGateway(licenseServerURL, &http.Client{})
-	tracer := &noopTracer{}
-	logger := &noopLogger{}
-	return listener.NewValidateLicenseHandler(repository, gateway, eventPublisher, tracer, logger)
+	return listener.NewValidateLicenseHandler(repository, gateway, eventPublisher)
 }
 
 func TestValidateLicenseHandler_Integration(t *testing.T) {
@@ -131,17 +109,6 @@ func TestValidateLicenseHandler_Integration(t *testing.T) {
 			expectStatus: domain.StatusAuthorizedLicense,
 			expectEvent:  true,
 		},
-		// TODO: re-enable when external license validation API is integrated
-		// Currently the gateway is hardcoded to return true (see external/gateway.go)
-		// {
-		// 	name:         "failure - does not update status when license is invalid",
-		// 	licenseValid: false,
-		// 	specialistSetup: func() *domain.Specialist {
-		// 		return specialistIntegrationFactory()
-		// 	},
-		// 	expectStatus: domain.StatusPending,
-		// 	expectEvent:  false,
-		// },
 	}
 
 	for _, tt := range tests {

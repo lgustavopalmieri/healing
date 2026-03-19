@@ -14,7 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
-	"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
 	estest "github.com/lgustavopalmieri/healing-specialist/internal/commom/tests/elasticsearch"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
 	"github.com/lgustavopalmieri/healing-specialist/internal/platform/elasticsearch/indexes"
@@ -25,13 +24,6 @@ var testHelper = estest.NewTestHelper()
 func TestMain(m *testing.M) {
 	testHelper.RunTestMain(m)
 }
-
-type noopLogger struct{}
-
-func (l *noopLogger) Debug(ctx context.Context, msg string, fields ...observability.Field) {}
-func (l *noopLogger) Info(ctx context.Context, msg string, fields ...observability.Field)  {}
-func (l *noopLogger) Warn(ctx context.Context, msg string, fields ...observability.Field)  {}
-func (l *noopLogger) Error(ctx context.Context, msg string, fields ...observability.Field) {}
 
 type captureDispatcher struct {
 	Events []event.Event
@@ -132,9 +124,8 @@ func TestElasticsearchRepository_Update(t *testing.T) {
 				specialist.Name = "Dr. Updated Name"
 				specialist.Specialty = "Neurologia"
 
-				logger := &noopLogger{}
 				dispatcher := &captureDispatcher{}
-				repo := NewRepository(client, indexName, logger, dispatcher)
+				repo := NewRepository(client, indexName, dispatcher)
 				err := repo.Update(context.Background(), specialist)
 				require.NoError(t, err)
 
@@ -158,9 +149,8 @@ func TestElasticsearchRepository_Update(t *testing.T) {
 			tt.setup(t, client, indexName)
 
 			specialist := tt.specialist()
-			logger := &noopLogger{}
 			dispatcher := &captureDispatcher{}
-			repo := NewRepository(client, indexName, logger, dispatcher)
+			repo := NewRepository(client, indexName, dispatcher)
 
 			err := repo.Update(context.Background(), specialist)
 
@@ -208,9 +198,7 @@ func TestElasticsearchRepository_PublishDLQ(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			logger := &noopLogger{}
 			repo := &Repository{
-				Logger:          logger,
 				EventDispatcher: tt.dispatcher,
 			}
 
