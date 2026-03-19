@@ -5,18 +5,6 @@ import (
 	"strings"
 )
 
-// DecodedCursorValue representa o conteúdo decodificado de um cursor.
-//
-// # Estrutura do Cursor
-//
-// Um cursor contém informações que permitem localizar exatamente onde
-// parar a busca anterior e onde começar a próxima. Tipicamente contém:
-//   - ID do último item visualizado
-//   - Timestamp ou campo de ordenação
-//   - Qualquer outro campo necessário para ordenação única
-//
-// Exemplo: Se você ordena por "created_at DESC, id DESC", o cursor deve
-// conter ambos os valores para garantir ordenação consistente.
 type DecodedCursorValue struct {
 	ID        string
 	SortValue string
