@@ -13,10 +13,4 @@ services:
       - ${ENV_FILE:-.env}
     environment:
       - APP_ENV=${APP_ENV:-development}
-    networks:
-      - healing-network
     restart: unless-stopped
-
-networks:
-  healing-network:
-    external: true
