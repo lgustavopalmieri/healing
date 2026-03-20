@@ -18,6 +18,7 @@ type ManagerDependencies struct {
 	EventDispatcher  event.EventDispatcher
 	LicenseBaseURL   string
 	BootstrapServers string
+	KafkaAuthConfig  platformkafka.AuthConfig
 }
 
 func NewValidateLicenseKafkaManager(ctx context.Context, deps ManagerDependencies) error {
@@ -33,10 +34,16 @@ func NewValidateLicenseKafkaManager(ctx context.Context, deps ManagerDependencie
 	manager := event.NewListenerManager()
 	manager.Register(application.SpecialistCreatedEventName, handler)
 
+	authOpts, err := platformkafka.AuthOpts(deps.KafkaAuthConfig)
+	if err != nil {
+		return err
+	}
+
 	consumer, err := platformkafka.NewKafkaConsumer(
 		[]string{deps.BootstrapServers},
 		"specialist-validate-license-consumer-group",
 		manager,
+		authOpts...,
 	)
 	if err != nil {
 		return err

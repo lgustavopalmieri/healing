@@ -38,6 +38,10 @@ func Load() (*Config, error) {
 		Kafka: KafkaConfig{
 			BootstrapServers: getEnv("KAFKA_BOOTSTRAP_SERVERS", ""),
 			AutoOffsetReset:  getEnv("KAFKA_AUTO_OFFSET_RESET", "earliest"),
+			SASLMechanism:    getEnv("KAFKA_SASL_MECHANISM", ""),
+			SASLUsername:     getEnv("KAFKA_SASL_USERNAME", ""),
+			SASLPassword:     getEnv("KAFKA_SASL_PASSWORD", ""),
+			UseTLS:           getEnv("KAFKA_USE_TLS", "false") == "true",
 		},
 		Elasticsearch: ElasticsearchConfig{
 			Addresses:    getEnvAsSlice("ELASTICSEARCH_ADDRESSES", nil),

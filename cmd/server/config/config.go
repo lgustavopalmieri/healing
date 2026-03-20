@@ -36,6 +36,10 @@ type DatabaseConfig struct {
 type KafkaConfig struct {
 	BootstrapServers string
 	AutoOffsetReset  string
+	SASLMechanism    string
+	SASLUsername     string
+	SASLPassword     string
+	UseTLS           bool
 }
 
 type ElasticsearchConfig struct {

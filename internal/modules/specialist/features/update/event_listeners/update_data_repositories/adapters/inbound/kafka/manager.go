@@ -19,6 +19,7 @@ type ManagerDependencies struct {
 	ESClient         *goelasticsearch.Client
 	EventDispatcher  event.EventDispatcher
 	BootstrapServers string
+	KafkaAuthConfig  platformkafka.AuthConfig
 }
 
 func NewUpdateDataRepositoriesKafkaManager(ctx context.Context, deps ManagerDependencies) error {
@@ -38,10 +39,16 @@ func NewUpdateDataRepositoriesKafkaManager(ctx context.Context, deps ManagerDepe
 	manager := event.NewListenerManager()
 	manager.Register(application.SpecialistUpdatedEventName, handler)
 
+	authOpts, err := platformkafka.AuthOpts(deps.KafkaAuthConfig)
+	if err != nil {
+		return err
+	}
+
 	consumer, err := platformkafka.NewKafkaConsumer(
 		[]string{deps.BootstrapServers},
 		"specialist-update-data-repositories-consumer-group",
 		manager,
+		authOpts...,
 	)
 	if err != nil {
 		return err

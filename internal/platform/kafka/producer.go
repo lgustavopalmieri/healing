@@ -13,11 +13,14 @@ type KafkaProducer struct {
 	client *kgo.Client
 }
 
-func NewKafkaProducer(brokers []string) (*KafkaProducer, error) {
-	client, err := kgo.NewClient(
+func NewKafkaProducer(brokers []string, opts ...kgo.Opt) (*KafkaProducer, error) {
+	baseOpts := []kgo.Opt{
 		kgo.SeedBrokers(brokers...),
 		kgo.AllowAutoTopicCreation(),
-	)
+	}
+	baseOpts = append(baseOpts, opts...)
+
+	client, err := kgo.NewClient(baseOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create kafka producer: %w", err)
 	}
