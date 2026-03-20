@@ -13,6 +13,9 @@ func InitElasticsearch(cfg *config.Config) (*platformES.Factory, error) {
 
 	factory, err := platformES.NewFactory(platformES.Config{
 		Addresses:    cfg.Elasticsearch.Addresses,
+		CloudID:      cfg.Elasticsearch.CloudID,
+		Username:     cfg.Elasticsearch.Username,
+		Password:     cfg.Elasticsearch.Password,
 		MaxRetries:   cfg.Elasticsearch.MaxRetries,
 		RetryBackoff: cfg.Elasticsearch.RetryBackoff,
 	})

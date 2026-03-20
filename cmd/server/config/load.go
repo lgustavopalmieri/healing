@@ -41,6 +41,9 @@ func Load() (*Config, error) {
 		},
 		Elasticsearch: ElasticsearchConfig{
 			Addresses:    getEnvAsSlice("ELASTICSEARCH_ADDRESSES", nil),
+			CloudID:      getEnv("ELASTICSEARCH_CLOUD_ID", ""),
+			Username:     getEnv("ELASTICSEARCH_USERNAME", ""),
+			Password:     getEnv("ELASTICSEARCH_PASSWORD", ""),
 			MaxRetries:   getEnvAsInt("ELASTICSEARCH_MAX_RETRIES", 3),
 			RetryBackoff: getEnvAsDuration("ELASTICSEARCH_RETRY_BACKOFF", 1*time.Second),
 		},

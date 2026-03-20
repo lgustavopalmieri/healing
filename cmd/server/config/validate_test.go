@@ -110,10 +110,13 @@ func TestValidate(t *testing.T) {
 			expectedMsg: "KAFKA_BOOTSTRAP_SERVERS is required",
 		},
 		{
-			name:        "failure - returns error when ELASTICSEARCH_ADDRESSES is empty",
-			override:    func(c *Config) { c.Elasticsearch.Addresses = nil },
+			name: "failure - returns error when ELASTICSEARCH_ADDRESSES and CLOUD_ID are both empty",
+			override: func(c *Config) {
+				c.Elasticsearch.Addresses = nil
+				c.Elasticsearch.CloudID = ""
+			},
 			expectError: true,
-			expectedMsg: "ELASTICSEARCH_ADDRESSES is required",
+			expectedMsg: "ELASTICSEARCH_ADDRESSES or ELASTICSEARCH_CLOUD_ID is required",
 		},
 		{
 			name:        "failure - returns error when LICENSE_VALIDATION_BASE_URL is empty",

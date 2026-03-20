@@ -40,6 +40,9 @@ type KafkaConfig struct {
 
 type ElasticsearchConfig struct {
 	Addresses    []string
+	CloudID      string
+	Username     string
+	Password     string
 	MaxRetries   int
 	RetryBackoff time.Duration
 }

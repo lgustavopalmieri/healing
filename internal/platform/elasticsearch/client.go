@@ -10,16 +10,29 @@ import (
 
 type Config struct {
 	Addresses    []string
+	CloudID      string
+	Username     string
+	Password     string
 	MaxRetries   int
 	RetryBackoff time.Duration
 }
 
 func NewClient(cfg Config) (*elasticsearch.Client, error) {
 	esCfg := elasticsearch.Config{
-		Addresses:     cfg.Addresses,
 		MaxRetries:    cfg.MaxRetries,
 		RetryBackoff:  func(i int) time.Duration { return cfg.RetryBackoff * time.Duration(i) },
 		EnableMetrics: true,
+	}
+
+	if len(cfg.Addresses) > 0 {
+		esCfg.Addresses = cfg.Addresses
+	} else if cfg.CloudID != "" {
+		esCfg.CloudID = cfg.CloudID
+	}
+
+	if cfg.Username != "" && cfg.Password != "" {
+		esCfg.Username = cfg.Username
+		esCfg.Password = cfg.Password
 	}
 
 	client, err := elasticsearch.NewClient(esCfg)

@@ -31,8 +31,8 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("KAFKA_BOOTSTRAP_SERVERS is required")
 	}
 
-	if len(c.Elasticsearch.Addresses) == 0 {
-		return fmt.Errorf("ELASTICSEARCH_ADDRESSES is required")
+	if len(c.Elasticsearch.Addresses) == 0 && c.Elasticsearch.CloudID == "" {
+		return fmt.Errorf("ELASTICSEARCH_ADDRESSES or ELASTICSEARCH_CLOUD_ID is required")
 	}
 
 	if c.External.LicenseBaseURL == "" {
