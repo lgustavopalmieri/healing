@@ -1,12 +1,12 @@
 # .kiro/
 .vscode/
+k8s/
 
 # Environment files (ignore all except example)
 .env
 .env.*
 !.env.docker.example
 !.env.example
-@docs/
 
 # Binaries
 bin/
