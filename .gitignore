@@ -1,6 +1,7 @@
 # .kiro/
 .vscode/
 k8s/
+docs/observability-metrics-guide.md
 
 # Environment files (ignore all except example)
 .env
