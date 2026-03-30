@@ -31,17 +31,19 @@ func run() error {
 
 	log.Println("Starting Healing Specialist Service...")
 
+	ctx := context.Background()
+
 	db, err := bootstrap.InitDatabase(cfg)
 	if err != nil {
 		return err
 	}
 
-	esFactory, err := bootstrap.InitElasticsearch(cfg)
+	osFactory, err := bootstrap.InitOpenSearch(cfg)
 	if err != nil {
 		return err
 	}
 
-	kafkaProducer, err := bootstrap.InitKafkaProducer(cfg)
+	sqsResources, err := bootstrap.InitSQS(ctx, cfg)
 	if err != nil {
 		return err
 	}
@@ -63,21 +65,20 @@ func run() error {
 
 	serviceDeps := bootstrap.ServiceDependencies{
 		DB:             db,
-		ESFactory:      esFactory,
-		EventPublisher: kafkaProducer,
+		OSFactory:      osFactory,
+		EventPublisher: sqsResources.Producer,
 	}
 
 	bootstrap.RegisterServices(grpcServer, serviceDeps)
 	bootstrap.RegisterHTTPServices(httpServer, serviceDeps)
 
-	if err := bootstrap.InitKafkaConsumers(context.Background(), bootstrap.ConsumerDependencies{
+	bootstrap.InitSQSConsumers(ctx, bootstrap.SQSConsumerDependencies{
 		DB:             db,
-		ESFactory:      esFactory,
-		EventPublisher: kafkaProducer,
+		OSFactory:      osFactory,
+		EventPublisher: sqsResources.Producer,
+		SQS:            sqsResources,
 		Config:         cfg,
-	}); err != nil {
-		return err
-	}
+	})
 
 	serverErrors := make(chan error, 2)
 
@@ -119,7 +120,7 @@ func run() error {
 		log.Printf("HTTP server shutdown error: %v", err)
 	}
 
-	if err := shutdownManager.Shutdown(grpcServer, db, kafkaProducer); err != nil {
+	if err := shutdownManager.Shutdown(grpcServer, db); err != nil {
 		log.Printf("Shutdown error: %v", err)
 		os.Exit(1)
 	}

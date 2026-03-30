@@ -16,35 +16,33 @@ import (
 
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
 	postgrestest "github.com/lgustavopalmieri/healing-specialist/internal/commom/tests/database/postgresql"
-	kafkatest "github.com/lgustavopalmieri/healing-specialist/internal/commom/tests/event/kafka"
+	sqstest "github.com/lgustavopalmieri/healing-specialist/internal/commom/tests/event/sqs"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
 	createdb "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/adapters/outbound/database"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/application"
 	vldb "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/event_listeners/validate_license/adapters/outbound/database"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/event_listeners/validate_license/adapters/outbound/external"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/event_listeners/validate_license/listener"
-	platformkafka "github.com/lgustavopalmieri/healing-specialist/internal/platform/kafka"
+	platformsqs "github.com/lgustavopalmieri/healing-specialist/internal/platform/sqs"
 )
 
 var (
-	pgHelper    = postgrestest.NewTestHelper()
-	kafkaHelper = kafkatest.NewTestHelper()
+	pgHelper  = postgrestest.NewTestHelper()
+	sqsHelper = sqstest.NewTestHelper()
 )
 
 func TestMain(m *testing.M) {
 	pgHelper.RunTestMainWithoutExit(m)
-	kafkaHelper.SharedContainer = kafkatest.SetupKafkaContainer(&testing.T{})
-	err := kafkaHelper.SharedContainer.CreateTopics(
-		application.SpecialistCreatedEventName,
-		"specialist.updated",
-	)
-	if err != nil {
-		panic("failed to create kafka topics: " + err.Error())
-	}
+	sqsHelper.SharedContainer = sqstest.SetupLocalStackContainer(&testing.T{})
+	urls, client := sqsHelper.SharedContainer.EnsureQueues(&testing.T{}, "specialist")
+	sqsHelper.SQSClient = client
+	sqsHelper.QueueURLs = urls
+
 	code := m.Run()
+
 	pgHelper.TerminateContainer()
-	if kafkaHelper.SharedContainer != nil {
-		kafkaHelper.SharedContainer.Terminate(&testing.T{})
+	if sqsHelper.SharedContainer != nil {
+		sqsHelper.SharedContainer.Terminate(&testing.T{})
 	}
 	os.Exit(code)
 }
@@ -122,27 +120,25 @@ func TestValidateLicenseHandler_Integration(t *testing.T) {
 			licenseServer := setupMockLicenseServer(tt.licenseValid)
 			defer licenseServer.Close()
 
-			brokers := kafkaHelper.SharedContainer.Brokers
-
-			producer, err := platformkafka.NewKafkaProducer(brokers)
-			require.NoError(t, err)
+			producer := platformsqs.NewSQSProducer(sqsHelper.SQSClient, sqsHelper.QueueURLs)
 
 			handler := setupHandler(db, licenseServer.URL, producer)
 
-			manager := event.NewListenerManager()
-			manager.Register(application.SpecialistCreatedEventName, handler)
+			createdQueueURL := sqsHelper.QueueURLs[application.SpecialistCreatedEventName]
 
-			consumerGroupID := "test-validate-license-" + uuid.New().String()[:8]
-
-			consumer, err := platformkafka.NewKafkaConsumer(brokers, consumerGroupID, manager)
-			require.NoError(t, err)
+			consumer := platformsqs.NewSQSConsumer(
+				sqsHelper.SQSClient,
+				createdQueueURL,
+				application.SpecialistCreatedEventName,
+				handler,
+			)
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
 			go consumer.Start(ctx)
 
-			time.Sleep(3 * time.Second)
+			time.Sleep(2 * time.Second)
 
 			payload := listener.ValidateLicenseEventPayload{
 				ID:            specialist.ID,
@@ -150,7 +146,7 @@ func TestValidateLicenseHandler_Integration(t *testing.T) {
 				LicenseNumber: specialist.LicenseNumber,
 				Specialty:     specialist.Specialty,
 			}
-			kafkaHelper.SharedContainer.ProduceEvent(t, application.SpecialistCreatedEventName, payload)
+			sqsHelper.SharedContainer.ProduceEvent(t, sqsHelper.SQSClient, createdQueueURL, payload)
 
 			time.Sleep(5 * time.Second)
 
@@ -160,10 +156,11 @@ func TestValidateLicenseHandler_Integration(t *testing.T) {
 			assert.Equal(t, tt.expectStatus, updated.Status)
 
 			if tt.expectEvent {
-				eventData := kafkaHelper.SharedContainer.ConsumeEvent(
+				updatedQueueURL := sqsHelper.QueueURLs["specialist.updated"]
+				eventData := sqsHelper.SharedContainer.ConsumeEvent(
 					t,
-					"specialist.updated",
-					"test-verify-event-"+uuid.New().String()[:8],
+					sqsHelper.SQSClient,
+					updatedQueueURL,
 					10*time.Second,
 				)
 				assert.NotNil(t, eventData)

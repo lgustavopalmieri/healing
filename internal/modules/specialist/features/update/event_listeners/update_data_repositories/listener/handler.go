@@ -29,12 +29,6 @@ func (h *UpdateDataRepositoriesHandler) Handle(ctx context.Context, evt event.Ev
 
 		if retryErr != nil {
 			hasFailure = true
-
-			if dlqErr := repo.PublishDLQ(ctx, specialist, retryErr); dlqErr != nil {
-				continue
-			}
-
-			continue
 		}
 	}
 

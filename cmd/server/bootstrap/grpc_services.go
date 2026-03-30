@@ -11,13 +11,14 @@ import (
 	searchpb "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/adapters/inbound/grpc_service/pb"
 	updategrpc "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/adapters/inbound/grpc_service"
 	updatepb "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/adapters/inbound/grpc_service/pb"
-	platformES "github.com/lgustavopalmieri/healing-specialist/internal/platform/elasticsearch"
+	platformOS "github.com/lgustavopalmieri/healing-specialist/internal/platform/opensearch"
+	opensearchindexes "github.com/lgustavopalmieri/healing-specialist/internal/platform/opensearch/indexes"
 	"github.com/lgustavopalmieri/healing-specialist/internal/platform/server"
 )
 
 type ServiceDependencies struct {
 	DB             *sql.DB
-	ESFactory      *platformES.Factory
+	OSFactory      *platformOS.Factory
 	EventPublisher event.EventDispatcher
 }
 
@@ -30,7 +31,8 @@ func RegisterServices(grpcServer *server.GRPCServer, deps ServiceDependencies) {
 	createpb.RegisterSpecialistServiceServer(grpcServer.GetServer(), specialistCreateService)
 
 	specialistSearchService := searchgrpc.NewSpecialistSearchService(searchgrpc.Dependencies{
-		ESClient: deps.ESFactory.Client,
+		OSClient:  deps.OSFactory.Client,
+		IndexName: deps.OSFactory.IndexName(opensearchindexes.SpecialistsIndex),
 	})
 	searchpb.RegisterSearchSpecialistServiceServer(grpcServer.GetServer(), specialistSearchService)
 

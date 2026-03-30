@@ -35,7 +35,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_specialist_features_create_adapters_inbound_http_handler.CreateSpecialistRequest"
+                            "$ref": "#/definitions/httphandler.CreateSpecialistRequest"
                         }
                     }
                 ],
@@ -43,7 +43,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_specialist_features_create_adapters_inbound_http_handler.CreateSpecialistSuccessResponse"
+                            "$ref": "#/definitions/internal_modules_specialist_features_create_adapters_inbound_http_handler.SpecialistResponse"
                         }
                     },
                     "400": {
@@ -63,7 +63,7 @@ const docTemplate = `{
         },
         "/api/v1/specialists/search": {
             "post": {
-                "description": "Searches specialists using full-text search, filters, sorting and cursor-based pagination. Powered by Elasticsearch.",
+                "description": "Searches specialists using full-text search, filters, sorting and cursor-based pagination. Powered by OpenSearch.",
                 "consumes": [
                     "application/json"
                 ],
@@ -81,7 +81,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.SearchSpecialistsRequest"
+                            "$ref": "#/definitions/httphandler.SearchSpecialistsRequest"
                         }
                     }
                 ],
@@ -89,7 +89,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.SearchSpecialistsResponse"
+                            "$ref": "#/definitions/httphandler.SearchSpecialistsResponse"
                         }
                     },
                     "400": {
@@ -134,7 +134,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_specialist_features_update_adapters_inbound_http_handler.UpdateSpecialistRequest"
+                            "$ref": "#/definitions/httphandler.UpdateSpecialistRequest"
                         }
                     }
                 ],
@@ -142,7 +142,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_modules_specialist_features_update_adapters_inbound_http_handler.UpdateSpecialistSuccessResponse"
+                            "$ref": "#/definitions/internal_modules_specialist_features_update_adapters_inbound_http_handler.SpecialistResponse"
                         }
                     },
                     "400": {
@@ -162,7 +162,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "internal_modules_specialist_features_create_adapters_inbound_http_handler.CreateSpecialistRequest": {
+        "httphandler.CreateSpecialistRequest": {
             "type": "object",
             "properties": {
                 "agreed_to_share": {
@@ -194,11 +194,123 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_modules_specialist_features_create_adapters_inbound_http_handler.CreateSpecialistSuccessResponse": {
+        "httphandler.FilterRequest": {
             "type": "object",
             "properties": {
-                "specialist": {
-                    "$ref": "#/definitions/internal_modules_specialist_features_create_adapters_inbound_http_handler.SpecialistResponse"
+                "field": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "httphandler.PaginationResponse": {
+            "type": "object",
+            "properties": {
+                "has_next_page": {
+                    "type": "boolean"
+                },
+                "has_previous_page": {
+                    "type": "boolean"
+                },
+                "next_cursor": {
+                    "type": "string"
+                },
+                "previous_cursor": {
+                    "type": "string"
+                },
+                "total_items_in_page": {
+                    "type": "integer"
+                }
+            }
+        },
+        "httphandler.SearchSpecialistsRequest": {
+            "type": "object",
+            "properties": {
+                "cursor": {
+                    "type": "string"
+                },
+                "direction": {
+                    "type": "string"
+                },
+                "filters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/httphandler.FilterRequest"
+                    }
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "search_term": {
+                    "type": "string"
+                },
+                "sort": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/httphandler.SortRequest"
+                    }
+                }
+            }
+        },
+        "httphandler.SearchSpecialistsResponse": {
+            "type": "object",
+            "properties": {
+                "pagination": {
+                    "$ref": "#/definitions/httphandler.PaginationResponse"
+                },
+                "specialists": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.SpecialistResponse"
+                    }
+                }
+            }
+        },
+        "httphandler.SortRequest": {
+            "type": "object",
+            "properties": {
+                "field": {
+                    "type": "string"
+                },
+                "order": {
+                    "type": "string"
+                }
+            }
+        },
+        "httphandler.UpdateSpecialistRequest": {
+            "type": "object",
+            "properties": {
+                "agreed_to_share": {
+                    "type": "boolean"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "keywords": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "license_number": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "specialty": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
                 }
             }
         },
@@ -261,91 +373,6 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "error": {
-                    "type": "string"
-                }
-            }
-        },
-        "internal_modules_specialist_features_search_adapters_inbound_http_handler.FilterRequest": {
-            "type": "object",
-            "properties": {
-                "field": {
-                    "type": "string"
-                },
-                "value": {
-                    "type": "string"
-                }
-            }
-        },
-        "internal_modules_specialist_features_search_adapters_inbound_http_handler.PaginationResponse": {
-            "type": "object",
-            "properties": {
-                "has_next_page": {
-                    "type": "boolean"
-                },
-                "has_previous_page": {
-                    "type": "boolean"
-                },
-                "next_cursor": {
-                    "type": "string"
-                },
-                "previous_cursor": {
-                    "type": "string"
-                },
-                "total_items_in_page": {
-                    "type": "integer"
-                }
-            }
-        },
-        "internal_modules_specialist_features_search_adapters_inbound_http_handler.SearchSpecialistsRequest": {
-            "type": "object",
-            "properties": {
-                "cursor": {
-                    "type": "string"
-                },
-                "direction": {
-                    "type": "string"
-                },
-                "filters": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.FilterRequest"
-                    }
-                },
-                "page_size": {
-                    "type": "integer"
-                },
-                "search_term": {
-                    "type": "string"
-                },
-                "sort": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.SortRequest"
-                    }
-                }
-            }
-        },
-        "internal_modules_specialist_features_search_adapters_inbound_http_handler.SearchSpecialistsResponse": {
-            "type": "object",
-            "properties": {
-                "pagination": {
-                    "$ref": "#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.PaginationResponse"
-                },
-                "specialists": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.SpecialistResponse"
-                    }
-                }
-            }
-        },
-        "internal_modules_specialist_features_search_adapters_inbound_http_handler.SortRequest": {
-            "type": "object",
-            "properties": {
-                "field": {
-                    "type": "string"
-                },
-                "order": {
                     "type": "string"
                 }
             }
@@ -449,49 +476,6 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
-                }
-            }
-        },
-        "internal_modules_specialist_features_update_adapters_inbound_http_handler.UpdateSpecialistRequest": {
-            "type": "object",
-            "properties": {
-                "agreed_to_share": {
-                    "type": "boolean"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "keywords": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "license_number": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "phone": {
-                    "type": "string"
-                },
-                "specialty": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "internal_modules_specialist_features_update_adapters_inbound_http_handler.UpdateSpecialistSuccessResponse": {
-            "type": "object",
-            "properties": {
-                "specialist": {
-                    "$ref": "#/definitions/internal_modules_specialist_features_update_adapters_inbound_http_handler.SpecialistResponse"
                 }
             }
         }

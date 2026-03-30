@@ -28,14 +28,12 @@ func validConfigFactory(overrides ...func(*Config)) *Config {
 			ConnMaxLifetime: 5 * time.Minute,
 			ConnMaxIdleTime: 10 * time.Minute,
 		},
-		Kafka: KafkaConfig{
-			BootstrapServers: "kafka.healing.svc.cluster.local:9092",
-			AutoOffsetReset:  "earliest",
+		SQS: SQSConfig{
+			Region:      "us-east-1",
+			QueuePrefix: "specialist",
 		},
-		Elasticsearch: ElasticsearchConfig{
-			Addresses:    []string{"http://elasticsearch.healing.svc.cluster.local:9200"},
-			MaxRetries:   3,
-			RetryBackoff: 1 * time.Second,
+		OpenSearch: OpenSearchConfig{
+			Addresses: []string{"http://opensearch.healing.svc.cluster.local:9200"},
 		},
 		External: ExternalConfig{
 			LicenseBaseURL: "http://license-service.healing.svc.cluster.local:8080",
@@ -104,19 +102,18 @@ func TestValidate(t *testing.T) {
 			expectedMsg: "POSTGRES_DB is required",
 		},
 		{
-			name:        "failure - returns error when KAFKA_BOOTSTRAP_SERVERS is empty",
-			override:    func(c *Config) { c.Kafka.BootstrapServers = "" },
+			name:        "failure - returns error when SQS_REGION is empty",
+			override:    func(c *Config) { c.SQS.Region = "" },
 			expectError: true,
-			expectedMsg: "KAFKA_BOOTSTRAP_SERVERS is required",
+			expectedMsg: "SQS_REGION is required",
 		},
 		{
-			name: "failure - returns error when ELASTICSEARCH_ADDRESSES and CLOUD_ID are both empty",
+			name: "failure - returns error when OPENSEARCH_ADDRESSES is empty",
 			override: func(c *Config) {
-				c.Elasticsearch.Addresses = nil
-				c.Elasticsearch.CloudID = ""
+				c.OpenSearch.Addresses = nil
 			},
 			expectError: true,
-			expectedMsg: "ELASTICSEARCH_ADDRESSES or ELASTICSEARCH_CLOUD_ID is required",
+			expectedMsg: "OPENSEARCH_ADDRESSES is required",
 		},
 		{
 			name:        "failure - returns error when LICENSE_VALIDATION_BASE_URL is empty",

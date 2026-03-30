@@ -12,5 +12,4 @@ type SourceRepository interface {
 
 type DataRepository interface {
 	Update(ctx context.Context, specialist *domain.Specialist) error
-	PublishDLQ(ctx context.Context, specialist *domain.Specialist, reason error) error
 }

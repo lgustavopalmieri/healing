@@ -80,20 +80,6 @@ func (m *MockDataRepository) EXPECT() *MockDataRepositoryMockRecorder {
 	return m.recorder
 }
 
-// PublishDLQ mocks base method.
-func (m *MockDataRepository) PublishDLQ(ctx context.Context, specialist *domain.Specialist, reason error) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PublishDLQ", ctx, specialist, reason)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// PublishDLQ indicates an expected call of PublishDLQ.
-func (mr *MockDataRepositoryMockRecorder) PublishDLQ(ctx, specialist, reason any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PublishDLQ", reflect.TypeOf((*MockDataRepository)(nil).PublishDLQ), ctx, specialist, reason)
-}
-
 // Update mocks base method.
 func (m *MockDataRepository) Update(ctx context.Context, specialist *domain.Specialist) error {
 	m.ctrl.T.Helper()
