@@ -116,10 +116,9 @@ func TestValidate(t *testing.T) {
 			expectedMsg: "OPENSEARCH_ADDRESSES is required",
 		},
 		{
-			name:        "failure - returns error when LICENSE_VALIDATION_BASE_URL is empty",
+			name:        "success - valid config with empty LICENSE_VALIDATION_BASE_URL",
 			override:    func(c *Config) { c.External.LicenseBaseURL = "" },
-			expectError: true,
-			expectedMsg: "LICENSE_VALIDATION_BASE_URL is required",
+			expectError: false,
 		},
 	}
 

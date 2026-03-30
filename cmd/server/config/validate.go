@@ -35,9 +35,5 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("OPENSEARCH_ADDRESSES is required")
 	}
 
-	if c.External.LicenseBaseURL == "" {
-		return fmt.Errorf("LICENSE_VALIDATION_BASE_URL is required")
-	}
-
 	return nil
 }
