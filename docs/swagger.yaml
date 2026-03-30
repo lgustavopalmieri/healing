@@ -1,6 +1,6 @@
 basePath: /
 definitions:
-  internal_modules_specialist_features_create_adapters_inbound_http_handler.CreateSpecialistRequest:
+  httphandler.CreateSpecialistRequest:
     properties:
       agreed_to_share:
         type: boolean
@@ -21,10 +21,83 @@ definitions:
       specialty:
         type: string
     type: object
-  internal_modules_specialist_features_create_adapters_inbound_http_handler.CreateSpecialistSuccessResponse:
+  httphandler.FilterRequest:
     properties:
-      specialist:
-        $ref: '#/definitions/internal_modules_specialist_features_create_adapters_inbound_http_handler.SpecialistResponse'
+      field:
+        type: string
+      value:
+        type: string
+    type: object
+  httphandler.PaginationResponse:
+    properties:
+      has_next_page:
+        type: boolean
+      has_previous_page:
+        type: boolean
+      next_cursor:
+        type: string
+      previous_cursor:
+        type: string
+      total_items_in_page:
+        type: integer
+    type: object
+  httphandler.SearchSpecialistsRequest:
+    properties:
+      cursor:
+        type: string
+      direction:
+        type: string
+      filters:
+        items:
+          $ref: '#/definitions/httphandler.FilterRequest'
+        type: array
+      page_size:
+        type: integer
+      search_term:
+        type: string
+      sort:
+        items:
+          $ref: '#/definitions/httphandler.SortRequest'
+        type: array
+    type: object
+  httphandler.SearchSpecialistsResponse:
+    properties:
+      pagination:
+        $ref: '#/definitions/httphandler.PaginationResponse'
+      specialists:
+        items:
+          $ref: '#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.SpecialistResponse'
+        type: array
+    type: object
+  httphandler.SortRequest:
+    properties:
+      field:
+        type: string
+      order:
+        type: string
+    type: object
+  httphandler.UpdateSpecialistRequest:
+    properties:
+      agreed_to_share:
+        type: boolean
+      description:
+        type: string
+      email:
+        type: string
+      keywords:
+        items:
+          type: string
+        type: array
+      license_number:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      specialty:
+        type: string
+      status:
+        type: string
     type: object
   internal_modules_specialist_features_create_adapters_inbound_http_handler.ErrorResponse:
     properties:
@@ -65,61 +138,6 @@ definitions:
   internal_modules_specialist_features_search_adapters_inbound_http_handler.ErrorResponse:
     properties:
       error:
-        type: string
-    type: object
-  internal_modules_specialist_features_search_adapters_inbound_http_handler.FilterRequest:
-    properties:
-      field:
-        type: string
-      value:
-        type: string
-    type: object
-  internal_modules_specialist_features_search_adapters_inbound_http_handler.PaginationResponse:
-    properties:
-      has_next_page:
-        type: boolean
-      has_previous_page:
-        type: boolean
-      next_cursor:
-        type: string
-      previous_cursor:
-        type: string
-      total_items_in_page:
-        type: integer
-    type: object
-  internal_modules_specialist_features_search_adapters_inbound_http_handler.SearchSpecialistsRequest:
-    properties:
-      cursor:
-        type: string
-      direction:
-        type: string
-      filters:
-        items:
-          $ref: '#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.FilterRequest'
-        type: array
-      page_size:
-        type: integer
-      search_term:
-        type: string
-      sort:
-        items:
-          $ref: '#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.SortRequest'
-        type: array
-    type: object
-  internal_modules_specialist_features_search_adapters_inbound_http_handler.SearchSpecialistsResponse:
-    properties:
-      pagination:
-        $ref: '#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.PaginationResponse'
-      specialists:
-        items:
-          $ref: '#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.SpecialistResponse'
-        type: array
-    type: object
-  internal_modules_specialist_features_search_adapters_inbound_http_handler.SortRequest:
-    properties:
-      field:
-        type: string
-      order:
         type: string
     type: object
   internal_modules_specialist_features_search_adapters_inbound_http_handler.SpecialistResponse:
@@ -189,34 +207,6 @@ definitions:
       updated_at:
         type: string
     type: object
-  internal_modules_specialist_features_update_adapters_inbound_http_handler.UpdateSpecialistRequest:
-    properties:
-      agreed_to_share:
-        type: boolean
-      description:
-        type: string
-      email:
-        type: string
-      keywords:
-        items:
-          type: string
-        type: array
-      license_number:
-        type: string
-      name:
-        type: string
-      phone:
-        type: string
-      specialty:
-        type: string
-      status:
-        type: string
-    type: object
-  internal_modules_specialist_features_update_adapters_inbound_http_handler.UpdateSpecialistSuccessResponse:
-    properties:
-      specialist:
-        $ref: '#/definitions/internal_modules_specialist_features_update_adapters_inbound_http_handler.SpecialistResponse'
-    type: object
 info:
   contact: {}
   description: API for managing healthcare specialists on the Healing platform. Supports
@@ -236,14 +226,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_modules_specialist_features_create_adapters_inbound_http_handler.CreateSpecialistRequest'
+          $ref: '#/definitions/httphandler.CreateSpecialistRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/internal_modules_specialist_features_create_adapters_inbound_http_handler.CreateSpecialistSuccessResponse'
+            $ref: '#/definitions/internal_modules_specialist_features_create_adapters_inbound_http_handler.SpecialistResponse'
         "400":
           description: Invalid request body
           schema:
@@ -272,14 +262,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_modules_specialist_features_update_adapters_inbound_http_handler.UpdateSpecialistRequest'
+          $ref: '#/definitions/httphandler.UpdateSpecialistRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_modules_specialist_features_update_adapters_inbound_http_handler.UpdateSpecialistSuccessResponse'
+            $ref: '#/definitions/internal_modules_specialist_features_update_adapters_inbound_http_handler.SpecialistResponse'
         "400":
           description: Missing ID or invalid request body
           schema:
@@ -296,21 +286,21 @@ paths:
       consumes:
       - application/json
       description: Searches specialists using full-text search, filters, sorting and
-        cursor-based pagination. Powered by Elasticsearch.
+        cursor-based pagination. Powered by OpenSearch.
       parameters:
       - description: Search criteria
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.SearchSpecialistsRequest'
+          $ref: '#/definitions/httphandler.SearchSpecialistsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.SearchSpecialistsResponse'
+            $ref: '#/definitions/httphandler.SearchSpecialistsResponse'
         "400":
           description: Invalid request body or search parameters
           schema:

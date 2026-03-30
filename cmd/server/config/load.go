@@ -35,21 +35,15 @@ func Load() (*Config, error) {
 			ConnMaxLifetime: getEnvAsDuration("POSTGRES_CONN_MAX_LIFETIME", 5*time.Minute),
 			ConnMaxIdleTime: getEnvAsDuration("POSTGRES_CONN_MAX_IDLE_TIME", 10*time.Minute),
 		},
-		Kafka: KafkaConfig{
-			BootstrapServers: getEnv("KAFKA_BOOTSTRAP_SERVERS", ""),
-			AutoOffsetReset:  getEnv("KAFKA_AUTO_OFFSET_RESET", "earliest"),
-			SASLMechanism:    getEnv("KAFKA_SASL_MECHANISM", ""),
-			SASLUsername:     getEnv("KAFKA_SASL_USERNAME", ""),
-			SASLPassword:     getEnv("KAFKA_SASL_PASSWORD", ""),
-			UseTLS:           getEnv("KAFKA_USE_TLS", "false") == "true",
+		SQS: SQSConfig{
+			Region:      getEnv("SQS_REGION", ""),
+			QueuePrefix: getEnv("SQS_QUEUE_PREFIX", "specialist"),
+			Endpoint:    getEnv("SQS_ENDPOINT", ""),
 		},
-		Elasticsearch: ElasticsearchConfig{
-			Addresses:    getEnvAsSlice("ELASTICSEARCH_ADDRESSES", nil),
-			CloudID:      getEnv("ELASTICSEARCH_CLOUD_ID", ""),
-			Username:     getEnv("ELASTICSEARCH_USERNAME", ""),
-			Password:     getEnv("ELASTICSEARCH_PASSWORD", ""),
-			MaxRetries:   getEnvAsInt("ELASTICSEARCH_MAX_RETRIES", 3),
-			RetryBackoff: getEnvAsDuration("ELASTICSEARCH_RETRY_BACKOFF", 1*time.Second),
+		OpenSearch: OpenSearchConfig{
+			Addresses:   getEnvAsSlice("OPENSEARCH_ADDRESSES", nil),
+			Region:      getEnv("OPENSEARCH_REGION", ""),
+			IndexPrefix: getEnv("OPENSEARCH_INDEX_PREFIX", ""),
 		},
 		External: ExternalConfig{
 			LicenseBaseURL: getEnv("LICENSE_VALIDATION_BASE_URL", ""),

@@ -11,7 +11,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/lgustavopalmieri/healing-specialist/internal/platform/kafka"
 	"github.com/lgustavopalmieri/healing-specialist/internal/platform/server"
 )
 
@@ -40,7 +39,6 @@ func (sm *ShutdownManager) Wait() {
 func (sm *ShutdownManager) Shutdown(
 	grpcServer *server.GRPCServer,
 	db *sql.DB,
-	kafkaProducer *kafka.KafkaProducer,
 ) error {
 	log.Println("Shutdown signal received, gracefully shutting down...")
 
@@ -48,7 +46,7 @@ func (sm *ShutdownManager) Shutdown(
 	defer cancel()
 
 	var wg sync.WaitGroup
-	errChan := make(chan error, 3)
+	errChan := make(chan error, 2)
 
 	wg.Add(1)
 	go func() {
@@ -71,16 +69,6 @@ func (sm *ShutdownManager) Shutdown(
 		}
 		log.Println("Database connections closed")
 	}()
-
-	if kafkaProducer != nil {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			log.Println("Closing Kafka producer...")
-			kafkaProducer.Close()
-			log.Println("Kafka producer closed")
-		}()
-	}
 
 	doneChan := make(chan struct{})
 	go func() {

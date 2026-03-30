@@ -27,7 +27,7 @@ func NewSpecialistSearchHTTPHandler(useCase SpecialistSearchUseCaseInterface) *S
 
 // SearchSpecialists godoc
 // @Summary      Search specialists
-// @Description  Searches specialists using full-text search, filters, sorting and cursor-based pagination. Powered by Elasticsearch.
+// @Description  Searches specialists using full-text search, filters, sorting and cursor-based pagination. Powered by OpenSearch.
 // @Tags         specialists
 // @Accept       json
 // @Produce      json

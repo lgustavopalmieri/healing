@@ -15,8 +15,8 @@ func setAllRequiredEnvVars(t *testing.T) {
 	t.Setenv("POSTGRES_PASSWORD", "secret")
 	t.Setenv("POSTGRES_DB", "healing_specialist_db")
 	t.Setenv("POSTGRES_SSLMODE", "require")
-	t.Setenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
-	t.Setenv("ELASTICSEARCH_ADDRESSES", "http://es:9200")
+	t.Setenv("SQS_REGION", "us-east-1")
+	t.Setenv("OPENSEARCH_ADDRESSES", "http://opensearch:9200")
 	t.Setenv("LICENSE_VALIDATION_BASE_URL", "http://license-service:8080")
 	t.Setenv("ENV_DIR", "/nonexistent")
 }
@@ -42,8 +42,9 @@ func TestLoad(t *testing.T) {
 				assert.Equal(t, "secret", cfg.Database.Password)
 				assert.Equal(t, "healing_specialist_db", cfg.Database.Database)
 				assert.Equal(t, "require", cfg.Database.SSLMode)
-				assert.Equal(t, "kafka:9092", cfg.Kafka.BootstrapServers)
-				assert.Equal(t, []string{"http://es:9200"}, cfg.Elasticsearch.Addresses)
+				assert.Equal(t, "us-east-1", cfg.SQS.Region)
+				assert.Equal(t, "specialist", cfg.SQS.QueuePrefix)
+				assert.Equal(t, []string{"http://opensearch:9200"}, cfg.OpenSearch.Addresses)
 				assert.Equal(t, "http://license-service:8080", cfg.External.LicenseBaseURL)
 			},
 		},
@@ -59,9 +60,9 @@ func TestLoad(t *testing.T) {
 				assert.Equal(t, 30*time.Second, cfg.Server.ShutdownTimeout)
 				assert.Equal(t, 1000, cfg.Server.MaxConnections)
 				assert.Equal(t, 10*time.Second, cfg.Server.ConnectionTimeout)
-				assert.Equal(t, "earliest", cfg.Kafka.AutoOffsetReset)
-				assert.Equal(t, 3, cfg.Elasticsearch.MaxRetries)
-				assert.Equal(t, 1*time.Second, cfg.Elasticsearch.RetryBackoff)
+				assert.Equal(t, "", cfg.SQS.Endpoint)
+				assert.Equal(t, "", cfg.OpenSearch.Region)
+				assert.Equal(t, "", cfg.OpenSearch.IndexPrefix)
 			},
 		},
 		{
@@ -73,9 +74,10 @@ func TestLoad(t *testing.T) {
 				t.Setenv("SERVER_HTTP_PORT", "8081")
 				t.Setenv("SERVER_SHUTDOWN_TIMEOUT", "60s")
 				t.Setenv("SERVER_MAX_CONNECTIONS", "2000")
-				t.Setenv("KAFKA_AUTO_OFFSET_RESET", "latest")
-				t.Setenv("ELASTICSEARCH_MAX_RETRIES", "5")
-				t.Setenv("ELASTICSEARCH_RETRY_BACKOFF", "2s")
+				t.Setenv("SQS_QUEUE_PREFIX", "specialist-staging")
+				t.Setenv("SQS_ENDPOINT", "http://localstack:4566")
+				t.Setenv("OPENSEARCH_REGION", "us-east-1")
+				t.Setenv("OPENSEARCH_INDEX_PREFIX", "healing")
 			},
 			expectError: false,
 			validateResult: func(t *testing.T, cfg *Config) {
@@ -83,9 +85,10 @@ func TestLoad(t *testing.T) {
 				assert.Equal(t, 8081, cfg.Server.HTTPPort)
 				assert.Equal(t, 60*time.Second, cfg.Server.ShutdownTimeout)
 				assert.Equal(t, 2000, cfg.Server.MaxConnections)
-				assert.Equal(t, "latest", cfg.Kafka.AutoOffsetReset)
-				assert.Equal(t, 5, cfg.Elasticsearch.MaxRetries)
-				assert.Equal(t, 2*time.Second, cfg.Elasticsearch.RetryBackoff)
+				assert.Equal(t, "specialist-staging", cfg.SQS.QueuePrefix)
+				assert.Equal(t, "http://localstack:4566", cfg.SQS.Endpoint)
+				assert.Equal(t, "us-east-1", cfg.OpenSearch.Region)
+				assert.Equal(t, "healing", cfg.OpenSearch.IndexPrefix)
 			},
 		},
 		{

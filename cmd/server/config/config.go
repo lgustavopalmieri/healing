@@ -1,15 +1,13 @@
 package config
 
-import (
-	"time"
-)
+import "time"
 
 type Config struct {
-	Server        ServerConfig
-	Database      DatabaseConfig
-	Kafka         KafkaConfig
-	Elasticsearch ElasticsearchConfig
-	External      ExternalConfig
+	Server     ServerConfig
+	Database   DatabaseConfig
+	SQS        SQSConfig
+	OpenSearch OpenSearchConfig
+	External   ExternalConfig
 }
 
 type ServerConfig struct {
@@ -33,22 +31,16 @@ type DatabaseConfig struct {
 	ConnMaxIdleTime time.Duration
 }
 
-type KafkaConfig struct {
-	BootstrapServers string
-	AutoOffsetReset  string
-	SASLMechanism    string
-	SASLUsername     string
-	SASLPassword     string
-	UseTLS           bool
+type SQSConfig struct {
+	Region      string
+	QueuePrefix string
+	Endpoint    string
 }
 
-type ElasticsearchConfig struct {
-	Addresses    []string
-	CloudID      string
-	Username     string
-	Password     string
-	MaxRetries   int
-	RetryBackoff time.Duration
+type OpenSearchConfig struct {
+	Addresses   []string
+	Region      string
+	IndexPrefix string
 }
 
 type ExternalConfig struct {

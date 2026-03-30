@@ -77,7 +77,6 @@ func TestUpdateDataRepositoriesHandler_Handle(t *testing.T) {
 
 				mockSource.EXPECT().FindByID(gomock.Any(), "specialist-123").Return(specialist, nil).Times(1)
 				mockData.EXPECT().Update(gomock.Any(), specialist).Return(nil).Times(1)
-				mockData.EXPECT().PublishDLQ(gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
 			},
 			expectError: false,
 		},
@@ -87,7 +86,6 @@ func TestUpdateDataRepositoriesHandler_Handle(t *testing.T) {
 			setupMocks: func(mockSource *mocks.MockSourceRepository, mockData *mocks.MockDataRepository) {
 				mockSource.EXPECT().FindByID(gomock.Any(), gomock.Any()).Times(0)
 				mockData.EXPECT().Update(gomock.Any(), gomock.Any()).Times(0)
-				mockData.EXPECT().PublishDLQ(gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
 			},
 			expectError: true,
 		},
@@ -98,13 +96,12 @@ func TestUpdateDataRepositoriesHandler_Handle(t *testing.T) {
 			setupMocks: func(mockSource *mocks.MockSourceRepository, mockData *mocks.MockDataRepository) {
 				mockSource.EXPECT().FindByID(gomock.Any(), "specialist-123").Return(nil, errors.New("not found")).Times(1)
 				mockData.EXPECT().Update(gomock.Any(), gomock.Any()).Times(0)
-				mockData.EXPECT().PublishDLQ(gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
 			},
 			expectError: true,
 			expectedErr: ErrSpecialistNotFound,
 		},
 		{
-			name:      "failure - returns ErrUpdateDataRepositories when repository update fails after retries and publishes DLQ",
+			name:      "failure - returns ErrUpdateDataRepositories when repository update fails after retries",
 			event:     makeEvent(payloadFactory()),
 			repoCount: 1,
 			setupMocks: func(mockSource *mocks.MockSourceRepository, mockData *mocks.MockDataRepository) {
@@ -112,21 +109,6 @@ func TestUpdateDataRepositoriesHandler_Handle(t *testing.T) {
 
 				mockSource.EXPECT().FindByID(gomock.Any(), "specialist-123").Return(specialist, nil).Times(1)
 				mockData.EXPECT().Update(gomock.Any(), specialist).Return(errors.New("es unavailable")).Times(3)
-				mockData.EXPECT().PublishDLQ(gomock.Any(), specialist, gomock.Any()).Return(nil).Times(1)
-			},
-			expectError: true,
-			expectedErr: ErrUpdateDataRepositories,
-		},
-		{
-			name:      "failure - returns ErrUpdateDataRepositories when repository update fails and DLQ publish also fails",
-			event:     makeEvent(payloadFactory()),
-			repoCount: 1,
-			setupMocks: func(mockSource *mocks.MockSourceRepository, mockData *mocks.MockDataRepository) {
-				specialist := specialistFactory()
-
-				mockSource.EXPECT().FindByID(gomock.Any(), "specialist-123").Return(specialist, nil).Times(1)
-				mockData.EXPECT().Update(gomock.Any(), specialist).Return(errors.New("es unavailable")).Times(3)
-				mockData.EXPECT().PublishDLQ(gomock.Any(), specialist, gomock.Any()).Return(errors.New("kafka down")).Times(1)
 			},
 			expectError: true,
 			expectedErr: ErrUpdateDataRepositories,
@@ -148,8 +130,6 @@ func TestUpdateDataRepositoriesHandler_Handle(t *testing.T) {
 					}
 					return nil
 				}).Times(3)
-
-				mockData.EXPECT().PublishDLQ(gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
 			},
 			expectError: false,
 		},

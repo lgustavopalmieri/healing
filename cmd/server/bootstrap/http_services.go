@@ -9,6 +9,7 @@ import (
 	createhttp "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/adapters/inbound/http_handler"
 	searchhttp "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/adapters/inbound/http_handler"
 	updatehttp "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/update/adapters/inbound/http_handler"
+	opensearchindexes "github.com/lgustavopalmieri/healing-specialist/internal/platform/opensearch/indexes"
 	"github.com/lgustavopalmieri/healing-specialist/internal/platform/server"
 )
 
@@ -26,7 +27,8 @@ func RegisterHTTPServices(httpServer *server.HTTPServer, deps ServiceDependencie
 	createHandler.RegisterRoutes(api)
 
 	searchHandler := searchhttp.NewSpecialistSearchHandler(searchhttp.Dependencies{
-		ESClient: deps.ESFactory.Client,
+		OSClient:  deps.OSFactory.Client,
+		IndexName: deps.OSFactory.IndexName(opensearchindexes.SpecialistsIndex),
 	})
 	searchHandler.RegisterRoutes(api)
 
