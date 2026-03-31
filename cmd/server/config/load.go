@@ -30,10 +30,10 @@ func Load() (*Config, error) {
 			Password:        getEnv("POSTGRES_PASSWORD", ""),
 			Database:        getEnv("POSTGRES_DB", ""),
 			SSLMode:         getEnv("POSTGRES_SSLMODE", "require"),
-			MaxOpenConns:    getEnvAsInt("POSTGRES_MAX_OPEN_CONNS", 25),
-			MaxIdleConns:    getEnvAsInt("POSTGRES_MAX_IDLE_CONNS", 5),
+			MaxOpenConns:    getEnvAsInt("POSTGRES_MAX_OPEN_CONNS", 10),
+			MaxIdleConns:    getEnvAsInt("POSTGRES_MAX_IDLE_CONNS", 10),
 			ConnMaxLifetime: getEnvAsDuration("POSTGRES_CONN_MAX_LIFETIME", 5*time.Minute),
-			ConnMaxIdleTime: getEnvAsDuration("POSTGRES_CONN_MAX_IDLE_TIME", 10*time.Minute),
+			ConnMaxIdleTime: getEnvAsDuration("POSTGRES_CONN_MAX_IDLE_TIME", 2*time.Minute),
 		},
 		SQS: SQSConfig{
 			Region:      getEnv("SQS_REGION", ""),

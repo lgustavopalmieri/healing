@@ -41,31 +41,17 @@ func (m *MockSpecialistCreateRepositoryInterface) EXPECT() *MockSpecialistCreate
 	return m.recorder
 }
 
-// Save mocks base method.
-func (m *MockSpecialistCreateRepositoryInterface) Save(ctx context.Context, specialist *domain.Specialist) (*domain.Specialist, error) {
+// SaveWithValidation mocks base method.
+func (m *MockSpecialistCreateRepositoryInterface) SaveWithValidation(ctx context.Context, specialist *domain.Specialist) (*domain.Specialist, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Save", ctx, specialist)
+	ret := m.ctrl.Call(m, "SaveWithValidation", ctx, specialist)
 	ret0, _ := ret[0].(*domain.Specialist)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// Save indicates an expected call of Save.
-func (mr *MockSpecialistCreateRepositoryInterfaceMockRecorder) Save(ctx, specialist any) *gomock.Call {
+// SaveWithValidation indicates an expected call of SaveWithValidation.
+func (mr *MockSpecialistCreateRepositoryInterfaceMockRecorder) SaveWithValidation(ctx, specialist any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockSpecialistCreateRepositoryInterface)(nil).Save), ctx, specialist)
-}
-
-// ValidateUniqueness mocks base method.
-func (m *MockSpecialistCreateRepositoryInterface) ValidateUniqueness(ctx context.Context, id, email, licenseNumber string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ValidateUniqueness", ctx, id, email, licenseNumber)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// ValidateUniqueness indicates an expected call of ValidateUniqueness.
-func (mr *MockSpecialistCreateRepositoryInterfaceMockRecorder) ValidateUniqueness(ctx, id, email, licenseNumber any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateUniqueness", reflect.TypeOf((*MockSpecialistCreateRepositoryInterface)(nil).ValidateUniqueness), ctx, id, email, licenseNumber)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveWithValidation", reflect.TypeOf((*MockSpecialistCreateRepositoryInterface)(nil).SaveWithValidation), ctx, specialist)
 }

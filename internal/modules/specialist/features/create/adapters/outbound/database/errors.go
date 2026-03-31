@@ -1,6 +1,8 @@
 package database
 
 var (
+	FailedToBeginTxErr         = "failed to begin transaction: %w"
+	FailedToCommitTxErr        = "failed to commit transaction: %w"
 	FailedToSaveErr            = "failed to save specialist: %w"
 	FailedToCheckUniquenessErr = "failed to check uniqueness: %w"
 

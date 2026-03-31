@@ -23,26 +23,14 @@ func (c *CreateSpecialistUseCase) Execute(ctx context.Context, input CreateSpeci
 		return nil, err
 	}
 
-	if err := c.validateUniquenessConstraints(ctx, specialist.ID, specialist.Email, specialist.LicenseNumber); err != nil {
-		return nil, err
-	}
-
-	savedSpecialist, err := c.repository.Save(ctx, specialist)
+	savedSpecialist, err := c.repository.SaveWithValidation(ctx, specialist)
 	if err != nil {
-		return nil, ErrSaveSpecialist
+		return nil, err
 	}
 
 	c.publishSpecialistCreatedEvent(ctx, savedSpecialist)
 
 	return savedSpecialist, nil
-}
-
-func (c *CreateSpecialistUseCase) validateUniquenessConstraints(ctx context.Context, id, email, licenseNumber string) error {
-	err := c.repository.ValidateUniqueness(ctx, id, email, licenseNumber)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (c *CreateSpecialistUseCase) publishSpecialistCreatedEvent(ctx context.Context, specialist *domain.Specialist) {

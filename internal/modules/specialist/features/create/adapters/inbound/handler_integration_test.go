@@ -73,7 +73,7 @@ func specialistIntegrationFactory(overrides ...func(*domain.Specialist)) *domain
 
 func seedSpecialist(t *testing.T, db *sql.DB, s *domain.Specialist) {
 	createRepo := createdb.NewSpecialistCreateRepository(db)
-	_, err := createRepo.Save(context.Background(), s)
+	_, err := createRepo.SaveWithValidation(context.Background(), s)
 	require.NoError(t, err)
 }
 
