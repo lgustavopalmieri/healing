@@ -67,47 +67,26 @@ func (r *SpecialistCreateRepository) Save(ctx context.Context, specialist *domai
 }
 
 func (r *SpecialistCreateRepository) ValidateUniqueness(ctx context.Context, id, email, licenseNumber string) error {
-	var idExists bool
-	err := r.db.QueryRowContext(
-		ctx,
-		"SELECT EXISTS(SELECT 1 FROM specialists WHERE id = $1)",
-		id,
-	).Scan(&idExists)
+	var idExists, emailExists, licenseExists bool
 
+	query := `
+		SELECT
+			EXISTS(SELECT 1 FROM specialists WHERE id = $1),
+			EXISTS(SELECT 1 FROM specialists WHERE email = $2),
+			EXISTS(SELECT 1 FROM specialists WHERE license_number = $3)`
+
+	err := r.db.QueryRowContext(ctx, query, id, email, licenseNumber).
+		Scan(&idExists, &emailExists, &licenseExists)
 	if err != nil {
-		return fmt.Errorf(FailedToCheckIdErr, err)
+		return fmt.Errorf(FailedToCheckUniquenessErr, err)
 	}
 
 	if idExists {
 		return fmt.Errorf(IdAlreadyExistsErr, id)
 	}
-
-	var emailExists bool
-	err = r.db.QueryRowContext(
-		ctx,
-		"SELECT EXISTS(SELECT 1 FROM specialists WHERE email = $1)",
-		email,
-	).Scan(&emailExists)
-
-	if err != nil {
-		return fmt.Errorf(FailedToCheckEmailErr, err)
-	}
-
 	if emailExists {
 		return fmt.Errorf(EmailAlreadyExistsErr, email)
 	}
-
-	var licenseExists bool
-	err = r.db.QueryRowContext(
-		ctx,
-		"SELECT EXISTS(SELECT 1 FROM specialists WHERE license_number = $1)",
-		licenseNumber,
-	).Scan(&licenseExists)
-
-	if err != nil {
-		return fmt.Errorf(FailedToCheckLicenseErr, err)
-	}
-
 	if licenseExists {
 		return fmt.Errorf(LicenseAlreadyExistsErr, licenseNumber)
 	}
