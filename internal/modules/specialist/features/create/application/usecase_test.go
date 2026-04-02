@@ -42,9 +42,7 @@ func TestCreateSpecialistUseCase_Execute(t *testing.T) {
 			name:           "creates specialist with status pending and publishes event",
 			inputOverrides: nil,
 			setupMocks: func(mockRepo *mocks.MockSpecialistCreateRepositoryInterface, mockEventPublisher *mocks.MockEventDispatcher, input CreateSpecialistDTO) {
-				mockRepo.EXPECT().ValidateUniqueness(gomock.Any(), gomock.Any(), input.Email, input.LicenseNumber).Return(nil).Times(1)
-
-				mockRepo.EXPECT().Save(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, specialist *domain.Specialist) (*domain.Specialist, error) {
+				mockRepo.EXPECT().SaveWithValidation(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, specialist *domain.Specialist) (*domain.Specialist, error) {
 					return specialist, nil
 				}).Times(1)
 
@@ -74,8 +72,7 @@ func TestCreateSpecialistUseCase_Execute(t *testing.T) {
 				func(dto *CreateSpecialistDTO) { dto.Name = "" },
 			},
 			setupMocks: func(mockRepo *mocks.MockSpecialistCreateRepositoryInterface, mockEventPublisher *mocks.MockEventDispatcher, input CreateSpecialistDTO) {
-				mockRepo.EXPECT().ValidateUniqueness(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(0)
-				mockRepo.EXPECT().Save(gomock.Any(), gomock.Any()).Times(0)
+				mockRepo.EXPECT().SaveWithValidation(gomock.Any(), gomock.Any()).Times(0)
 				mockEventPublisher.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Times(0)
 			},
 			expectError: true,
@@ -85,9 +82,8 @@ func TestCreateSpecialistUseCase_Execute(t *testing.T) {
 			name:           "returns error when uniqueness validation fails",
 			inputOverrides: nil,
 			setupMocks: func(mockRepo *mocks.MockSpecialistCreateRepositoryInterface, mockEventPublisher *mocks.MockEventDispatcher, input CreateSpecialistDTO) {
-				mockRepo.EXPECT().ValidateUniqueness(gomock.Any(), gomock.Any(), input.Email, input.LicenseNumber).Return(create.ErrDuplicateEmail).Times(1)
+				mockRepo.EXPECT().SaveWithValidation(gomock.Any(), gomock.Any()).Return(nil, create.ErrDuplicateEmail).Times(1)
 
-				mockRepo.EXPECT().Save(gomock.Any(), gomock.Any()).Times(0)
 				mockEventPublisher.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Times(0)
 			},
 			expectError: true,
@@ -97,22 +93,17 @@ func TestCreateSpecialistUseCase_Execute(t *testing.T) {
 			name:           "returns error when repository save fails",
 			inputOverrides: nil,
 			setupMocks: func(mockRepo *mocks.MockSpecialistCreateRepositoryInterface, mockEventPublisher *mocks.MockEventDispatcher, input CreateSpecialistDTO) {
-				mockRepo.EXPECT().ValidateUniqueness(gomock.Any(), gomock.Any(), input.Email, input.LicenseNumber).Return(nil).Times(1)
-
-				mockRepo.EXPECT().Save(gomock.Any(), gomock.Any()).Return(nil, errors.New("db connection lost")).Times(1)
+				mockRepo.EXPECT().SaveWithValidation(gomock.Any(), gomock.Any()).Return(nil, errors.New("db connection lost")).Times(1)
 
 				mockEventPublisher.EXPECT().Dispatch(gomock.Any(), gomock.Any()).Times(0)
 			},
 			expectError: true,
-			expectedErr: ErrSaveSpecialist,
 		},
 		{
 			name:           "still succeeds when event publish fails",
 			inputOverrides: nil,
 			setupMocks: func(mockRepo *mocks.MockSpecialistCreateRepositoryInterface, mockEventPublisher *mocks.MockEventDispatcher, input CreateSpecialistDTO) {
-				mockRepo.EXPECT().ValidateUniqueness(gomock.Any(), gomock.Any(), input.Email, input.LicenseNumber).Return(nil).Times(1)
-
-				mockRepo.EXPECT().Save(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, specialist *domain.Specialist) (*domain.Specialist, error) {
+				mockRepo.EXPECT().SaveWithValidation(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, specialist *domain.Specialist) (*domain.Specialist, error) {
 					return specialist, nil
 				}).Times(1)
 

@@ -123,10 +123,10 @@ func TestLoad(t *testing.T) {
 			},
 			expectError: false,
 			validateResult: func(t *testing.T, cfg *Config) {
-				assert.Equal(t, 25, cfg.Database.MaxOpenConns)
-				assert.Equal(t, 5, cfg.Database.MaxIdleConns)
+				assert.Equal(t, 10, cfg.Database.MaxOpenConns)
+				assert.Equal(t, 10, cfg.Database.MaxIdleConns)
 				assert.Equal(t, 5*time.Minute, cfg.Database.ConnMaxLifetime)
-				assert.Equal(t, 10*time.Minute, cfg.Database.ConnMaxIdleTime)
+				assert.Equal(t, 2*time.Minute, cfg.Database.ConnMaxIdleTime)
 			},
 		},
 	}

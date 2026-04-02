@@ -7,6 +7,5 @@ import (
 )
 
 type SpecialistCreateRepositoryInterface interface {
-	Save(ctx context.Context, specialist *domain.Specialist) (*domain.Specialist, error)
-	ValidateUniqueness(ctx context.Context, id, email, licenseNumber string) error
+	SaveWithValidation(ctx context.Context, specialist *domain.Specialist) (*domain.Specialist, error)
 }

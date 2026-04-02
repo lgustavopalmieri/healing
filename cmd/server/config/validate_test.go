@@ -23,10 +23,10 @@ func validConfigFactory(overrides ...func(*Config)) *Config {
 			Password:        "secret",
 			Database:        "healing_specialist_db",
 			SSLMode:         "require",
-			MaxOpenConns:    25,
-			MaxIdleConns:    5,
+			MaxOpenConns:    10,
+			MaxIdleConns:    10,
 			ConnMaxLifetime: 5 * time.Minute,
-			ConnMaxIdleTime: 10 * time.Minute,
+			ConnMaxIdleTime: 2 * time.Minute,
 		},
 		SQS: SQSConfig{
 			Region:      "us-east-1",
