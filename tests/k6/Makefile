@@ -19,6 +19,8 @@ run-create-specialist: setup
 
 run-create-specialist-http:
 	@echo "🚀 Running create specialist HTTP test..."
+	@docker-compose -f docker-compose.k6.yml down --remove-orphans 2>/dev/null || true
+	@docker network rm k6_default 2>/dev/null || true
 	@docker-compose -f docker-compose.k6.yml run --rm k6 run /scripts/modules/specialist/create/stress-http/create-specialist-test.js
 	@echo "✅ Create specialist HTTP test completed!"
 

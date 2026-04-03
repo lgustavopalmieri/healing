@@ -1,18 +1,19 @@
 export const stressTestConfig = {
   stages: [
-    { duration: '15s', target: 10 },
-    { duration: '30s', target: 30 },
-    { duration: '30s', target: 50 },
-    { duration: '1m', target: 50 },
-    { duration: '15s', target: 0 },
+    { duration: '20s', target: 100 },
+    { duration: '30s', target: 200 },
+    { duration: '30s', target: 300 },
+    { duration: '30s', target: 400 },
+    { duration: '2m30s', target: 400 },
+    { duration: '20s', target: 0 },
   ],
 
   thresholds: {
     'http_req_duration': [
-      'p(50)<300',
-      'p(90)<800',
-      'p(95)<1200',
-      'p(99)<2500',
+      'p(50)<200',
+      'p(90)<500',
+      'p(95)<1000',
+      'p(99)<2000',
     ],
 
     'checks': [
@@ -20,7 +21,7 @@ export const stressTestConfig = {
     ],
 
     'iteration_duration': [
-      'p(95)<3000',
+      'p(95)<2500',
     ],
   },
 
@@ -34,6 +35,6 @@ export const stressTestConfig = {
     test_type: 'stress',
     service: 'specialist_creation_http',
     environment: 'development',
-    max_vus: '50',
+    max_vus: '400',
   },
 };
