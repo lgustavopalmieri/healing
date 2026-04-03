@@ -4,7 +4,7 @@ export class HttpClient {
   constructor(config = {}) {
     this.baseUrl =
       config.baseUrl ||
-      "http://k8s-healingqa-60d8597078-1001071288.us-east-1.elb.amazonaws.com";
+      "http://k8s-healingqa-60d8597078-1268144452.us-east-1.elb.amazonaws.com";
   }
 
   post(path, body, params = {}) {

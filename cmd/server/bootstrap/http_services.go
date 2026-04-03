@@ -23,6 +23,7 @@ func RegisterHTTPServices(httpServer *server.HTTPServer, deps ServiceDependencie
 	createHandler := createhttp.NewSpecialistCreateHandler(createhttp.Dependencies{
 		DB:             deps.DB,
 		EventPublisher: deps.EventPublisher,
+		Logger:         deps.Logger,
 	})
 	createHandler.RegisterRoutes(api)
 

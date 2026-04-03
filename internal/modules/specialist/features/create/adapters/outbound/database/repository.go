@@ -3,9 +3,11 @@ package database
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/create"
 	"github.com/lib/pq"
 )
 
@@ -14,57 +16,14 @@ type SpecialistCreateRepository struct {
 }
 
 func (r *SpecialistCreateRepository) SaveWithValidation(ctx context.Context, specialist *domain.Specialist) (*domain.Specialist, error) {
-	tx, err := r.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelReadCommitted})
+	result, err := r.save(ctx, specialist)
 	if err != nil {
-		return nil, fmt.Errorf(FailedToBeginTxErr, err)
+		return nil, r.handleSaveError(err)
 	}
-	defer tx.Rollback()
-
-	if err := r.validateUniqueness(ctx, tx, specialist.ID, specialist.Email, specialist.LicenseNumber); err != nil {
-		return nil, err
-	}
-
-	result, err := r.save(ctx, tx, specialist)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := tx.Commit(); err != nil {
-		return nil, fmt.Errorf(FailedToCommitTxErr, err)
-	}
-
 	return result, nil
 }
 
-func (r *SpecialistCreateRepository) validateUniqueness(ctx context.Context, tx *sql.Tx, id, email, licenseNumber string) error {
-	var idExists, emailExists, licenseExists bool
-
-	query := `
-		SELECT
-			EXISTS(SELECT 1 FROM specialists WHERE id = $1),
-			EXISTS(SELECT 1 FROM specialists WHERE email = $2),
-			EXISTS(SELECT 1 FROM specialists WHERE license_number = $3)`
-
-	err := tx.QueryRowContext(ctx, query, id, email, licenseNumber).
-		Scan(&idExists, &emailExists, &licenseExists)
-	if err != nil {
-		return fmt.Errorf(FailedToCheckUniquenessErr, err)
-	}
-
-	if idExists {
-		return fmt.Errorf(IdAlreadyExistsErr, id)
-	}
-	if emailExists {
-		return fmt.Errorf(EmailAlreadyExistsErr, email)
-	}
-	if licenseExists {
-		return fmt.Errorf(LicenseAlreadyExistsErr, licenseNumber)
-	}
-
-	return nil
-}
-
-func (r *SpecialistCreateRepository) save(ctx context.Context, tx *sql.Tx, specialist *domain.Specialist) (*domain.Specialist, error) {
+func (r *SpecialistCreateRepository) save(ctx context.Context, specialist *domain.Specialist) (*domain.Specialist, error) {
 	query := `
 		INSERT INTO specialists (
 			id, name, email, phone, specialty, license_number, 
@@ -77,7 +36,7 @@ func (r *SpecialistCreateRepository) save(ctx context.Context, tx *sql.Tx, speci
 	var savedSpecialist domain.Specialist
 	var keywords pq.StringArray
 
-	err := tx.QueryRowContext(
+	err := r.db.QueryRowContext(
 		ctx,
 		query,
 		specialist.ID,
@@ -110,9 +69,24 @@ func (r *SpecialistCreateRepository) save(ctx context.Context, tx *sql.Tx, speci
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf(FailedToSaveErr, err)
+		return nil, err
 	}
 
 	savedSpecialist.Keywords = []string(keywords)
 	return &savedSpecialist, nil
+}
+
+func (r *SpecialistCreateRepository) handleSaveError(err error) error {
+	var pqErr *pq.Error
+	if errors.As(err, &pqErr) && pqErr.Code == "23505" {
+		switch pqErr.Constraint {
+		case "specialists_pkey":
+			return create.ErrDuplicateID
+		case "specialists_email_key":
+			return create.ErrDuplicateEmail
+		case "specialists_license_number_key":
+			return create.ErrDuplicateLicense
+		}
+	}
+	return fmt.Errorf(FailedToSaveErr, err)
 }
