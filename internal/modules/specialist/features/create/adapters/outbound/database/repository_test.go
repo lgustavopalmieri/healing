@@ -12,6 +12,7 @@ import (
 
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/tests/database/postgresql"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/create"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/application"
 )
 
@@ -58,11 +59,11 @@ func TestSpecialistCreateRepository_SaveWithValidation(t *testing.T) {
 		name           string
 		setupInput     func(application.SpecialistCreateRepositoryInterface) *domain.Specialist
 		expectError    bool
-		expectedErr    string
+		expectedErr    error
 		validateResult func(*testing.T, *domain.Specialist, *domain.Specialist)
 	}{
 		{
-			name: "success - validates uniqueness and saves specialist atomically",
+			name: "success - saves specialist and returns all fields",
 			setupInput: func(repo application.SpecialistCreateRepositoryInterface) *domain.Specialist {
 				return specialistFactory()
 			},
@@ -82,7 +83,7 @@ func TestSpecialistCreateRepository_SaveWithValidation(t *testing.T) {
 			},
 		},
 		{
-			name: "failure - returns error when ID already exists",
+			name: "failure - returns ErrDuplicateID when ID already exists",
 			setupInput: func(repo application.SpecialistCreateRepositoryInterface) *domain.Specialist {
 				existing := specialistFactory()
 				_, err := repo.SaveWithValidation(context.Background(), existing)
@@ -93,13 +94,13 @@ func TestSpecialistCreateRepository_SaveWithValidation(t *testing.T) {
 				})
 			},
 			expectError: true,
-			expectedErr: "already exists",
+			expectedErr: create.ErrDuplicateID,
 			validateResult: func(t *testing.T, input, result *domain.Specialist) {
 				assert.Nil(t, result)
 			},
 		},
 		{
-			name: "failure - returns error when email already exists",
+			name: "failure - returns ErrDuplicateEmail when email already exists",
 			setupInput: func(repo application.SpecialistCreateRepositoryInterface) *domain.Specialist {
 				existing := specialistFactory(func(s *domain.Specialist) {
 					s.Email = "existing@example.com"
@@ -112,13 +113,13 @@ func TestSpecialistCreateRepository_SaveWithValidation(t *testing.T) {
 				})
 			},
 			expectError: true,
-			expectedErr: "already exists",
+			expectedErr: create.ErrDuplicateEmail,
 			validateResult: func(t *testing.T, input, result *domain.Specialist) {
 				assert.Nil(t, result)
 			},
 		},
 		{
-			name: "failure - returns error when license number already exists",
+			name: "failure - returns ErrDuplicateLicense when license number already exists",
 			setupInput: func(repo application.SpecialistCreateRepositoryInterface) *domain.Specialist {
 				existing := specialistFactory(func(s *domain.Specialist) {
 					s.LicenseNumber = "CRM555555"
@@ -131,7 +132,7 @@ func TestSpecialistCreateRepository_SaveWithValidation(t *testing.T) {
 				})
 			},
 			expectError: true,
-			expectedErr: "already exists",
+			expectedErr: create.ErrDuplicateLicense,
 			validateResult: func(t *testing.T, input, result *domain.Specialist) {
 				assert.Nil(t, result)
 			},
@@ -150,7 +151,9 @@ func TestSpecialistCreateRepository_SaveWithValidation(t *testing.T) {
 
 			if tt.expectError {
 				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tt.expectedErr)
+				if tt.expectedErr != nil {
+					assert.ErrorIs(t, err, tt.expectedErr)
+				}
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, result)

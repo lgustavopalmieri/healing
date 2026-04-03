@@ -9,6 +9,7 @@ import (
 	"github.com/lgustavopalmieri/healing-specialist/cmd/server/config"
 	_ "github.com/lgustavopalmieri/healing-specialist/docs"
 	"github.com/lgustavopalmieri/healing-specialist/internal/platform/server"
+	"github.com/lgustavopalmieri/healing-specialist/internal/platform/telemetry"
 )
 
 // @title           Healing Specialist API
@@ -67,6 +68,7 @@ func run() error {
 		DB:             db,
 		OSFactory:      osFactory,
 		EventPublisher: sqsResources.Producer,
+		Logger:         telemetry.NewSlogLogger("healing-specialist"),
 	}
 
 	bootstrap.RegisterServices(grpcServer, serviceDeps)

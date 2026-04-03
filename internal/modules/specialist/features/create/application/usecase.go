@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
+	"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/create"
 )
@@ -28,7 +29,7 @@ func (c *CreateSpecialistUseCase) Execute(ctx context.Context, input CreateSpeci
 		return nil, err
 	}
 
-	c.publishSpecialistCreatedEvent(ctx, savedSpecialist)
+	go c.publishSpecialistCreatedEvent(context.WithoutCancel(ctx), savedSpecialist)
 
 	return savedSpecialist, nil
 }
@@ -41,5 +42,11 @@ func (c *CreateSpecialistUseCase) publishSpecialistCreatedEvent(ctx context.Cont
 		"specialty":     specialist.Specialty,
 	})
 
-	c.eventPublisher.Dispatch(ctx, specialistCreatedEvent)
+	if err := c.eventPublisher.Dispatch(ctx, specialistCreatedEvent); err != nil {
+		c.logger.Error(ctx, ErrEventPublishMessage,
+			observability.Field{Key: "specialist_id", Value: specialist.ID},
+			observability.Field{Key: "event", Value: SpecialistCreatedEventName},
+			observability.Field{Key: "error", Value: err.Error()},
+		)
+	}
 }

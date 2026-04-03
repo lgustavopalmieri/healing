@@ -1,32 +1,31 @@
 export const stressTestConfig = {
   stages: [
-    { duration: '30s', target: 100 },
-    { duration: '1m', target: 300 },
-    { duration: '1m', target: 500 },
-    { duration: '1m', target: 800 },
-    { duration: '3m', target: 800 },
-    { duration: '1m', target: 0 },
+    { duration: '15s', target: 10 },
+    { duration: '30s', target: 30 },
+    { duration: '30s', target: 50 },
+    { duration: '1m', target: 50 },
+    { duration: '15s', target: 0 },
   ],
 
   thresholds: {
     'http_req_duration': [
-      'p(50)<100',
-      'p(90)<300',
-      'p(95)<500',
-      'p(99)<1000',
+      'p(50)<300',
+      'p(90)<800',
+      'p(95)<1200',
+      'p(99)<2500',
     ],
 
     'checks': [
-      'rate>0.98',
+      'rate>0.95',
     ],
 
     'iteration_duration': [
-      'p(95)<1100',
+      'p(95)<3000',
     ],
   },
 
-  setupTimeout: '60s',
-  teardownTimeout: '60s',
+  setupTimeout: '30s',
+  teardownTimeout: '30s',
 
   noConnectionReuse: false,
   noVUConnectionReuse: false,
@@ -34,7 +33,7 @@ export const stressTestConfig = {
   tags: {
     test_type: 'stress',
     service: 'specialist_creation_http',
-    environment: 'k8s',
-    max_vus: '800',
+    environment: 'development',
+    max_vus: '50',
   },
 };

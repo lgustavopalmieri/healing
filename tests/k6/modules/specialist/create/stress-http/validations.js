@@ -1,14 +1,12 @@
 import { check } from 'k6';
 
 export function validateSpecialistResponse(response, request = null) {
-  let body = null;
+  let specialist = null;
   try {
-    body = JSON.parse(response.body);
+    specialist = JSON.parse(response.body);
   } catch (e) {
     // noop
   }
-
-  const specialist = body && body.specialist ? body.specialist : null;
 
   const validations = {
     'http status 201': (r) => r.status === 201,

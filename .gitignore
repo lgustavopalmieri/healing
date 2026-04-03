@@ -2,6 +2,7 @@
 .vscode/
 k8s/
 docs/observability-metrics-guide.md
+adr/
 
 # Environment files (ignore all except example)
 .env

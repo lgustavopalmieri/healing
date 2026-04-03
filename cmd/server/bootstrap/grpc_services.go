@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
+	"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
 	creategrpc "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/adapters/inbound/grpc_service"
 	createpb "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/adapters/inbound/grpc_service/pb"
 	searchgrpc "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/search/adapters/inbound/grpc_service"
@@ -20,6 +21,7 @@ type ServiceDependencies struct {
 	DB             *sql.DB
 	OSFactory      *platformOS.Factory
 	EventPublisher event.EventDispatcher
+	Logger         observability.Logger
 }
 
 func RegisterServices(grpcServer *server.GRPCServer, deps ServiceDependencies) {
@@ -27,6 +29,7 @@ func RegisterServices(grpcServer *server.GRPCServer, deps ServiceDependencies) {
 	specialistCreateService := creategrpc.NewSpecialistCreateService(creategrpc.Dependencies{
 		DB:             deps.DB,
 		EventPublisher: deps.EventPublisher,
+		Logger:         deps.Logger,
 	})
 	createpb.RegisterSpecialistServiceServer(grpcServer.GetServer(), specialistCreateService)
 
