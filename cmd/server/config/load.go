@@ -48,6 +48,12 @@ func Load() (*Config, error) {
 		External: ExternalConfig{
 			LicenseBaseURL: getEnv("LICENSE_VALIDATION_BASE_URL", ""),
 		},
+		Otel: OtelConfig{
+			ExporterEndpoint:   getEnv("OTEL_EXPORTER_OTLP_ENDPOINT", ""),
+			ExporterProtocol:   getEnv("OTEL_EXPORTER_OTLP_PROTOCOL", "http/protobuf"),
+			ServiceName:        getEnv("OTEL_SERVICE_NAME", "healing-specialist"),
+			ResourceAttributes: getEnv("OTEL_RESOURCE_ATTRIBUTES", ""),
+		},
 	}
 
 	if err := cfg.Validate(); err != nil {

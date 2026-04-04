@@ -8,6 +8,14 @@ type Config struct {
 	SQS        SQSConfig
 	OpenSearch OpenSearchConfig
 	External   ExternalConfig
+	Otel       OtelConfig
+}
+
+type OtelConfig struct {
+	ExporterEndpoint   string
+	ExporterProtocol   string
+	ServiceName        string
+	ResourceAttributes string
 }
 
 type ServerConfig struct {

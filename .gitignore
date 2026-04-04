@@ -1,4 +1,4 @@
-# .kiro/
+.kiro/
 .vscode/
 k8s/
 docs/observability-metrics-guide.md
@@ -32,3 +32,5 @@ go.work
 *.swp
 *.swo
 *~
+
+app-telemetria
