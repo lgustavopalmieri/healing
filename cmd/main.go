@@ -10,6 +10,7 @@ import (
 	_ "github.com/lgustavopalmieri/healing-specialist/docs"
 	"github.com/lgustavopalmieri/healing-specialist/internal/platform/server"
 	"github.com/lgustavopalmieri/healing-specialist/internal/platform/telemetry"
+	"google.golang.org/grpc"
 )
 
 // @title           Healing Specialist API
@@ -34,6 +35,11 @@ func run() error {
 
 	ctx := context.Background()
 
+	otelProvider, err := bootstrap.InitOtel(ctx, cfg)
+	if err != nil {
+		return err
+	}
+
 	db, err := bootstrap.InitDatabase(cfg)
 	if err != nil {
 		return err
@@ -49,20 +55,25 @@ func run() error {
 		return err
 	}
 
+	serviceName := cfg.Otel.ServiceName
+	grpcMetrics := telemetry.NewGRPCMetrics(serviceName)
+
 	grpcServer, err := server.NewGRPCServer(server.Config{
-		Port:               cfg.Server.GRPCPort,
-		MaxConnections:     cfg.Server.MaxConnections,
-		ConnectionTimeout:  cfg.Server.ConnectionTimeout,
-		Interceptors:       nil,
-		StreamInterceptors: nil,
+		Port:              cfg.Server.GRPCPort,
+		MaxConnections:    cfg.Server.MaxConnections,
+		ConnectionTimeout: cfg.Server.ConnectionTimeout,
+		Interceptors:      []grpc.UnaryServerInterceptor{grpcMetrics.UnaryServerInterceptor()},
 	})
 	if err != nil {
 		return err
 	}
 
+	httpMetrics := telemetry.NewHTTPMetrics(serviceName)
+
 	httpServer := server.NewHTTPServer(server.HTTPConfig{
 		Port: cfg.Server.HTTPPort,
 	})
+	httpServer.Engine.Use(httpMetrics.Middleware())
 
 	serviceDeps := bootstrap.ServiceDependencies{
 		DB:             db,
@@ -120,6 +131,12 @@ func run() error {
 
 	if err := httpServer.Shutdown(shutdownCtx); err != nil {
 		log.Printf("HTTP server shutdown error: %v", err)
+	}
+
+	if otelProvider != nil {
+		if err := otelProvider.Shutdown(shutdownCtx); err != nil {
+			log.Printf("OTel shutdown error: %v", err)
+		}
 	}
 
 	if err := shutdownManager.Shutdown(grpcServer, db); err != nil {
