@@ -10,31 +10,29 @@ inclusion: always
 .
 ├── cmd/
 │   ├── main.go                        # Application entrypoint
-│   ├── server/                        # Main server (HTTP + gRPC + Kafka)
-│   │   ├── .env
-│   │   ├── bootstrap/                 # Initialization orchestration
-│   │   │   ├── database.go
-│   │   │   ├── elasticsearch.go
-│   │   │   ├── grpc_services.go
-│   │   │   ├── http_services.go
-│   │   │   ├── kafka.go
-│   │   │   ├── kafka_consumers.go
-│   │   │   ├── observability.go
-│   │   │   └── shutdown.go
-│   │   └── config/
-│   │       ├── config.go
-│   │       ├── helpers.go
-│   │       ├── load.go
-│   │       └── validate.go
-│   └── grpcserver/                    # Standalone gRPC server (empty, placeholder)
-│       ├── bootstrap/
+│   └── server/
+│       ├── bootstrap/                 # Initialization orchestration
+│       │   ├── database.go
+│       │   ├── opensearch.go
+│       │   ├── sqs.go
+│       │   ├── sqs_consumers.go
+│       │   ├── grpc_services.go
+│       │   ├── http_services.go
+│       │   ├── otel.go
+│       │   └── shutdown.go
 │       └── config/
+│           ├── config.go
+│           ├── helpers.go
+│           ├── load.go
+│           └── validate.go
 ├── internal/
 │   ├── commom/                        # Shared cross-module utilities (note: "commom" typo is intentional)
 │   ├── modules/                       # Business domain modules
 │   └── platform/                      # Infrastructure adapters
 ├── tests/
 │   └── k6/                            # Load/stress tests (k6 framework)
+├── adr/                               # Architecture Decision Records
+├── docs/                              # Swagger generated docs
 ├── docker-compose.yml
 ├── Dockerfile
 ├── Makefile
@@ -47,19 +45,20 @@ inclusion: always
 ```
 commom/
 ├── event/
-│   ├── dipstacher.go                  # Event dispatcher implementation
-│   ├── event.go                       # Event interface/struct
-│   └── listener.go                    # Listener interface
+│   ├── dipstacher.go                  # EventDispatcher interface
+│   ├── event.go                       # Event struct (Name, Payload, Timestamp)
+│   ├── listener.go                    # Listener interface
+│   └── retry.go                       # Retry with exponential backoff
 ├── observability/
-│   ├── logging.go                     # Logger interface
-│   ├── metrics.go                     # Metrics interface
-│   ├── tracing.go                     # Tracer interface
+│   ├── logging.go                     # Logger interface (Debug, Info, Warn, Error)
+│   ├── metrics.go                     # Metrics interface (Counter, Histogram, Gauge)
+│   ├── tracing.go                     # Tracer interface (Start, Span, RecordError)
 │   └── mocks/
 │       └── logger_mock.go             # Shared logger mock (gomock)
 ├── tests/                             # Test infrastructure helpers
 │   ├── database/postgresql/           # Testcontainers PostgreSQL setup
-│   ├── elasticsearch/                 # Testcontainers Elasticsearch setup + factory
-│   └── event/kafka/                   # Testcontainers Kafka setup
+│   ├── opensearch/                    # Testcontainers OpenSearch setup + factory
+│   └── event/sqs/                     # Testcontainers LocalStack SQS setup
 ├── utils/
 │   ├── sanitize.go
 │   └── sanitize_test.go
@@ -69,7 +68,6 @@ commom/
         ├── encode.go / decode.go      # Cursor encoding/decoding
         ├── validate_input.go          # Input validation
         ├── errors.go / utils.go
-        ├── example_usage.go
         ├── encode_test.go / decode_test.go
         └── README.md
 ```
@@ -121,9 +119,9 @@ Domain layer specifics:
 
 Each feature follows the `application/ + adapters/` structure (Clean Architecture / Hexagonal), with variations per feature.
 
-The `adapters/` directory replaces the former `infra/` and is split into:
+The `adapters/` directory is split into:
 - `adapters/inbound/` — driving adapters (HTTP handlers, gRPC services)
-- `adapters/outbound/` — driven adapters (database repositories, Elasticsearch repositories)
+- `adapters/outbound/` — driven adapters (database repositories, OpenSearch repositories)
 
 Note: `event_listeners/` inside features also use the `adapters/inbound/outbound` structure, matching the feature-level convention.
 
@@ -140,17 +138,17 @@ features/create/
 │   └── mocks/                         # 4 mocks: event_dispatcher, logger, repository, tracer
 ├── event_listeners/                   # Event-driven side effects
 │   ├── send_credentials_email/        # (empty — placeholder)
-│   └── validate_license/              # Kafka consumer listener (fully implemented)
+│   └── validate_license/              # SQS consumer listener (fully implemented)
 │       ├── listener/                  # Handler logic (mirrors application/ pattern)
 │       │   ├── handler.go / handler_test.go
 │       │   ├── new_handler.go
 │       │   ├── interface.go
 │       │   ├── dto.go
 │       │   ├── constants.go
-│       │   └── mocks/                 # 4 mocks: event_dispatcher, logger, repository, tracer
+│       │   └── mocks/                 # 2 mocks: event_dispatcher, repository
 │       └── adapters/
 │           ├── inbound/
-│           │   └── kafka/             # manager.go (consumer group management)
+│           │   └── sqs/               # SQS consumer management
 │           └── outbound/
 │               ├── database/          # repository.go, new.go, errors.go, repository_test.go
 │               └── external/          # gateway.go, new.go
@@ -164,8 +162,8 @@ features/create/
 ```
 
 Create specifics:
-- Only feature with `event_listeners/` containing fully implemented Kafka listeners
-- `validate_license/` is a mini-module with its own `listener/` + `adapters/` (inbound/kafka, outbound/database, outbound/external)
+- Only feature with `event_listeners/` containing fully implemented SQS listeners
+- `validate_license/` is a mini-module with its own `listener/` + `adapters/` (inbound/sqs, outbound/database, outbound/external)
 - `send_credentials_email/` exists as an empty placeholder
 - `handler_integration_test.go` lives at the `adapters/inbound/` root, not inside `database/` or `http_handler/`
 - `adapters/inbound/` has both `http_handler/` and `grpc_service/` (dual transport)
@@ -186,19 +184,18 @@ features/search/
     │   ├── http_handler/              # handler.go, handler_test.go, dto.go, di.go, mocks/
     │   └── grpc_service/              # service.go, service_test.go, dto.go, di.go, mocks/, pb/, proto/
     └── outbound/
-        └── elasticsearch/             # Elasticsearch repository (does not use database/)
+        └── opensearch/                # OpenSearch repository (read store)
             ├── repository.go / repository_test.go
             ├── new.go / errors.go
             ├── builders.go            # Query builders
             ├── mappers.go             # Response mappers
-            ├── dto.go                 # ES-specific DTOs
-            └── README.md
+            └── dto.go                 # OpenSearch-specific DTOs
 ```
 
 Search specifics:
 - No `event_listeners/`
-- `adapters/outbound/` uses `elasticsearch/` instead of `database/` — read repository
-- `elasticsearch/` has extra files: `builders.go`, `mappers.go` (query construction + response mapping)
+- `adapters/outbound/` uses `opensearch/` instead of `database/` — read repository
+- `opensearch/` has extra files: `builders.go`, `mappers.go` (query construction + response mapping)
 - `application/mocks/` has only `repository_mock.go` (fewer dependencies than create/update)
 
 #### Feature: update
@@ -215,9 +212,16 @@ features/update/
 ├── event_listeners/
 │   ├── send_status_email/             # (empty — placeholder)
 │   └── update_data_repositories/      # Sync data to read stores
-│       ├── command/                   # (empty — placeholder)
-│       └── repositories/
-│           └── elasticsearch/         # errors.go, new.go, repository.go
+│       ├── listener/                  # Handler logic (mirrors application/ pattern)
+│       │   ├── handler.go / handler_test.go
+│       │   ├── new_handler.go
+│       │   ├── interface.go
+│       │   ├── dto.go
+│       │   ├── constants.go
+│       │   └── mocks/
+│       └── adapters/
+│           ├── inbound/               # SQS consumer
+│           └── outbound/              # OpenSearch repository for index sync
 └── adapters/
     ├── inbound/
     │   ├── http_handler/              # handler.go, handler_test.go, dto.go, di.go, mocks/
@@ -227,8 +231,7 @@ features/update/
 ```
 
 Update specifics:
-- `event_listeners/` has a different structure from create: `update_data_repositories/` uses `repositories/` (not `infra/`)
-- `update_data_repositories/command/` is empty (placeholder)
+- `event_listeners/update_data_repositories/` syncs specialist data to OpenSearch after updates
 - `send_status_email/` is empty (placeholder)
 - No `handler_integration_test.go` at the `adapters/inbound/` root
 
@@ -237,28 +240,34 @@ Update specifics:
 ```
 platform/
 ├── database/postgresql/
-│   ├── connection.go                  # Connection pool setup
-│   ├── migrations.go                  # Migration runner
+│   ├── connection.go                  # DSN construction, connection pool setup
+│   ├── migrations.go                  # Goose migration runner
 │   └── migrations/                    # SQL migration files (ordered: 001_, 002_, 003_)
-├── elasticsearch/
-│   ├── client.go                      # ES client setup
+├── opensearch/
+│   ├── client.go                      # OpenSearch client with optional AWS SigV4 auth
+│   ├── factory.go                     # Factory: client init + index creation + prefix management
 │   └── indexes/
-│       ├── registry.go                # Index registry
-│       └── specialists.go             # Specialist index mapping
-├── kafka/
-│   ├── producer.go
-│   └── consumer.go
+│       ├── registry.go                # Index registry with prefix support (multi-tenant)
+│       └── specialists.go             # Specialist index mapping with custom analyzers
+├── sqs/
+│   ├── client.go                      # AWS SDK v2 SQS client initialization
+│   ├── producer.go                    # SQSProducer implements EventDispatcher interface
+│   ├── consumer.go                    # SQS consumer with Long Polling + delete after success
+│   ├── ensure.go                      # Idempotent queue creation with DLQ setup
+│   └── health.go                      # Health check for SQS queues
 ├── server/
-│   ├── grpcserver.go
-│   ├── httpserver.go
-│   └── metrics_server.go             # Prometheus metrics endpoint
+│   ├── grpcserver.go                  # gRPC server with keepalive, health check, reflection
+│   └── httpserver.go                  # HTTP server with CORS, health endpoint, Swagger
 └── telemetry/
-    ├── otel.go                        # OpenTelemetry bootstrap
-    ├── tracing_provider.go
-    ├── prometheus.go
-    ├── slog.go                        # Structured logging setup
-    ├── grpc_metrics.go                # gRPC interceptors
-    └── provider.go                    # Telemetry provider aggregate
+    ├── otel.go                        # OTel tracer wrapper
+    ├── provider.go                    # OTel resource + MeterProvider initialization
+    ├── tracing_provider.go            # TracerProvider setup (OTLP gRPC export)
+    ├── metrics_provider.go            # MeterProvider setup (OTLP HTTP export)
+    ├── metrics.go                     # OtelMetrics: Counter, Histogram, Gauge via OTel SDK
+    ├── grpc_metrics.go                # gRPC unary interceptor for request metrics
+    ├── http_metrics.go                # Gin middleware for HTTP request metrics
+    ├── slog.go                        # Structured logging with slog (JSON output)
+    └── factory.go                     # Telemetry factory utilities
 ```
 
 ## tests/k6/ — Load & Stress Tests
@@ -289,9 +298,9 @@ tests/k6/
 
 ```yaml
 create:
-  event_listeners: yes (validate_license fully implemented, send_credentials_email empty)
+  event_listeners: yes (validate_license fully implemented via SQS, send_credentials_email empty)
   adapters/outbound/database: yes
-  adapters/outbound/elasticsearch: no
+  adapters/outbound/opensearch: no
   adapters/inbound/http_handler: yes
   adapters/inbound/grpc_service: yes
   handler_integration_test: yes (at adapters/inbound/ root)
@@ -301,7 +310,7 @@ create:
 search:
   event_listeners: no
   adapters/outbound/database: no
-  adapters/outbound/elasticsearch: yes (with builders, mappers, own dto)
+  adapters/outbound/opensearch: yes (with builders, mappers, own dto)
   adapters/inbound/http_handler: yes
   adapters/inbound/grpc_service: yes
   handler_integration_test: no
@@ -309,9 +318,9 @@ search:
   domain sub-packages: search_input/ + search_output/ (value objects as sub-packages)
 
 update:
-  event_listeners: yes (update_data_repositories partial, send_status_email empty)
+  event_listeners: yes (update_data_repositories with SQS consumer + OpenSearch sync, send_status_email empty)
   adapters/outbound/database: yes
-  adapters/outbound/elasticsearch: no
+  adapters/outbound/opensearch: no
   adapters/inbound/http_handler: yes
   adapters/inbound/grpc_service: yes
   handler_integration_test: no
@@ -323,13 +332,13 @@ update:
 
 - `usecase.go` + `new_usecase.go` — application layer (logic and constructor separated)
 - `handler.go` + `new_handler.go` — listener layer (same pattern)
-- `repository.go` + `new.go` — adapters/outbound/database and adapters/outbound/elasticsearch
+- `repository.go` + `new.go` — adapters/outbound/database and adapters/outbound/opensearch
 - `gateway.go` + `new.go` — event_listeners/*/adapters/outbound/external
 - `service.go` + `di.go` — adapters/inbound/grpc_service (DI separated from service)
 - `handler.go` + `di.go` — adapters/inbound/http_handler
-- `dto.go` — present in all layers (application, listener, adapters/inbound/grpc_service, adapters/inbound/http_handler, adapters/outbound/elasticsearch)
+- `dto.go` — present in all layers (application, listener, adapters/inbound/grpc_service, adapters/inbound/http_handler, adapters/outbound/opensearch)
 - `constants.go` — application and listener (span names, event names, error messages)
-- `errors.go` — domain, application (via constants.go), adapters/outbound/database, adapters/outbound/elasticsearch
+- `errors.go` — domain, application (via constants.go), adapters/outbound/database, adapters/outbound/opensearch
 - `interface.go` — application and listener (dependency contracts)
 
 ## Package Dependencies Flow
@@ -342,11 +351,11 @@ domain/<feature>/ (factory, validation, feature-specific errors)
 features/<feature>/application/ (use case orchestration, interfaces, DTOs)
     ↑
 features/<feature>/adapters/inbound/ (grpc_service, http_handler)
-features/<feature>/adapters/outbound/ (database, elasticsearch)
+features/<feature>/adapters/outbound/ (database, opensearch)
 
 features/<feature>/event_listeners/<listener>/listener/ (handler, interfaces, DTOs)
     ↑
-features/<feature>/event_listeners/<listener>/adapters/ (inbound/kafka, outbound/database, outbound/external)
+features/<feature>/event_listeners/<listener>/adapters/ (inbound/sqs, outbound/database, outbound/external)
 ```
 
 Event listeners are independent mini-modules within a feature, with their own listener/ + adapters/ separation.
