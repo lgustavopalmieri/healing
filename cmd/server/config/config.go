@@ -7,6 +7,7 @@ type Config struct {
 	Database   DatabaseConfig
 	AuthDB     DatabaseConfig
 	Redis      RedisConfig
+	Auth       AuthConfig
 	SQS        SQSConfig
 	OpenSearch OpenSearchConfig
 	External   ExternalConfig
@@ -55,6 +56,20 @@ type OpenSearchConfig struct {
 
 type ExternalConfig struct {
 	LicenseBaseURL string
+}
+
+type AuthConfig struct {
+	PrivateKeyPath    string
+	PublicKeyPath     string
+	CurrentKeyID      string
+	AccessTokenTTL    time.Duration
+	RefreshTokenTTL   time.Duration
+	SetPasswordTTL    time.Duration
+	ResetPasswordTTL  time.Duration
+	Issuer            string
+	Audience          string
+	BcryptCost        int
+	PasswordMinLength int
 }
 
 type RedisConfig struct {

@@ -25,6 +25,9 @@ func setAllRequiredEnvVars(t *testing.T) {
 	t.Setenv("OPENSEARCH_ADDRESSES", "http://opensearch:9200")
 	t.Setenv("LICENSE_VALIDATION_BASE_URL", "http://license-service:8080")
 	t.Setenv("REDIS_HOST", "redis.healing.svc.cluster.local")
+	t.Setenv("AUTH_PRIVATE_KEY_PATH", "/etc/healing/keys/auth-private.pem")
+	t.Setenv("AUTH_PUBLIC_KEY_PATH", "/etc/healing/keys/auth-public.pem")
+	t.Setenv("AUTH_CURRENT_KEY_ID", "healing-2026-05")
 	t.Setenv("ENV_DIR", "/nonexistent")
 }
 
@@ -197,6 +200,54 @@ func TestLoad(t *testing.T) {
 				assert.Equal(t, 5, cfg.AuthDB.MaxIdleConns)
 				assert.Equal(t, 5*time.Minute, cfg.AuthDB.ConnMaxLifetime)
 				assert.Equal(t, 1*time.Minute, cfg.AuthDB.ConnMaxIdleTime)
+			},
+		},
+		{
+			name: "success - auth config reads from env vars with custom values",
+			setupEnv: func(t *testing.T) {
+				setAllRequiredEnvVars(t)
+				t.Setenv("AUTH_PRIVATE_KEY_PATH", "/etc/healing/keys/priv.pem")
+				t.Setenv("AUTH_PUBLIC_KEY_PATH", "/etc/healing/keys/pub.pem")
+				t.Setenv("AUTH_CURRENT_KEY_ID", "custom-kid")
+				t.Setenv("AUTH_ACCESS_TOKEN_TTL", "2h")
+				t.Setenv("AUTH_REFRESH_TOKEN_TTL", "720h")
+				t.Setenv("AUTH_SET_PASSWORD_TTL", "12h")
+				t.Setenv("AUTH_RESET_PASSWORD_TTL", "30m")
+				t.Setenv("AUTH_ISSUER", "custom-issuer")
+				t.Setenv("AUTH_AUDIENCE", "custom-audience")
+				t.Setenv("AUTH_BCRYPT_COST", "13")
+				t.Setenv("AUTH_PASSWORD_MIN_LENGTH", "10")
+			},
+			expectError: false,
+			validateResult: func(t *testing.T, cfg *Config) {
+				assert.Equal(t, "/etc/healing/keys/priv.pem", cfg.Auth.PrivateKeyPath)
+				assert.Equal(t, "/etc/healing/keys/pub.pem", cfg.Auth.PublicKeyPath)
+				assert.Equal(t, "custom-kid", cfg.Auth.CurrentKeyID)
+				assert.Equal(t, 2*time.Hour, cfg.Auth.AccessTokenTTL)
+				assert.Equal(t, 720*time.Hour, cfg.Auth.RefreshTokenTTL)
+				assert.Equal(t, 12*time.Hour, cfg.Auth.SetPasswordTTL)
+				assert.Equal(t, 30*time.Minute, cfg.Auth.ResetPasswordTTL)
+				assert.Equal(t, "custom-issuer", cfg.Auth.Issuer)
+				assert.Equal(t, "custom-audience", cfg.Auth.Audience)
+				assert.Equal(t, 13, cfg.Auth.BcryptCost)
+				assert.Equal(t, 10, cfg.Auth.PasswordMinLength)
+			},
+		},
+		{
+			name: "success - auth config uses defaults when optional env vars not set",
+			setupEnv: func(t *testing.T) {
+				setAllRequiredEnvVars(t)
+			},
+			expectError: false,
+			validateResult: func(t *testing.T, cfg *Config) {
+				assert.Equal(t, 1*time.Hour, cfg.Auth.AccessTokenTTL)
+				assert.Equal(t, 168*time.Hour, cfg.Auth.RefreshTokenTTL)
+				assert.Equal(t, 24*time.Hour, cfg.Auth.SetPasswordTTL)
+				assert.Equal(t, 1*time.Hour, cfg.Auth.ResetPasswordTTL)
+				assert.Equal(t, "healing-specialist", cfg.Auth.Issuer)
+				assert.Equal(t, "healing-platform", cfg.Auth.Audience)
+				assert.Equal(t, 12, cfg.Auth.BcryptCost)
+				assert.Equal(t, 8, cfg.Auth.PasswordMinLength)
 			},
 		},
 	}

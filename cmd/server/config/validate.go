@@ -63,5 +63,49 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("REDIS_POOL_SIZE must be >= 1")
 	}
 
+	if c.Auth.PrivateKeyPath == "" {
+		return fmt.Errorf("AUTH_PRIVATE_KEY_PATH is required")
+	}
+
+	if c.Auth.PublicKeyPath == "" {
+		return fmt.Errorf("AUTH_PUBLIC_KEY_PATH is required")
+	}
+
+	if c.Auth.CurrentKeyID == "" {
+		return fmt.Errorf("AUTH_CURRENT_KEY_ID is required")
+	}
+
+	if c.Auth.Issuer == "" {
+		return fmt.Errorf("AUTH_ISSUER is required")
+	}
+
+	if c.Auth.Audience == "" {
+		return fmt.Errorf("AUTH_AUDIENCE is required")
+	}
+
+	if c.Auth.AccessTokenTTL <= 0 {
+		return fmt.Errorf("AUTH_ACCESS_TOKEN_TTL must be > 0")
+	}
+
+	if c.Auth.RefreshTokenTTL <= 0 {
+		return fmt.Errorf("AUTH_REFRESH_TOKEN_TTL must be > 0")
+	}
+
+	if c.Auth.SetPasswordTTL <= 0 {
+		return fmt.Errorf("AUTH_SET_PASSWORD_TTL must be > 0")
+	}
+
+	if c.Auth.ResetPasswordTTL <= 0 {
+		return fmt.Errorf("AUTH_RESET_PASSWORD_TTL must be > 0")
+	}
+
+	if c.Auth.BcryptCost < 10 || c.Auth.BcryptCost > 14 {
+		return fmt.Errorf("AUTH_BCRYPT_COST must be between 10 and 14")
+	}
+
+	if c.Auth.PasswordMinLength < 8 {
+		return fmt.Errorf("AUTH_PASSWORD_MIN_LENGTH must be >= 8")
+	}
+
 	return nil
 }

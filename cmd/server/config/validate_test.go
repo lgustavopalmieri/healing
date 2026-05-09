@@ -58,6 +58,19 @@ func validConfigFactory(overrides ...func(*Config)) *Config {
 			PoolSize:     10,
 			MinIdleConns: 2,
 		},
+		Auth: AuthConfig{
+			PrivateKeyPath:    "/etc/healing/keys/auth-private.pem",
+			PublicKeyPath:     "/etc/healing/keys/auth-public.pem",
+			CurrentKeyID:      "healing-2026-05",
+			AccessTokenTTL:    1 * time.Hour,
+			RefreshTokenTTL:   168 * time.Hour,
+			SetPasswordTTL:    24 * time.Hour,
+			ResetPasswordTTL:  1 * time.Hour,
+			Issuer:            "healing-specialist",
+			Audience:          "healing-platform",
+			BcryptCost:        12,
+			PasswordMinLength: 8,
+		},
 	}
 
 	for _, override := range overrides {
@@ -182,6 +195,78 @@ func TestValidate(t *testing.T) {
 			override:    func(c *Config) { c.Redis.PoolSize = 0 },
 			expectError: true,
 			expectedMsg: "REDIS_POOL_SIZE must be >= 1",
+		},
+		{
+			name:        "failure - returns error when AUTH_PRIVATE_KEY_PATH is empty",
+			override:    func(c *Config) { c.Auth.PrivateKeyPath = "" },
+			expectError: true,
+			expectedMsg: "AUTH_PRIVATE_KEY_PATH is required",
+		},
+		{
+			name:        "failure - returns error when AUTH_PUBLIC_KEY_PATH is empty",
+			override:    func(c *Config) { c.Auth.PublicKeyPath = "" },
+			expectError: true,
+			expectedMsg: "AUTH_PUBLIC_KEY_PATH is required",
+		},
+		{
+			name:        "failure - returns error when AUTH_CURRENT_KEY_ID is empty",
+			override:    func(c *Config) { c.Auth.CurrentKeyID = "" },
+			expectError: true,
+			expectedMsg: "AUTH_CURRENT_KEY_ID is required",
+		},
+		{
+			name:        "failure - returns error when AUTH_ISSUER is empty",
+			override:    func(c *Config) { c.Auth.Issuer = "" },
+			expectError: true,
+			expectedMsg: "AUTH_ISSUER is required",
+		},
+		{
+			name:        "failure - returns error when AUTH_AUDIENCE is empty",
+			override:    func(c *Config) { c.Auth.Audience = "" },
+			expectError: true,
+			expectedMsg: "AUTH_AUDIENCE is required",
+		},
+		{
+			name:        "failure - returns error when AUTH_ACCESS_TOKEN_TTL is zero",
+			override:    func(c *Config) { c.Auth.AccessTokenTTL = 0 },
+			expectError: true,
+			expectedMsg: "AUTH_ACCESS_TOKEN_TTL must be > 0",
+		},
+		{
+			name:        "failure - returns error when AUTH_REFRESH_TOKEN_TTL is zero",
+			override:    func(c *Config) { c.Auth.RefreshTokenTTL = 0 },
+			expectError: true,
+			expectedMsg: "AUTH_REFRESH_TOKEN_TTL must be > 0",
+		},
+		{
+			name:        "failure - returns error when AUTH_SET_PASSWORD_TTL is zero",
+			override:    func(c *Config) { c.Auth.SetPasswordTTL = 0 },
+			expectError: true,
+			expectedMsg: "AUTH_SET_PASSWORD_TTL must be > 0",
+		},
+		{
+			name:        "failure - returns error when AUTH_RESET_PASSWORD_TTL is zero",
+			override:    func(c *Config) { c.Auth.ResetPasswordTTL = 0 },
+			expectError: true,
+			expectedMsg: "AUTH_RESET_PASSWORD_TTL must be > 0",
+		},
+		{
+			name:        "failure - returns error when AUTH_BCRYPT_COST below 10",
+			override:    func(c *Config) { c.Auth.BcryptCost = 9 },
+			expectError: true,
+			expectedMsg: "AUTH_BCRYPT_COST must be between 10 and 14",
+		},
+		{
+			name:        "failure - returns error when AUTH_BCRYPT_COST above 14",
+			override:    func(c *Config) { c.Auth.BcryptCost = 15 },
+			expectError: true,
+			expectedMsg: "AUTH_BCRYPT_COST must be between 10 and 14",
+		},
+		{
+			name:        "failure - returns error when AUTH_PASSWORD_MIN_LENGTH below 8",
+			override:    func(c *Config) { c.Auth.PasswordMinLength = 7 },
+			expectError: true,
+			expectedMsg: "AUTH_PASSWORD_MIN_LENGTH must be >= 8",
 		},
 		{
 			name:        "success - valid config with empty LICENSE_VALIDATION_BASE_URL",
