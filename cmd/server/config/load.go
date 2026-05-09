@@ -35,6 +35,18 @@ func Load() (*Config, error) {
 			ConnMaxLifetime: getEnvAsDuration("POSTGRES_CONN_MAX_LIFETIME", 5*time.Minute),
 			ConnMaxIdleTime: getEnvAsDuration("POSTGRES_CONN_MAX_IDLE_TIME", 2*time.Minute),
 		},
+		AuthDB: DatabaseConfig{
+			Host:            getEnv("AUTH_POSTGRES_HOST", ""),
+			Port:            getEnvAsInt("AUTH_POSTGRES_PORT", 5432),
+			User:            getEnv("AUTH_POSTGRES_USER", ""),
+			Password:        getEnv("AUTH_POSTGRES_PASSWORD", ""),
+			Database:        getEnv("AUTH_POSTGRES_DB", ""),
+			SSLMode:         getEnv("AUTH_POSTGRES_SSLMODE", "require"),
+			MaxOpenConns:    getEnvAsInt("AUTH_POSTGRES_MAX_OPEN_CONNS", 10),
+			MaxIdleConns:    getEnvAsInt("AUTH_POSTGRES_MAX_IDLE_CONNS", 5),
+			ConnMaxLifetime: getEnvAsDuration("AUTH_POSTGRES_CONN_MAX_LIFETIME", 5*time.Minute),
+			ConnMaxIdleTime: getEnvAsDuration("AUTH_POSTGRES_CONN_MAX_IDLE_TIME", 1*time.Minute),
+		},
 		SQS: SQSConfig{
 			Region:      getEnv("SQS_REGION", ""),
 			QueuePrefix: getEnv("SQS_QUEUE_PREFIX", "specialist"),

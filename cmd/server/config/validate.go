@@ -27,6 +27,22 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("POSTGRES_DB is required")
 	}
 
+	if c.AuthDB.Host == "" {
+		return fmt.Errorf("AUTH_POSTGRES_HOST is required")
+	}
+
+	if c.AuthDB.User == "" {
+		return fmt.Errorf("AUTH_POSTGRES_USER is required")
+	}
+
+	if c.AuthDB.Password == "" {
+		return fmt.Errorf("AUTH_POSTGRES_PASSWORD is required")
+	}
+
+	if c.AuthDB.Database == "" {
+		return fmt.Errorf("AUTH_POSTGRES_DB is required")
+	}
+
 	if c.SQS.Region == "" {
 		return fmt.Errorf("SQS_REGION is required")
 	}

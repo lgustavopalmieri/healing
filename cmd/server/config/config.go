@@ -5,6 +5,7 @@ import "time"
 type Config struct {
 	Server     ServerConfig
 	Database   DatabaseConfig
+	AuthDB     DatabaseConfig
 	Redis      RedisConfig
 	SQS        SQSConfig
 	OpenSearch OpenSearchConfig

@@ -15,6 +15,12 @@ func setAllRequiredEnvVars(t *testing.T) {
 	t.Setenv("POSTGRES_PASSWORD", "secret")
 	t.Setenv("POSTGRES_DB", "healing_specialist_db")
 	t.Setenv("POSTGRES_SSLMODE", "require")
+	t.Setenv("AUTH_POSTGRES_HOST", "postgres-auth.healing.svc.cluster.local")
+	t.Setenv("AUTH_POSTGRES_PORT", "5432")
+	t.Setenv("AUTH_POSTGRES_USER", "healing_auth")
+	t.Setenv("AUTH_POSTGRES_PASSWORD", "healing_auth")
+	t.Setenv("AUTH_POSTGRES_DB", "healing_auth")
+	t.Setenv("AUTH_POSTGRES_SSLMODE", "disable")
 	t.Setenv("SQS_REGION", "us-east-1")
 	t.Setenv("OPENSEARCH_ADDRESSES", "http://opensearch:9200")
 	t.Setenv("LICENSE_VALIDATION_BASE_URL", "http://license-service:8080")
@@ -43,6 +49,12 @@ func TestLoad(t *testing.T) {
 				assert.Equal(t, "secret", cfg.Database.Password)
 				assert.Equal(t, "healing_specialist_db", cfg.Database.Database)
 				assert.Equal(t, "require", cfg.Database.SSLMode)
+				assert.Equal(t, "postgres-auth.healing.svc.cluster.local", cfg.AuthDB.Host)
+				assert.Equal(t, 5432, cfg.AuthDB.Port)
+				assert.Equal(t, "healing_auth", cfg.AuthDB.User)
+				assert.Equal(t, "healing_auth", cfg.AuthDB.Password)
+				assert.Equal(t, "healing_auth", cfg.AuthDB.Database)
+				assert.Equal(t, "disable", cfg.AuthDB.SSLMode)
 				assert.Equal(t, "us-east-1", cfg.SQS.Region)
 				assert.Equal(t, "specialist", cfg.SQS.QueuePrefix)
 				assert.Equal(t, []string{"http://opensearch:9200"}, cfg.OpenSearch.Addresses)
@@ -155,6 +167,36 @@ func TestLoad(t *testing.T) {
 				assert.Equal(t, 3, cfg.Redis.DB)
 				assert.Equal(t, 25, cfg.Redis.PoolSize)
 				assert.Equal(t, 5, cfg.Redis.MinIdleConns)
+			},
+		},
+		{
+			name: "success - auth database pool config reads from env vars",
+			setupEnv: func(t *testing.T) {
+				setAllRequiredEnvVars(t)
+				t.Setenv("AUTH_POSTGRES_MAX_OPEN_CONNS", "20")
+				t.Setenv("AUTH_POSTGRES_MAX_IDLE_CONNS", "8")
+				t.Setenv("AUTH_POSTGRES_CONN_MAX_LIFETIME", "15m")
+				t.Setenv("AUTH_POSTGRES_CONN_MAX_IDLE_TIME", "3m")
+			},
+			expectError: false,
+			validateResult: func(t *testing.T, cfg *Config) {
+				assert.Equal(t, 20, cfg.AuthDB.MaxOpenConns)
+				assert.Equal(t, 8, cfg.AuthDB.MaxIdleConns)
+				assert.Equal(t, 15*time.Minute, cfg.AuthDB.ConnMaxLifetime)
+				assert.Equal(t, 3*time.Minute, cfg.AuthDB.ConnMaxIdleTime)
+			},
+		},
+		{
+			name: "success - auth database uses defaults when env vars not set",
+			setupEnv: func(t *testing.T) {
+				setAllRequiredEnvVars(t)
+			},
+			expectError: false,
+			validateResult: func(t *testing.T, cfg *Config) {
+				assert.Equal(t, 10, cfg.AuthDB.MaxOpenConns)
+				assert.Equal(t, 5, cfg.AuthDB.MaxIdleConns)
+				assert.Equal(t, 5*time.Minute, cfg.AuthDB.ConnMaxLifetime)
+				assert.Equal(t, 1*time.Minute, cfg.AuthDB.ConnMaxIdleTime)
 			},
 		},
 	}
