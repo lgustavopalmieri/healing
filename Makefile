@@ -1,4 +1,4 @@
-.PHONY: run up down es-up es-down es-logs es-health auth-keys
+.PHONY: run up down test auth-keys
 
 run:
 	@APP_ENV=development go run ./cmd
@@ -9,6 +9,9 @@ up:
 
 down:
 	@docker-compose down -v 2>/dev/null || true
+
+test:
+	@go test -race -timeout 600s ./...
 
 auth-keys:
 	@mkdir -p keys

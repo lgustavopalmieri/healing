@@ -24,5 +24,5 @@ func (c *Claims) IsExpired(now time.Time) bool {
 }
 
 func (c *Claims) Valid() bool {
-	return c != nil && c.Subject != "" && c.Role.Valid() && c.TokenID != ""
+	return c != nil && c.Subject != "" && c.Role.Valid() && c.Provider.Valid() && c.TokenID != ""
 }

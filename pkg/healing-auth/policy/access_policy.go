@@ -13,11 +13,18 @@ func PublicAccess() AccessPolicy {
 }
 
 func AuthenticatedAccess(roles ...role.Role) AccessPolicy {
+	if len(roles) == 0 {
+		roles = []role.Role{role.Specialist, role.Patient, role.Admin}
+	}
 	return AccessPolicy{
-		AllowedRoles:     roles,
+		AllowedRoles:     append([]role.Role(nil), roles...),
 		RequireOwnership: false,
 		AllowPublic:      false,
 	}
+}
+
+func AnyAuthenticated() AccessPolicy {
+	return AuthenticatedAccess()
 }
 
 func OwnedAccess(r role.Role) AccessPolicy {

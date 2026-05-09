@@ -169,3 +169,45 @@ func TestClaims_Valid(t *testing.T) {
 		})
 	}
 }
+
+func TestClaims_Valid_ProviderChecks(t *testing.T) {
+	tests := []struct {
+		name     string
+		override func(*claims.Claims)
+		expected bool
+	}{
+		{
+			name:     "provider invalido retorna false",
+			override: func(c *claims.Claims) { c.Provider = provider.Provider("facebook") },
+			expected: false,
+		},
+		{
+			name:     "provider vazio retorna false",
+			override: func(c *claims.Claims) { c.Provider = provider.Provider("") },
+			expected: false,
+		},
+		{
+			name:     "provider google e valido",
+			override: func(c *claims.Claims) { c.Provider = provider.Google },
+			expected: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := validClaimsFactory(tt.override)
+			assert.Equal(t, tt.expected, c.Valid())
+		})
+	}
+}
+
+func TestClaims_IsExpired_Boundary(t *testing.T) {
+	t.Run("ExpireAt igual a now retorna false (nao expirou ainda)", func(t *testing.T) {
+		now := time.Now()
+		c := validClaimsFactory(func(c *claims.Claims) {
+			c.ExpireAt = now
+		})
+
+		assert.False(t, c.IsExpired(now))
+	})
+}
