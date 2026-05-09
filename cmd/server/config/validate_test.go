@@ -38,6 +38,14 @@ func validConfigFactory(overrides ...func(*Config)) *Config {
 		External: ExternalConfig{
 			LicenseBaseURL: "http://license-service.healing.svc.cluster.local:8080",
 		},
+		Redis: RedisConfig{
+			Host:         "redis.healing.svc.cluster.local",
+			Port:         6379,
+			Password:     "",
+			DB:           0,
+			PoolSize:     10,
+			MinIdleConns: 2,
+		},
 	}
 
 	for _, override := range overrides {
@@ -114,6 +122,30 @@ func TestValidate(t *testing.T) {
 			},
 			expectError: true,
 			expectedMsg: "OPENSEARCH_ADDRESSES is required",
+		},
+		{
+			name:        "failure - returns error when REDIS_HOST is empty",
+			override:    func(c *Config) { c.Redis.Host = "" },
+			expectError: true,
+			expectedMsg: "REDIS_HOST is required",
+		},
+		{
+			name:        "failure - returns error when REDIS_PORT is zero",
+			override:    func(c *Config) { c.Redis.Port = 0 },
+			expectError: true,
+			expectedMsg: "invalid REDIS_PORT: 0",
+		},
+		{
+			name:        "failure - returns error when REDIS_PORT exceeds 65535",
+			override:    func(c *Config) { c.Redis.Port = 70000 },
+			expectError: true,
+			expectedMsg: "invalid REDIS_PORT: 70000",
+		},
+		{
+			name:        "failure - returns error when REDIS_POOL_SIZE is less than 1",
+			override:    func(c *Config) { c.Redis.PoolSize = 0 },
+			expectError: true,
+			expectedMsg: "REDIS_POOL_SIZE must be >= 1",
 		},
 		{
 			name:        "success - valid config with empty LICENSE_VALIDATION_BASE_URL",

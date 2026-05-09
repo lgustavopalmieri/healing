@@ -35,5 +35,17 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("OPENSEARCH_ADDRESSES is required")
 	}
 
+	if c.Redis.Host == "" {
+		return fmt.Errorf("REDIS_HOST is required")
+	}
+
+	if c.Redis.Port <= 0 || c.Redis.Port > 65535 {
+		return fmt.Errorf("invalid REDIS_PORT: %d", c.Redis.Port)
+	}
+
+	if c.Redis.PoolSize < 1 {
+		return fmt.Errorf("REDIS_POOL_SIZE must be >= 1")
+	}
+
 	return nil
 }

@@ -18,6 +18,7 @@ func setAllRequiredEnvVars(t *testing.T) {
 	t.Setenv("SQS_REGION", "us-east-1")
 	t.Setenv("OPENSEARCH_ADDRESSES", "http://opensearch:9200")
 	t.Setenv("LICENSE_VALIDATION_BASE_URL", "http://license-service:8080")
+	t.Setenv("REDIS_HOST", "redis.healing.svc.cluster.local")
 	t.Setenv("ENV_DIR", "/nonexistent")
 }
 
@@ -46,6 +47,12 @@ func TestLoad(t *testing.T) {
 				assert.Equal(t, "specialist", cfg.SQS.QueuePrefix)
 				assert.Equal(t, []string{"http://opensearch:9200"}, cfg.OpenSearch.Addresses)
 				assert.Equal(t, "http://license-service:8080", cfg.External.LicenseBaseURL)
+				assert.Equal(t, "redis.healing.svc.cluster.local", cfg.Redis.Host)
+				assert.Equal(t, 6379, cfg.Redis.Port)
+				assert.Equal(t, "", cfg.Redis.Password)
+				assert.Equal(t, 0, cfg.Redis.DB)
+				assert.Equal(t, 10, cfg.Redis.PoolSize)
+				assert.Equal(t, 2, cfg.Redis.MinIdleConns)
 			},
 		},
 		{
@@ -127,6 +134,27 @@ func TestLoad(t *testing.T) {
 				assert.Equal(t, 10, cfg.Database.MaxIdleConns)
 				assert.Equal(t, 5*time.Minute, cfg.Database.ConnMaxLifetime)
 				assert.Equal(t, 2*time.Minute, cfg.Database.ConnMaxIdleTime)
+			},
+		},
+		{
+			name: "success - redis config reads from env vars",
+			setupEnv: func(t *testing.T) {
+				setAllRequiredEnvVars(t)
+				t.Setenv("REDIS_HOST", "redis-override")
+				t.Setenv("REDIS_PORT", "6380")
+				t.Setenv("REDIS_PASSWORD", "s3cret")
+				t.Setenv("REDIS_DB", "3")
+				t.Setenv("REDIS_POOL_SIZE", "25")
+				t.Setenv("REDIS_MIN_IDLE_CONNS", "5")
+			},
+			expectError: false,
+			validateResult: func(t *testing.T, cfg *Config) {
+				assert.Equal(t, "redis-override", cfg.Redis.Host)
+				assert.Equal(t, 6380, cfg.Redis.Port)
+				assert.Equal(t, "s3cret", cfg.Redis.Password)
+				assert.Equal(t, 3, cfg.Redis.DB)
+				assert.Equal(t, 25, cfg.Redis.PoolSize)
+				assert.Equal(t, 5, cfg.Redis.MinIdleConns)
 			},
 		},
 	}

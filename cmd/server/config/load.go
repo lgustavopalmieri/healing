@@ -48,6 +48,14 @@ func Load() (*Config, error) {
 		External: ExternalConfig{
 			LicenseBaseURL: getEnv("LICENSE_VALIDATION_BASE_URL", ""),
 		},
+		Redis: RedisConfig{
+			Host:         getEnv("REDIS_HOST", ""),
+			Port:         getEnvAsInt("REDIS_PORT", 6379),
+			Password:     getEnv("REDIS_PASSWORD", ""),
+			DB:           getEnvAsInt("REDIS_DB", 0),
+			PoolSize:     getEnvAsInt("REDIS_POOL_SIZE", 10),
+			MinIdleConns: getEnvAsInt("REDIS_MIN_IDLE_CONNS", 2),
+		},
 		Otel: OtelConfig{
 			ExporterEndpoint:   getEnv("OTEL_EXPORTER_OTLP_ENDPOINT", ""),
 			ExporterProtocol:   getEnv("OTEL_EXPORTER_OTLP_PROTOCOL", "http/protobuf"),

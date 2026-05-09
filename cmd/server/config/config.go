@@ -5,6 +5,7 @@ import "time"
 type Config struct {
 	Server     ServerConfig
 	Database   DatabaseConfig
+	Redis      RedisConfig
 	SQS        SQSConfig
 	OpenSearch OpenSearchConfig
 	External   ExternalConfig
@@ -53,4 +54,13 @@ type OpenSearchConfig struct {
 
 type ExternalConfig struct {
 	LicenseBaseURL string
+}
+
+type RedisConfig struct {
+	Host         string
+	Port         int
+	Password     string
+	DB           int
+	PoolSize     int
+	MinIdleConns int
 }
