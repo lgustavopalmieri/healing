@@ -1,6 +1,37 @@
 version: '3.8'
 
 services:
+  postgres-auth:
+    image: postgres:16-alpine
+    container_name: healing-auth-postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: healing_auth
+      POSTGRES_USER: healing_auth
+      POSTGRES_PASSWORD: healing_auth
+    volumes:
+      - postgres-auth-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healing_auth"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: healing-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
   healing-specialist:
     build:
       context: .
@@ -13,4 +44,15 @@ services:
       - ${ENV_FILE:-.env}
     environment:
       - APP_ENV=${APP_ENV:-development}
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./keys:/etc/healing/keys:ro
     restart: unless-stopped
+
+volumes:
+  postgres-auth-data:
+  redis-data:
