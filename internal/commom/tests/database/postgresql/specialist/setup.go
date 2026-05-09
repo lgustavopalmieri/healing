@@ -1,4 +1,4 @@
-package postgresql
+package specialist
 
 import (
 	"context"
@@ -14,7 +14,7 @@ import (
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
 
-	"github.com/lgustavopalmieri/healing-specialist/internal/platform/database/postgresql"
+	platformspecialist "github.com/lgustavopalmieri/healing-specialist/internal/platform/database/postgresql/specialist"
 )
 
 // PostgreSQLContainer wraps the testcontainers postgres container
@@ -95,7 +95,7 @@ func (c *PostgreSQLContainer) CreateCleanDatabase(t *testing.T, dbName string) (
 	require.NoError(t, err)
 
 	// Run migrations
-	err = postgresql.RunMigrations(testDB)
+	err = platformspecialist.RunMigrations(testDB)
 	require.NoError(t, err)
 
 	// Return cleanup function

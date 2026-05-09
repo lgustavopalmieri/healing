@@ -10,12 +10,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/lgustavopalmieri/healing-specialist/internal/commom/tests/database/postgresql"
+	"github.com/lgustavopalmieri/healing-specialist/internal/commom/tests/database/postgresql/specialist"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
 	createdb "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/adapters/outbound/database"
 )
 
-var testHelper = postgresql.NewTestHelper()
+var testHelper = specialist.NewTestHelper()
 
 func TestMain(m *testing.M) {
 	testHelper.RunTestMain(m)

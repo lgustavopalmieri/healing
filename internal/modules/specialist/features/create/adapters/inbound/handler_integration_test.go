@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
-	postgrestest "github.com/lgustavopalmieri/healing-specialist/internal/commom/tests/database/postgresql"
+	postgrestest "github.com/lgustavopalmieri/healing-specialist/internal/commom/tests/database/postgresql/specialist"
 	sqstest "github.com/lgustavopalmieri/healing-specialist/internal/commom/tests/event/sqs"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
 	createdb "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/adapters/outbound/database"

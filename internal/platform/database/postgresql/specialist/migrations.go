@@ -1,4 +1,4 @@
-package postgresql
+package specialist
 
 import (
 	"database/sql"

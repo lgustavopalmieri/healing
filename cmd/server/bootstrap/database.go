@@ -6,13 +6,13 @@ import (
 	"log"
 
 	"github.com/lgustavopalmieri/healing-specialist/cmd/server/config"
-	"github.com/lgustavopalmieri/healing-specialist/internal/platform/database/postgresql"
+	"github.com/lgustavopalmieri/healing-specialist/internal/platform/database/postgresql/specialist"
 )
 
 func InitDatabase(cfg *config.Config) (*sql.DB, error) {
 	log.Printf("Connecting to PostgreSQL (%s:%d)...", cfg.Database.Host, cfg.Database.Port)
 
-	db, err := postgresql.NewConnection(postgresql.Config{
+	db, err := specialist.NewConnection(specialist.Config{
 		Host:            cfg.Database.Host,
 		Port:            cfg.Database.Port,
 		User:            cfg.Database.User,
@@ -34,7 +34,7 @@ func InitDatabase(cfg *config.Config) (*sql.DB, error) {
 	}
 
 	log.Println("Running database migrations...")
-	if err := postgresql.RunMigrations(db); err != nil {
+	if err := specialist.RunMigrations(db); err != nil {
 		return nil, fmt.Errorf("failed to run migrations: %w", err)
 	}
 
