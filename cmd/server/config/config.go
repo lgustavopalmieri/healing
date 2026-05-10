@@ -9,6 +9,7 @@ type Config struct {
 	Redis      RedisConfig
 	Auth       AuthConfig
 	SQS        SQSConfig
+	SNS        SNSConfig
 	OpenSearch OpenSearchConfig
 	External   ExternalConfig
 	Otel       OtelConfig
@@ -46,6 +47,12 @@ type SQSConfig struct {
 	Region      string
 	QueuePrefix string
 	Endpoint    string
+}
+
+type SNSConfig struct {
+	Region      string
+	Endpoint    string
+	TopicPrefix string
 }
 
 type OpenSearchConfig struct {

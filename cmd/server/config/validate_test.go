@@ -44,6 +44,10 @@ func validConfigFactory(overrides ...func(*Config)) *Config {
 			Region:      "us-east-1",
 			QueuePrefix: "specialist",
 		},
+		SNS: SNSConfig{
+			Region:      "us-east-1",
+			TopicPrefix: "specialist",
+		},
 		OpenSearch: OpenSearchConfig{
 			Addresses: []string{"http://opensearch.healing.svc.cluster.local:9200"},
 		},
@@ -163,6 +167,18 @@ func TestValidate(t *testing.T) {
 			override:    func(c *Config) { c.SQS.Region = "" },
 			expectError: true,
 			expectedMsg: "SQS_REGION is required",
+		},
+		{
+			name:        "failure - returns error when SNS_REGION is empty",
+			override:    func(c *Config) { c.SNS.Region = "" },
+			expectError: true,
+			expectedMsg: "SNS_REGION is required",
+		},
+		{
+			name:        "failure - returns error when SNS_TOPIC_PREFIX is empty",
+			override:    func(c *Config) { c.SNS.TopicPrefix = "" },
+			expectError: true,
+			expectedMsg: "SNS_TOPIC_PREFIX is required",
 		},
 		{
 			name: "failure - returns error when OPENSEARCH_ADDRESSES is empty",

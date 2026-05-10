@@ -55,6 +55,11 @@ func run() error {
 		return err
 	}
 
+	snsResources, err := bootstrap.InitSNS(ctx, cfg, sqsResources)
+	if err != nil {
+		return err
+	}
+
 	serviceName := cfg.Otel.ServiceName
 	grpcMetrics := telemetry.NewGRPCMetrics(serviceName)
 
@@ -78,7 +83,7 @@ func run() error {
 	serviceDeps := bootstrap.ServiceDependencies{
 		DB:             db,
 		OSFactory:      osFactory,
-		EventPublisher: sqsResources.Producer,
+		EventPublisher: snsResources.Producer,
 		Logger:         telemetry.NewSlogLogger("healing-specialist"),
 	}
 
@@ -88,7 +93,7 @@ func run() error {
 	bootstrap.InitSQSConsumers(ctx, bootstrap.SQSConsumerDependencies{
 		DB:             db,
 		OSFactory:      osFactory,
-		EventPublisher: sqsResources.Producer,
+		EventPublisher: snsResources.Producer,
 		SQS:            sqsResources,
 		Config:         cfg,
 	})

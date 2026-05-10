@@ -31,7 +31,7 @@ func InitAuthSQSConsumers(ctx context.Context, deps AuthSQSConsumerDependencies)
 		Signer:               deps.Signer,
 		EventPublisher:       deps.EventPublisher,
 		SQSClient:            deps.SQS.Client,
-		SpecialistCreatedURL: deps.SQS.QueueURLs["specialist.created"],
+		SpecialistCreatedURL: deps.SQS.QueueURLs[ConsumerRegisterCredential],
 		SetPasswordTTL:       deps.Config.Auth.SetPasswordTTL,
 	})
 

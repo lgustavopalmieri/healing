@@ -52,6 +52,11 @@ func Load() (*Config, error) {
 			QueuePrefix: getEnv("SQS_QUEUE_PREFIX", "specialist"),
 			Endpoint:    getEnv("SQS_ENDPOINT", ""),
 		},
+		SNS: SNSConfig{
+			Region:      getEnv("SNS_REGION", getEnv("SQS_REGION", "")),
+			Endpoint:    getEnv("SNS_ENDPOINT", ""),
+			TopicPrefix: getEnv("SNS_TOPIC_PREFIX", getEnv("SQS_QUEUE_PREFIX", "specialist")),
+		},
 		OpenSearch: OpenSearchConfig{
 			Addresses:   getEnvAsSlice("OPENSEARCH_ADDRESSES", nil),
 			Region:      getEnv("OPENSEARCH_REGION", ""),

@@ -13,7 +13,6 @@ import (
 
 type SQSResources struct {
 	Client    *awssqs.Client
-	Producer  *platformsqs.SQSProducer
 	QueueURLs map[string]string
 }
 
@@ -29,10 +28,10 @@ func InitSQS(ctx context.Context, cfg *config.Config) (*SQSResources, error) {
 		return nil, fmt.Errorf("failed to create SQS client: %w", err)
 	}
 
-	log.Println("Ensuring SQS queues exist...")
-	queueURLs, err := platformsqs.EnsureQueues(ctx, client, cfg.SQS.QueuePrefix, platformsqs.DefaultQueueDefinitions())
+	log.Println("Ensuring SQS consumer queues...")
+	queueURLs, err := platformsqs.EnsureConsumerQueues(ctx, client, cfg.SQS.QueuePrefix, platformsqs.DefaultConsumerQueueDefinitions())
 	if err != nil {
-		return nil, fmt.Errorf("failed to ensure SQS queues: %w", err)
+		return nil, fmt.Errorf("failed to ensure SQS consumer queues: %w", err)
 	}
 
 	log.Println("Running SQS health check...")
@@ -40,13 +39,10 @@ func InitSQS(ctx context.Context, cfg *config.Config) (*SQSResources, error) {
 		return nil, fmt.Errorf("SQS health check failed: %w", err)
 	}
 
-	producer := platformsqs.NewSQSProducer(client, queueURLs)
-
 	log.Println("SQS initialized successfully")
 
 	return &SQSResources{
 		Client:    client,
-		Producer:  producer,
 		QueueURLs: queueURLs,
 	}, nil
 }

@@ -47,6 +47,14 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("SQS_REGION is required")
 	}
 
+	if c.SNS.Region == "" {
+		return fmt.Errorf("SNS_REGION is required")
+	}
+
+	if c.SNS.TopicPrefix == "" {
+		return fmt.Errorf("SNS_TOPIC_PREFIX is required")
+	}
+
 	if len(c.OpenSearch.Addresses) == 0 {
 		return fmt.Errorf("OPENSEARCH_ADDRESSES is required")
 	}

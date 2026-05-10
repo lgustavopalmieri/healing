@@ -30,6 +30,23 @@ services:
       timeout: 3s
       retries: 5
 
+  localstack:
+    image: localstack/localstack:3.8
+    container_name: healing-localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=sns,sqs
+      - DEFAULT_REGION=us-east-1
+      - DEBUG=0
+    volumes:
+      - localstack-data:/var/lib/localstack
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   healing-specialist:
     build:
       context: .
@@ -47,6 +64,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      localstack:
+        condition: service_healthy
     volumes:
       - ./keys:/etc/healing/keys:ro
     restart: unless-stopped
@@ -54,3 +73,4 @@ services:
 volumes:
   postgres-auth-data:
   redis-data:
+  localstack-data:

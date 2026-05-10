@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
+	awssns "github.com/aws/aws-sdk-go-v2/service/sns"
 	awssqs "github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
@@ -18,6 +19,7 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
+	platformsns "github.com/lgustavopalmieri/healing-specialist/internal/platform/sns"
 	platformsqs "github.com/lgustavopalmieri/healing-specialist/internal/platform/sqs"
 )
 
@@ -32,7 +34,7 @@ func SetupLocalStackContainer(t *testing.T) *LocalStackContainer {
 	container, err := tclocalstack.Run(ctx,
 		"localstack/localstack:3.8",
 		testcontainers.WithEnv(map[string]string{
-			"SERVICES": "sqs",
+			"SERVICES": "sqs,sns",
 		}),
 		testcontainers.WithWaitStrategy(
 			wait.ForHTTP("/_localstack/health").
@@ -79,16 +81,54 @@ func (c *LocalStackContainer) CreateSQSClient(t *testing.T) *awssqs.Client {
 	return client
 }
 
-func (c *LocalStackContainer) CreateProducer(t *testing.T, queueURLs map[string]string) *platformsqs.SQSProducer {
-	client := c.CreateSQSClient(t)
-	return platformsqs.NewSQSProducer(client, queueURLs)
+func (c *LocalStackContainer) CreateSNSClient(t *testing.T) *awssns.Client {
+	awsCfg, err := awsconfig.LoadDefaultConfig(context.Background(),
+		awsconfig.WithRegion("us-east-1"),
+		awsconfig.WithCredentialsProvider(credentials.NewStaticCredentialsProvider("test", "test", "test")),
+	)
+	require.NoError(t, err)
+
+	endpoint := c.Endpoint
+	client := awssns.NewFromConfig(awsCfg, func(o *awssns.Options) {
+		o.BaseEndpoint = &endpoint
+	})
+	return client
+}
+
+func (c *LocalStackContainer) CreateSNSProducer(t *testing.T, topicARNs map[string]string) *platformsns.SNSProducer {
+	client := c.CreateSNSClient(t)
+	return platformsns.NewSNSProducer(client, topicARNs)
 }
 
 func (c *LocalStackContainer) EnsureQueues(t *testing.T, prefix string) (map[string]string, *awssqs.Client) {
 	client := c.CreateSQSClient(t)
-	urls, err := platformsqs.EnsureQueues(context.Background(), client, prefix, platformsqs.DefaultQueueDefinitions())
+	urls, err := platformsqs.EnsureConsumerQueues(context.Background(), client, prefix, platformsqs.DefaultConsumerQueueDefinitions())
 	require.NoError(t, err)
 	return urls, client
+}
+
+func (c *LocalStackContainer) EnsureTopicsAndSubscriptions(t *testing.T, snsClient *awssns.Client, sqsClient *awssqs.Client, prefix string, queueURLs map[string]string) map[string]string {
+	topicARNs, err := platformsns.EnsureTopics(context.Background(), snsClient, prefix, platformsns.DefaultTopicDefinitions())
+	require.NoError(t, err)
+
+	subs := make([]platformsns.SubscriptionDefinition, 0)
+	for _, def := range platformsqs.DefaultConsumerQueueDefinitions() {
+		if def.SubscribesToEvent == "" {
+			continue
+		}
+		queueURL, ok := queueURLs[def.ConsumerName]
+		if !ok {
+			continue
+		}
+		subs = append(subs, platformsns.SubscriptionDefinition{
+			EventName:    def.SubscribesToEvent,
+			ConsumerName: def.ConsumerName,
+			QueueURL:     queueURL,
+		})
+	}
+
+	require.NoError(t, platformsns.EnsureSubscriptions(context.Background(), snsClient, sqsClient, topicARNs, subs))
+	return topicARNs
 }
 
 func (c *LocalStackContainer) ProduceEvent(t *testing.T, client *awssqs.Client, queueURL string, payload any) {
@@ -140,7 +180,9 @@ func (c *LocalStackContainer) ConsumeEvent(t *testing.T, client *awssqs.Client, 
 type TestHelper struct {
 	SharedContainer *LocalStackContainer
 	SQSClient       *awssqs.Client
+	SNSClient       *awssns.Client
 	QueueURLs       map[string]string
+	TopicARNs       map[string]string
 }
 
 func NewTestHelper() *TestHelper {
@@ -150,9 +192,12 @@ func NewTestHelper() *TestHelper {
 func (h *TestHelper) RunTestMain(m *testing.M) {
 	h.SharedContainer = SetupLocalStackContainer(&testing.T{})
 
-	urls, client := h.SharedContainer.EnsureQueues(&testing.T{}, "specialist")
-	h.SQSClient = client
+	urls, sqsClient := h.SharedContainer.EnsureQueues(&testing.T{}, "specialist")
+	h.SQSClient = sqsClient
 	h.QueueURLs = urls
+
+	h.SNSClient = h.SharedContainer.CreateSNSClient(&testing.T{})
+	h.TopicARNs = h.SharedContainer.EnsureTopicsAndSubscriptions(&testing.T{}, h.SNSClient, h.SQSClient, "specialist", urls)
 
 	code := m.Run()
 
