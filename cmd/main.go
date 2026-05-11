@@ -77,6 +77,8 @@ func run() error {
 
 	_ = bootstrap.InitAuthTokenValidator(cfg, keyring)
 
+	emailSender := bootstrap.InitEmailSender(cfg)
+
 	serviceName := cfg.Otel.ServiceName
 	grpcMetrics := telemetry.NewGRPCMetrics(serviceName)
 
@@ -122,6 +124,7 @@ func run() error {
 		DB:             db,
 		OSFactory:      osFactory,
 		EventPublisher: snsResources.Producer,
+		EmailSender:    emailSender,
 		SQS:            sqsResources,
 		Config:         cfg,
 	})

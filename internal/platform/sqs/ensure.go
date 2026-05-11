@@ -43,6 +43,13 @@ func DefaultConsumerQueueDefinitions() []ConsumerQueueDefinition {
 			VisibilityTimeout: 30,
 			RetentionPeriod:   1209600,
 		},
+		{
+			ConsumerName:      "specialist-send-welcome-email",
+			SubscribesToEvent: "specialist.created",
+			MaxReceiveCount:   3,
+			VisibilityTimeout: 30,
+			RetentionPeriod:   1209600,
+		},
 	}
 }
 
