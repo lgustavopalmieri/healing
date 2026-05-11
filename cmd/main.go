@@ -60,6 +60,23 @@ func run() error {
 		return err
 	}
 
+	authDB, err := bootstrap.InitAuthDatabase(cfg)
+	if err != nil {
+		return err
+	}
+
+	redisClient, err := bootstrap.InitRedis(ctx, cfg)
+	if err != nil {
+		return err
+	}
+
+	signer, keyring, err := bootstrap.InitAuthTokenService(cfg)
+	if err != nil {
+		return err
+	}
+
+	_ = bootstrap.InitAuthTokenValidator(cfg, keyring)
+
 	serviceName := cfg.Otel.ServiceName
 	grpcMetrics := telemetry.NewGRPCMetrics(serviceName)
 
@@ -90,9 +107,29 @@ func run() error {
 	bootstrap.RegisterServices(grpcServer, serviceDeps)
 	bootstrap.RegisterHTTPServices(httpServer, serviceDeps)
 
+	authLogger := telemetry.NewSlogLogger("healing-auth")
+	bootstrap.RegisterAuthHTTPServices(httpServer, bootstrap.AuthHTTPDependencies{
+		AuthDB:         authDB,
+		RedisClient:    redisClient,
+		Signer:         signer,
+		Keyring:        keyring,
+		EventPublisher: snsResources.Producer,
+		Logger:         authLogger,
+		Config:         cfg,
+	})
+
 	bootstrap.InitSQSConsumers(ctx, bootstrap.SQSConsumerDependencies{
 		DB:             db,
 		OSFactory:      osFactory,
+		EventPublisher: snsResources.Producer,
+		SQS:            sqsResources,
+		Config:         cfg,
+	})
+
+	bootstrap.InitAuthSQSConsumers(ctx, bootstrap.AuthSQSConsumerDependencies{
+		AuthDB:         authDB,
+		RedisClient:    redisClient,
+		Signer:         signer,
 		EventPublisher: snsResources.Producer,
 		SQS:            sqsResources,
 		Config:         cfg,
@@ -144,7 +181,12 @@ func run() error {
 		}
 	}
 
-	if err := shutdownManager.Shutdown(grpcServer, db); err != nil {
+	if err := shutdownManager.Shutdown(bootstrap.ShutdownResources{
+		GRPCServer:  grpcServer,
+		DB:          db,
+		AuthDB:      authDB,
+		RedisClient: redisClient,
+	}); err != nil {
 		log.Printf("Shutdown error: %v", err)
 		os.Exit(1)
 	}

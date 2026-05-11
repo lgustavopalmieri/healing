@@ -4,8 +4,8 @@ import "time"
 
 type TokenPair struct {
 	AccessToken      string
-	RefreshToken     string
+	AccessJTI        string
 	AccessExpiresAt  time.Time
+	RefreshToken     string
 	RefreshExpiresAt time.Time
-	TokenType        string
 }

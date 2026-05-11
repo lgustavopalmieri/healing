@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/auth/domain/password"
 	"github.com/lgustavopalmieri/healing-specialist/pkg/healing-auth/provider"
 	"github.com/lgustavopalmieri/healing-specialist/pkg/healing-auth/role"
 )
@@ -15,7 +16,7 @@ type Credential struct {
 	Role           role.Role
 	Provider       provider.Provider
 	ProviderUserID string
-	PasswordHash   string
+	PasswordHash   password.HashedPassword
 	Email          string
 	Status         Status
 	LastUsedAt     *time.Time
@@ -46,7 +47,7 @@ func NewCredential(in NewCredentialInput) *Credential {
 	}
 }
 
-func (c *Credential) Activate(passwordHash string) error {
+func (c *Credential) Activate(passwordHash password.HashedPassword) error {
 	if !c.Status.CanTransitionTo(StatusActive) {
 		return ErrInvalidStatusTransition
 	}
@@ -56,7 +57,7 @@ func (c *Credential) Activate(passwordHash string) error {
 	return nil
 }
 
-func (c *Credential) UpdatePassword(passwordHash string) error {
+func (c *Credential) UpdatePassword(passwordHash password.HashedPassword) error {
 	if c.Status != StatusActive {
 		return ErrInvalidStatusTransition
 	}

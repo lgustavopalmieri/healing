@@ -9,9 +9,9 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
-	"github.com/lgustavopalmieri/healing-specialist/internal/modules/auth/features/register-credential/event_listeners/create_specialist_credential/adapters/outbound/database"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/auth/features/register-credential/event_listeners/create_specialist_credential/adapters/outbound/tokens"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/auth/features/register-credential/event_listeners/create_specialist_credential/listener"
+	credentialrepo "github.com/lgustavopalmieri/healing-specialist/internal/modules/auth/shared/repositories/credential"
 	platformsqs "github.com/lgustavopalmieri/healing-specialist/internal/platform/sqs"
 	tokenissuer "github.com/lgustavopalmieri/healing-specialist/internal/platform/tokenissuer"
 )
@@ -27,7 +27,7 @@ type ManagerDependencies struct {
 }
 
 func NewCreateSpecialistCredentialSQSManager(ctx context.Context, deps ManagerDependencies) {
-	credentialRepository := database.NewCredentialDatabaseRepository(deps.AuthDB)
+	credentialRepository := credentialrepo.NewCredentialDatabaseRepository(deps.AuthDB)
 	setPasswordGenerator := tokens.NewSetPasswordTokenGenerator(deps.Signer, deps.RedisClient, deps.SetPasswordTTL)
 
 	handler := listener.NewCreateSpecialistCredentialHandler(

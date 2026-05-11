@@ -24,7 +24,7 @@ func TestPassword_New(t *testing.T) {
 		expectedErr error
 	}{
 		{
-			name: "happy path - raw valido retorna Password com Raw preenchido",
+			name: "happy path - raw valido retorna Password nao-vazia",
 			raw:  "abc12345",
 			cfg:  defaultCfg(),
 		},
@@ -65,16 +65,14 @@ func TestPassword_New(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := password.NewPassword(tt.raw, tt.cfg)
+			_, err := password.NewPassword(tt.raw, tt.cfg)
 
 			if tt.expectError {
 				require.Error(t, err)
 				assert.ErrorIs(t, err, tt.expectedErr)
-				assert.Empty(t, got.Raw)
 				return
 			}
 			require.NoError(t, err)
-			assert.Equal(t, tt.raw, got.Raw)
 		})
 	}
 }
@@ -84,25 +82,46 @@ func TestPassword_HashAndMatches(t *testing.T) {
 		pwd, err := password.NewPassword("abc12345", defaultCfg())
 		require.NoError(t, err)
 
-		hash, err := pwd.Hash(testBcryptCost)
+		hashed, err := pwd.Hash(testBcryptCost)
 		require.NoError(t, err)
-		require.NotEmpty(t, hash)
-		assert.NotEqual(t, "abc12345", hash)
+		require.False(t, hashed.IsEmpty())
+		assert.NotEqual(t, "abc12345", hashed.String())
 
-		assert.True(t, password.Matches("abc12345", hash))
+		assert.True(t, pwd.Matches(hashed))
 	})
 
 	t.Run("failure - match com senha errada retorna false", func(t *testing.T) {
 		pwd, err := password.NewPassword("abc12345", defaultCfg())
 		require.NoError(t, err)
 
-		hash, err := pwd.Hash(testBcryptCost)
+		hashed, err := pwd.Hash(testBcryptCost)
 		require.NoError(t, err)
 
-		assert.False(t, password.Matches("wrong-password", hash))
+		wrongAttempt, err := password.NewPassword("wrong-password-1", defaultCfg())
+		require.NoError(t, err)
+
+		assert.False(t, wrongAttempt.Matches(hashed))
 	})
 
 	t.Run("failure - match com hash malformado retorna false", func(t *testing.T) {
-		assert.False(t, password.Matches("abc12345", "not-a-bcrypt-hash"))
+		pwd, err := password.NewPassword("abc12345", defaultCfg())
+		require.NoError(t, err)
+
+		malformed := password.NewHashedPassword("not-a-bcrypt-hash")
+		assert.False(t, pwd.Matches(malformed))
+	})
+}
+
+func TestHashedPassword(t *testing.T) {
+	t.Run("empty hashed password", func(t *testing.T) {
+		h := password.NewHashedPassword("")
+		assert.True(t, h.IsEmpty())
+		assert.Equal(t, "", h.String())
+	})
+
+	t.Run("non-empty hashed password", func(t *testing.T) {
+		h := password.NewHashedPassword("hash-123")
+		assert.False(t, h.IsEmpty())
+		assert.Equal(t, "hash-123", h.String())
 	})
 }

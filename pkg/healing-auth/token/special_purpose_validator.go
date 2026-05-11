@@ -8,41 +8,49 @@ import (
 
 	jwtlib "github.com/golang-jwt/jwt/v5"
 
-	"github.com/lgustavopalmieri/healing-specialist/pkg/healing-auth/claims"
 	autherrors "github.com/lgustavopalmieri/healing-specialist/pkg/healing-auth/errors"
-	"github.com/lgustavopalmieri/healing-specialist/pkg/healing-auth/provider"
 	"github.com/lgustavopalmieri/healing-specialist/pkg/healing-auth/role"
 )
 
-type JWTValidatorConfig struct {
+type SpecialPurposeJWTValidatorConfig struct {
 	PublicKeys map[string]*rsa.PublicKey
 	Issuer     string
 	Audience   string
 }
 
-type JWTValidator struct {
+type SpecialPurposeJWTValidator struct {
 	publicKeys map[string]*rsa.PublicKey
 	issuer     string
 	audience   string
 }
 
-func NewJWTValidator(cfg JWTValidatorConfig) *JWTValidator {
-	return &JWTValidator{
+func NewSpecialPurposeJWTValidator(cfg SpecialPurposeJWTValidatorConfig) *SpecialPurposeJWTValidator {
+	return &SpecialPurposeJWTValidator{
 		publicKeys: cfg.PublicKeys,
 		issuer:     cfg.Issuer,
 		audience:   cfg.Audience,
 	}
 }
 
-type standardClaims struct {
-	Role     string `json:"role"`
-	Email    string `json:"email"`
-	Provider string `json:"provider"`
+type SpecialPurposeClaims struct {
+	Subject  string
+	Role     role.Role
+	Purpose  string
+	TokenID  string
+	IssuedAt time.Time
+	ExpireAt time.Time
+	Issuer   string
+	Audience string
+}
+
+type specialPurposeJWTClaims struct {
+	Role    string `json:"role"`
+	Purpose string `json:"purpose"`
 	jwtlib.RegisteredClaims
 }
 
-func (v *JWTValidator) Validate(ctx context.Context, rawToken string) (*claims.Claims, error) {
-	parsed, err := jwtlib.ParseWithClaims(rawToken, &standardClaims{}, rsaKeyFunc(v.publicKeys))
+func (v *SpecialPurposeJWTValidator) Validate(ctx context.Context, rawToken string, expectedPurpose string) (*SpecialPurposeClaims, error) {
+	parsed, err := jwtlib.ParseWithClaims(rawToken, &specialPurposeJWTClaims{}, rsaKeyFunc(v.publicKeys))
 	if err != nil {
 		if errors.Is(err, jwtlib.ErrTokenExpired) {
 			return nil, autherrors.ErrExpiredToken
@@ -52,7 +60,7 @@ func (v *JWTValidator) Validate(ctx context.Context, rawToken string) (*claims.C
 	if !parsed.Valid {
 		return nil, autherrors.ErrInvalidToken
 	}
-	sc, ok := parsed.Claims.(*standardClaims)
+	sc, ok := parsed.Claims.(*specialPurposeJWTClaims)
 	if !ok {
 		return nil, autherrors.ErrInvalidClaims
 	}
@@ -62,14 +70,17 @@ func (v *JWTValidator) Validate(ctx context.Context, rawToken string) (*claims.C
 	if !containsAudience(sc.Audience, v.audience) {
 		return nil, autherrors.ErrInvalidClaims
 	}
+	if sc.Purpose == "" || sc.Purpose != expectedPurpose {
+		return nil, autherrors.ErrInvalidClaims
+	}
 	r, err := role.Parse(sc.Role)
 	if err != nil {
 		return nil, autherrors.ErrInvalidClaims
 	}
-	p, err := provider.Parse(sc.Provider)
-	if err != nil {
+	if sc.Subject == "" || sc.ID == "" {
 		return nil, autherrors.ErrInvalidClaims
 	}
+
 	issuedAt := time.Time{}
 	if sc.IssuedAt != nil {
 		issuedAt = sc.IssuedAt.Time
@@ -78,22 +89,18 @@ func (v *JWTValidator) Validate(ctx context.Context, rawToken string) (*claims.C
 	if sc.ExpiresAt != nil {
 		expireAt = sc.ExpiresAt.Time
 	}
-	c := &claims.Claims{
+	if time.Now().After(expireAt) {
+		return nil, autherrors.ErrExpiredToken
+	}
+
+	return &SpecialPurposeClaims{
 		Subject:  sc.Subject,
 		Role:     r,
-		Email:    sc.Email,
-		Provider: p,
+		Purpose:  sc.Purpose,
 		TokenID:  sc.ID,
 		IssuedAt: issuedAt,
 		ExpireAt: expireAt,
 		Issuer:   sc.Issuer,
 		Audience: firstAudience(sc.Audience),
-	}
-	if !c.Valid() {
-		return nil, autherrors.ErrInvalidClaims
-	}
-	if c.IsExpired(time.Now()) {
-		return nil, autherrors.ErrExpiredToken
-	}
-	return c, nil
+	}, nil
 }

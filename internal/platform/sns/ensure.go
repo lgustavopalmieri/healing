@@ -30,6 +30,7 @@ func DefaultTopicDefinitions() []TopicDefinition {
 		{EventName: "specialist.created", Suffix: "specialist-created"},
 		{EventName: "specialist.updated", Suffix: "specialist-updated"},
 		{EventName: "auth.credential.pending", Suffix: "auth-credential-pending"},
+		{EventName: "auth.credential.activated", Suffix: "auth-credential-activated"},
 	}
 }
 

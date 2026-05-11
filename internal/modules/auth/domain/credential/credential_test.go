@@ -9,8 +9,15 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/auth/domain/credential"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/auth/domain/password"
 	"github.com/lgustavopalmieri/healing-specialist/pkg/healing-auth/provider"
 	"github.com/lgustavopalmieri/healing-specialist/pkg/healing-auth/role"
+)
+
+var (
+	hashXYZ = password.NewHashedPassword("hash-xyz")
+	hashOld = password.NewHashedPassword("old-hash")
+	hashNew = password.NewHashedPassword("new-hash")
 )
 
 func credFactory(overrides ...func(*credential.NewCredentialInput)) credential.NewCredentialInput {
@@ -41,7 +48,7 @@ func TestCredential_New(t *testing.T) {
 		assert.Equal(t, in.Provider, cred.Provider)
 		assert.Equal(t, in.Email, cred.Email)
 		assert.Equal(t, credential.StatusPending, cred.Status)
-		assert.Empty(t, cred.PasswordHash)
+		assert.True(t, cred.PasswordHash.IsEmpty())
 		assert.Nil(t, cred.LastUsedAt)
 		assert.False(t, cred.CreatedAt.IsZero())
 		assert.False(t, cred.UpdatedAt.IsZero())
@@ -87,18 +94,18 @@ func TestCredential_Activate(t *testing.T) {
 			originalUpdatedAt := cred.UpdatedAt
 
 			time.Sleep(time.Millisecond)
-			err := cred.Activate("hash-xyz")
+			err := cred.Activate(hashXYZ)
 
 			if tt.expectError {
 				require.Error(t, err)
 				assert.ErrorIs(t, err, tt.expectedErr)
 				assert.Equal(t, tt.initial, cred.Status)
-				assert.Empty(t, cred.PasswordHash)
+				assert.True(t, cred.PasswordHash.IsEmpty())
 				return
 			}
 			require.NoError(t, err)
 			assert.Equal(t, tt.expectedNext, cred.Status)
-			assert.Equal(t, "hash-xyz", cred.PasswordHash)
+			assert.Equal(t, hashXYZ.String(), cred.PasswordHash.String())
 			assert.True(t, cred.UpdatedAt.After(originalUpdatedAt))
 		})
 	}
@@ -120,20 +127,20 @@ func TestCredential_UpdatePassword(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cred := credential.NewCredential(credFactory())
 			cred.Status = tt.initial
-			cred.PasswordHash = "old-hash"
+			cred.PasswordHash = hashOld
 			originalUpdatedAt := cred.UpdatedAt
 
 			time.Sleep(time.Millisecond)
-			err := cred.UpdatePassword("new-hash")
+			err := cred.UpdatePassword(hashNew)
 
 			if tt.expectError {
 				require.Error(t, err)
 				assert.ErrorIs(t, err, credential.ErrInvalidStatusTransition)
-				assert.Equal(t, "old-hash", cred.PasswordHash)
+				assert.Equal(t, hashOld.String(), cred.PasswordHash.String())
 				return
 			}
 			require.NoError(t, err)
-			assert.Equal(t, "new-hash", cred.PasswordHash)
+			assert.Equal(t, hashNew.String(), cred.PasswordHash.String())
 			assert.True(t, cred.UpdatedAt.After(originalUpdatedAt))
 		})
 	}
