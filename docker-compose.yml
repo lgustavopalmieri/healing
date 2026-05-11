@@ -1,4 +1,21 @@
 services:
+  postgres-specialist:
+    image: postgres:16-alpine
+    container_name: healing-specialist-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: healing_specialist
+      POSTGRES_USER: healing_specialist
+      POSTGRES_PASSWORD: healing_specialist
+    volumes:
+      - postgres-specialist-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healing_specialist"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   postgres-auth:
     image: postgres:16-alpine
     container_name: healing-auth-postgres
@@ -30,6 +47,23 @@ services:
       timeout: 3s
       retries: 5
 
+  opensearch:
+    image: opensearchproject/opensearch:2.11.0
+    container_name: healing-opensearch
+    ports:
+      - "9200:9200"
+    environment:
+      - discovery.type=single-node
+      - plugins.security.disabled=true
+      - OPENSEARCH_JAVA_OPTS=-Xms256m -Xmx256m
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
   localstack:
     image: localstack/localstack:3.8
     container_name: healing-localstack
@@ -60,9 +94,13 @@ services:
     environment:
       - APP_ENV=${APP_ENV:-development}
     depends_on:
+      postgres-specialist:
+        condition: service_healthy
       postgres-auth:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      opensearch:
         condition: service_healthy
       localstack:
         condition: service_healthy
@@ -71,6 +109,8 @@ services:
     restart: unless-stopped
 
 volumes:
+  postgres-specialist-data:
   postgres-auth-data:
   redis-data:
+  opensearch-data:
   localstack-data:
