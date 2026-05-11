@@ -1,6 +1,42 @@
 basePath: /
 definitions:
-  httphandler.CreateSpecialistRequest:
+  internal_modules_auth_features_set-password_adapters_inbound_http_handler.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  internal_modules_auth_features_set-password_adapters_inbound_http_handler.SetPasswordRequest:
+    properties:
+      device_info:
+        type: string
+      password:
+        type: string
+      token:
+        type: string
+    type: object
+  internal_modules_auth_features_set-password_adapters_inbound_http_handler.SetPasswordResponse:
+    properties:
+      role:
+        type: string
+      subject_id:
+        type: string
+      token_pair:
+        $ref: '#/definitions/internal_modules_auth_features_set-password_adapters_inbound_http_handler.TokenPairResponse'
+    type: object
+  internal_modules_auth_features_set-password_adapters_inbound_http_handler.TokenPairResponse:
+    properties:
+      access_expires_at:
+        type: string
+      access_token:
+        type: string
+      refresh_expires_at:
+        type: string
+      refresh_token:
+        type: string
+      token_type:
+        type: string
+    type: object
+  internal_modules_specialist_features_create_adapters_inbound_http_handler.CreateSpecialistRequest:
     properties:
       agreed_to_share:
         type: boolean
@@ -19,84 +55,6 @@ definitions:
       phone:
         type: string
       specialty:
-        type: string
-    type: object
-  httphandler.FilterRequest:
-    properties:
-      field:
-        type: string
-      value:
-        type: string
-    type: object
-  httphandler.PaginationResponse:
-    properties:
-      has_next_page:
-        type: boolean
-      has_previous_page:
-        type: boolean
-      next_cursor:
-        type: string
-      previous_cursor:
-        type: string
-      total_items_in_page:
-        type: integer
-    type: object
-  httphandler.SearchSpecialistsRequest:
-    properties:
-      cursor:
-        type: string
-      direction:
-        type: string
-      filters:
-        items:
-          $ref: '#/definitions/httphandler.FilterRequest'
-        type: array
-      page_size:
-        type: integer
-      search_term:
-        type: string
-      sort:
-        items:
-          $ref: '#/definitions/httphandler.SortRequest'
-        type: array
-    type: object
-  httphandler.SearchSpecialistsResponse:
-    properties:
-      pagination:
-        $ref: '#/definitions/httphandler.PaginationResponse'
-      specialists:
-        items:
-          $ref: '#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.SpecialistResponse'
-        type: array
-    type: object
-  httphandler.SortRequest:
-    properties:
-      field:
-        type: string
-      order:
-        type: string
-    type: object
-  httphandler.UpdateSpecialistRequest:
-    properties:
-      agreed_to_share:
-        type: boolean
-      description:
-        type: string
-      email:
-        type: string
-      keywords:
-        items:
-          type: string
-        type: array
-      license_number:
-        type: string
-      name:
-        type: string
-      phone:
-        type: string
-      specialty:
-        type: string
-      status:
         type: string
     type: object
   internal_modules_specialist_features_create_adapters_inbound_http_handler.ErrorResponse:
@@ -138,6 +96,61 @@ definitions:
   internal_modules_specialist_features_search_adapters_inbound_http_handler.ErrorResponse:
     properties:
       error:
+        type: string
+    type: object
+  internal_modules_specialist_features_search_adapters_inbound_http_handler.FilterRequest:
+    properties:
+      field:
+        type: string
+      value:
+        type: string
+    type: object
+  internal_modules_specialist_features_search_adapters_inbound_http_handler.PaginationResponse:
+    properties:
+      has_next_page:
+        type: boolean
+      has_previous_page:
+        type: boolean
+      next_cursor:
+        type: string
+      previous_cursor:
+        type: string
+      total_items_in_page:
+        type: integer
+    type: object
+  internal_modules_specialist_features_search_adapters_inbound_http_handler.SearchSpecialistsRequest:
+    properties:
+      cursor:
+        type: string
+      direction:
+        type: string
+      filters:
+        items:
+          $ref: '#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.FilterRequest'
+        type: array
+      page_size:
+        type: integer
+      search_term:
+        type: string
+      sort:
+        items:
+          $ref: '#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.SortRequest'
+        type: array
+    type: object
+  internal_modules_specialist_features_search_adapters_inbound_http_handler.SearchSpecialistsResponse:
+    properties:
+      pagination:
+        $ref: '#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.PaginationResponse'
+      specialists:
+        items:
+          $ref: '#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.SpecialistResponse'
+        type: array
+    type: object
+  internal_modules_specialist_features_search_adapters_inbound_http_handler.SortRequest:
+    properties:
+      field:
+        type: string
+      order:
         type: string
     type: object
   internal_modules_specialist_features_search_adapters_inbound_http_handler.SpecialistResponse:
@@ -207,6 +220,29 @@ definitions:
       updated_at:
         type: string
     type: object
+  internal_modules_specialist_features_update_adapters_inbound_http_handler.UpdateSpecialistRequest:
+    properties:
+      agreed_to_share:
+        type: boolean
+      description:
+        type: string
+      email:
+        type: string
+      keywords:
+        items:
+          type: string
+        type: array
+      license_number:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      specialty:
+        type: string
+      status:
+        type: string
+    type: object
 info:
   contact: {}
   description: API for managing healthcare specialists on the Healing platform. Supports
@@ -214,6 +250,46 @@ info:
   title: Healing Specialist API
   version: "1.0"
 paths:
+  /api/v1/auth/set-password:
+    post:
+      consumes:
+      - application/json
+      description: Consumes a single-use set-password token, activates the credential,
+        and returns access/refresh tokens. The token is issued during onboarding and
+        can be used only once.
+      parameters:
+      - description: Set-password payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_auth_features_set-password_adapters_inbound_http_handler.SetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_auth_features_set-password_adapters_inbound_http_handler.SetPasswordResponse'
+        "400":
+          description: Invalid payload or weak password
+          schema:
+            $ref: '#/definitions/internal_modules_auth_features_set-password_adapters_inbound_http_handler.ErrorResponse'
+        "401":
+          description: Invalid or already used token
+          schema:
+            $ref: '#/definitions/internal_modules_auth_features_set-password_adapters_inbound_http_handler.ErrorResponse'
+        "409":
+          description: Credential not in pending state
+          schema:
+            $ref: '#/definitions/internal_modules_auth_features_set-password_adapters_inbound_http_handler.ErrorResponse'
+        "500":
+          description: Infrastructure failure
+          schema:
+            $ref: '#/definitions/internal_modules_auth_features_set-password_adapters_inbound_http_handler.ErrorResponse'
+      summary: Set initial password for a pending credential
+      tags:
+      - auth
   /api/v1/specialists:
     post:
       consumes:
@@ -226,7 +302,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/httphandler.CreateSpecialistRequest'
+          $ref: '#/definitions/internal_modules_specialist_features_create_adapters_inbound_http_handler.CreateSpecialistRequest'
       produces:
       - application/json
       responses:
@@ -262,7 +338,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/httphandler.UpdateSpecialistRequest'
+          $ref: '#/definitions/internal_modules_specialist_features_update_adapters_inbound_http_handler.UpdateSpecialistRequest'
       produces:
       - application/json
       responses:
@@ -293,14 +369,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/httphandler.SearchSpecialistsRequest'
+          $ref: '#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.SearchSpecialistsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httphandler.SearchSpecialistsResponse'
+            $ref: '#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.SearchSpecialistsResponse'
         "400":
           description: Invalid request body or search parameters
           schema:
