@@ -65,6 +65,12 @@ func Load() (*Config, error) {
 		External: ExternalConfig{
 			LicenseBaseURL: getEnv("LICENSE_VALIDATION_BASE_URL", ""),
 		},
+		Email: EmailConfig{
+			SMTPHost:    getEnv("EMAIL_SMTP_HOST", "mailhog"),
+			SMTPPort:    getEnvAsInt("EMAIL_SMTP_PORT", 1025),
+			FromAddress: getEnv("EMAIL_FROM_ADDRESS", "noreply@healing.local"),
+			FromName:    getEnv("EMAIL_FROM_NAME", "Healing Platform"),
+		},
 		Redis: RedisConfig{
 			Host:         getEnv("REDIS_HOST", ""),
 			Port:         getEnvAsInt("REDIS_PORT", 6379),

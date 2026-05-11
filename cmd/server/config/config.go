@@ -12,6 +12,7 @@ type Config struct {
 	SNS        SNSConfig
 	OpenSearch OpenSearchConfig
 	External   ExternalConfig
+	Email      EmailConfig
 	Otel       OtelConfig
 }
 
@@ -63,6 +64,13 @@ type OpenSearchConfig struct {
 
 type ExternalConfig struct {
 	LicenseBaseURL string
+}
+
+type EmailConfig struct {
+	SMTPHost    string
+	SMTPPort    int
+	FromAddress string
+	FromName    string
 }
 
 type AuthConfig struct {
