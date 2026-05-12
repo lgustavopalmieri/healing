@@ -39,6 +39,52 @@ definitions:
       token_type:
         type: string
     type: object
+  internal_modules_auth_features_logout_adapters_inbound_http_handler.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  internal_modules_auth_features_logout_adapters_inbound_http_handler.LogoutRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  internal_modules_auth_features_refresh-token_adapters_inbound_http_handler.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  internal_modules_auth_features_refresh-token_adapters_inbound_http_handler.RefreshTokenRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  internal_modules_auth_features_refresh-token_adapters_inbound_http_handler.RefreshTokenResponse:
+    properties:
+      role:
+        type: string
+      subject_id:
+        type: string
+      token_pair:
+        $ref: '#/definitions/internal_modules_auth_features_refresh-token_adapters_inbound_http_handler.TokenPairResponse'
+    type: object
+  internal_modules_auth_features_refresh-token_adapters_inbound_http_handler.TokenPairResponse:
+    properties:
+      access_expires_at:
+        type: string
+      access_token:
+        type: string
+      refresh_expires_at:
+        type: string
+      refresh_token:
+        type: string
+      token_type:
+        type: string
+    type: object
   internal_modules_auth_features_set-password_adapters_inbound_http_handler.ErrorResponse:
     properties:
       error:
@@ -289,6 +335,74 @@ info:
   title: Healing Specialist API
   version: "1.0"
 paths:
+  /api/v1/auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Invalidates the refresh token and blacklists the current access
+        token. Requires authentication.
+      parameters:
+      - description: Logout payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_auth_features_logout_adapters_inbound_http_handler.LogoutRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Invalid payload
+          schema:
+            $ref: '#/definitions/internal_modules_auth_features_logout_adapters_inbound_http_handler.ErrorResponse'
+        "401":
+          description: Unauthenticated
+          schema:
+            $ref: '#/definitions/internal_modules_auth_features_logout_adapters_inbound_http_handler.ErrorResponse'
+        "500":
+          description: Infrastructure failure
+          schema:
+            $ref: '#/definitions/internal_modules_auth_features_logout_adapters_inbound_http_handler.ErrorResponse'
+      summary: Logout and revoke session
+      tags:
+      - auth
+  /api/v1/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Exchange a valid refresh token for a new access/refresh token pair.
+        The old refresh token is invalidated.
+      parameters:
+      - description: Refresh token payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_modules_auth_features_refresh-token_adapters_inbound_http_handler.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_modules_auth_features_refresh-token_adapters_inbound_http_handler.RefreshTokenResponse'
+        "400":
+          description: Invalid payload
+          schema:
+            $ref: '#/definitions/internal_modules_auth_features_refresh-token_adapters_inbound_http_handler.ErrorResponse'
+        "401":
+          description: Invalid or expired refresh token
+          schema:
+            $ref: '#/definitions/internal_modules_auth_features_refresh-token_adapters_inbound_http_handler.ErrorResponse'
+        "500":
+          description: Infrastructure failure
+          schema:
+            $ref: '#/definitions/internal_modules_auth_features_refresh-token_adapters_inbound_http_handler.ErrorResponse'
+      summary: Refresh access token
+      tags:
+      - auth
   /api/v1/auth/set-password:
     post:
       consumes:

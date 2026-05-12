@@ -127,6 +127,15 @@ func (r *SessionDatabaseRepository) Revoke(ctx context.Context, sessionID string
 	return nil
 }
 
+func (r *SessionDatabaseRepository) UpdateRefreshTokenHash(ctx context.Context, sessionID, newHash string) error {
+	query := `UPDATE sessions SET refresh_token_hash = $1, last_used_at = NOW() WHERE id = $2`
+	_, err := r.DB.ExecContext(ctx, query, newHash, sessionID)
+	if err != nil {
+		return fmt.Errorf(FailedToSaveSessionErr, err)
+	}
+	return nil
+}
+
 func (r *SessionDatabaseRepository) RevokeAllForSubject(ctx context.Context, subjectID string, r2 role.Role) (int64, error) {
 	query := `UPDATE sessions SET revoked_at = $1 WHERE subject_id = $2 AND role = $3 AND revoked_at IS NULL`
 

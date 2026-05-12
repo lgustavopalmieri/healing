@@ -15,6 +15,107 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/auth/logout": {
+            "post": {
+                "description": "Invalidates the refresh token and blacklists the current access token. Requires authentication.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Logout and revoke session",
+                "parameters": [
+                    {
+                        "description": "Logout payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_logout_adapters_inbound_http_handler.LogoutRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Invalid payload",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_logout_adapters_inbound_http_handler.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_logout_adapters_inbound_http_handler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Infrastructure failure",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_logout_adapters_inbound_http_handler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/refresh": {
+            "post": {
+                "description": "Exchange a valid refresh token for a new access/refresh token pair. The old refresh token is invalidated.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Refresh access token",
+                "parameters": [
+                    {
+                        "description": "Refresh token payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_refresh-token_adapters_inbound_http_handler.RefreshTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_refresh-token_adapters_inbound_http_handler.RefreshTokenResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_refresh-token_adapters_inbound_http_handler.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or expired refresh token",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_refresh-token_adapters_inbound_http_handler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Infrastructure failure",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_refresh-token_adapters_inbound_http_handler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/auth/set-password": {
             "post": {
                 "description": "Consumes a single-use set-password token, activates the credential, and returns access/refresh tokens. The token is issued during onboarding and can be used only once.",
@@ -313,6 +414,78 @@ const docTemplate = `{
             }
         },
         "internal_modules_auth_features_login_adapters_inbound_http_handler.TokenPairResponse": {
+            "type": "object",
+            "properties": {
+                "access_expires_at": {
+                    "type": "string"
+                },
+                "access_token": {
+                    "type": "string"
+                },
+                "refresh_expires_at": {
+                    "type": "string"
+                },
+                "refresh_token": {
+                    "type": "string"
+                },
+                "token_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_auth_features_logout_adapters_inbound_http_handler.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_auth_features_logout_adapters_inbound_http_handler.LogoutRequest": {
+            "type": "object",
+            "required": [
+                "refresh_token"
+            ],
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_auth_features_refresh-token_adapters_inbound_http_handler.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_auth_features_refresh-token_adapters_inbound_http_handler.RefreshTokenRequest": {
+            "type": "object",
+            "required": [
+                "refresh_token"
+            ],
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_auth_features_refresh-token_adapters_inbound_http_handler.RefreshTokenResponse": {
+            "type": "object",
+            "properties": {
+                "role": {
+                    "type": "string"
+                },
+                "subject_id": {
+                    "type": "string"
+                },
+                "token_pair": {
+                    "$ref": "#/definitions/internal_modules_auth_features_refresh-token_adapters_inbound_http_handler.TokenPairResponse"
+                }
+            }
+        },
+        "internal_modules_auth_features_refresh-token_adapters_inbound_http_handler.TokenPairResponse": {
             "type": "object",
             "properties": {
                 "access_expires_at": {
