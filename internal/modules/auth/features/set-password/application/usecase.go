@@ -4,14 +4,13 @@ import (
 	"context"
 	"errors"
 	"sync"
-	"time"
 
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
-	"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/auth/domain/audit"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/auth/domain/credential"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/auth/domain/password"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/auth/domain/session"
+	"github.com/lgustavopalmieri/healing-specialist/internal/modules/auth/shared/authutil"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/auth/shared/events"
 	refreshtoken "github.com/lgustavopalmieri/healing-specialist/internal/modules/auth/shared/repositories/refresh_token"
 	sdktoken "github.com/lgustavopalmieri/healing-specialist/pkg/healing-auth/token"
@@ -25,7 +24,7 @@ func (uc *SetPasswordUseCase) Execute(ctx context.Context, input SetPasswordDTO)
 
 	consumed, err := uc.singleUseTokenRepository.Consume(ctx, validated.JTI)
 	if err != nil {
-		uc.logError(ctx, FailedToConsumeSingleUseTokenMessage, err, validated.SubjectID)
+		authutil.LogError(ctx, uc.logger, FailedToConsumeSingleUseTokenMessage, err, validated.SubjectID)
 		return nil, ErrFailedToConsumeSingleUse
 	}
 	if !consumed {
@@ -34,7 +33,7 @@ func (uc *SetPasswordUseCase) Execute(ctx context.Context, input SetPasswordDTO)
 
 	cred, err := uc.credentialRepository.FindBySubjectAndRole(ctx, validated.SubjectID, validated.Role)
 	if err != nil {
-		uc.logError(ctx, FailedToFindCredentialMessage, err, validated.SubjectID)
+		authutil.LogError(ctx, uc.logger, FailedToFindCredentialMessage, err, validated.SubjectID)
 		return nil, ErrFailedToFindCredential
 	}
 	if cred == nil {
@@ -51,7 +50,7 @@ func (uc *SetPasswordUseCase) Execute(ctx context.Context, input SetPasswordDTO)
 
 	hashed, err := pwd.Hash(uc.bcryptCost)
 	if err != nil {
-		uc.logError(ctx, FailedToHashPasswordMessage, err, validated.SubjectID)
+		authutil.LogError(ctx, uc.logger, FailedToHashPasswordMessage, err, validated.SubjectID)
 		return nil, ErrFailedToHashPassword
 	}
 
@@ -61,7 +60,7 @@ func (uc *SetPasswordUseCase) Execute(ctx context.Context, input SetPasswordDTO)
 
 	issued, err := uc.accessTokenIssuer.IssueAccessAndRefresh(ctx, cred)
 	if err != nil {
-		uc.logError(ctx, FailedToIssueTokenPairMessage, err, validated.SubjectID)
+		authutil.LogError(ctx, uc.logger, FailedToIssueTokenPairMessage, err, validated.SubjectID)
 		return nil, ErrFailedToIssueTokenPair
 	}
 
@@ -78,7 +77,7 @@ func (uc *SetPasswordUseCase) Execute(ctx context.Context, input SetPasswordDTO)
 	})
 
 	if err := uc.credentialRepository.UpdateWithSessionInTransaction(ctx, cred, sess); err != nil {
-		uc.logError(ctx, FailedToPersistCredentialMessage, err, validated.SubjectID)
+		authutil.LogError(ctx, uc.logger, FailedToPersistCredentialMessage, err, validated.SubjectID)
 		return nil, ErrFailedToPersistCredential
 	}
 
@@ -86,9 +85,9 @@ func (uc *SetPasswordUseCase) Execute(ctx context.Context, input SetPasswordDTO)
 		SessionID: sess.ID,
 		SubjectID: cred.SubjectID,
 		Role:      cred.Role.String(),
-		TTL:       remainingTTL(issued.RefreshExpiresAt),
+		TTL:       authutil.RemainingTTL(issued.RefreshExpiresAt),
 	}); err != nil {
-		uc.logError(ctx, FailedToCacheRefreshTokenMessage, err, validated.SubjectID)
+		authutil.LogError(ctx, uc.logger, FailedToCacheRefreshTokenMessage, err, validated.SubjectID)
 		return nil, ErrFailedToCacheRefreshToken
 	}
 
@@ -118,14 +117,6 @@ func (uc *SetPasswordUseCase) runPostCommitSideEffects(ctx context.Context, cred
 	wg.Wait()
 }
 
-func remainingTTL(expiresAt time.Time) time.Duration {
-	remaining := time.Until(expiresAt)
-	if remaining <= 0 {
-		return 0
-	}
-	return remaining
-}
-
 func (uc *SetPasswordUseCase) recordAuditPasswordSet(ctx context.Context, cred *credential.Credential, input SetPasswordDTO) {
 	log := audit.NewAuditLog(audit.NewAuditLogInput{
 		SubjectID: cred.SubjectID,
@@ -135,7 +126,7 @@ func (uc *SetPasswordUseCase) recordAuditPasswordSet(ctx context.Context, cred *
 		UserAgent: input.UserAgent,
 	})
 	if err := uc.auditRepository.Save(ctx, log); err != nil {
-		uc.logError(ctx, FailedToRecordAuditMessage, err, cred.SubjectID)
+		authutil.LogError(ctx, uc.logger, FailedToRecordAuditMessage, err, cred.SubjectID)
 	}
 }
 
@@ -146,16 +137,6 @@ func (uc *SetPasswordUseCase) publishCredentialActivatedEvent(ctx context.Contex
 		"email":      cred.Email,
 	})
 	if err := uc.eventPublisher.Dispatch(ctx, evt); err != nil {
-		uc.logError(ctx, FailedToPublishActivatedEventMessage, err, cred.SubjectID)
+		authutil.LogError(ctx, uc.logger, FailedToPublishActivatedEventMessage, err, cred.SubjectID)
 	}
-}
-
-func (uc *SetPasswordUseCase) logError(ctx context.Context, message string, err error, subjectID string) {
-	if uc.logger == nil {
-		return
-	}
-	uc.logger.Error(ctx, message,
-		observability.Field{Key: "subject_id", Value: subjectID},
-		observability.Field{Key: "error", Value: err.Error()},
-	)
 }

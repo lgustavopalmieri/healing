@@ -9,6 +9,7 @@ import (
 	"github.com/lgustavopalmieri/healing-specialist/cmd/server/config"
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/observability"
+	loginhttp "github.com/lgustavopalmieri/healing-specialist/internal/modules/auth/features/login/adapters/inbound/http_handler"
 	setpasswordhttp "github.com/lgustavopalmieri/healing-specialist/internal/modules/auth/features/set-password/adapters/inbound/http_handler"
 	"github.com/lgustavopalmieri/healing-specialist/internal/platform/server"
 	tokenissuer "github.com/lgustavopalmieri/healing-specialist/internal/platform/tokenissuer"
@@ -39,6 +40,15 @@ func RegisterAuthHTTPServices(httpServer *server.HTTPServer, deps AuthHTTPDepend
 		Config:         deps.Config,
 	})
 	setPasswordHandler.RegisterRoutes(api)
+
+	loginHandler := loginhttp.NewLoginHandler(loginhttp.Dependencies{
+		AuthDB:      deps.AuthDB,
+		RedisClient: deps.RedisClient,
+		Signer:      deps.Signer,
+		Logger:      deps.Logger,
+		Config:      deps.Config,
+	})
+	loginHandler.RegisterRoutes(api)
 
 	log.Println("✅ Auth HTTP services registered")
 }

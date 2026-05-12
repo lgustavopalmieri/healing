@@ -107,6 +107,15 @@ func (r *CredentialDatabaseRepository) Update(ctx context.Context, c *credential
 	return updateCredential(ctx, r.DB, c)
 }
 
+func (r *CredentialDatabaseRepository) UpdateLastUsed(ctx context.Context, credentialID string) error {
+	query := `UPDATE credentials SET last_used_at = NOW() WHERE id = $1`
+	_, err := r.DB.ExecContext(ctx, query, credentialID)
+	if err != nil {
+		return fmt.Errorf(FailedToUpdateCredentialErr, err)
+	}
+	return nil
+}
+
 func (r *CredentialDatabaseRepository) UpdateWithSessionInTransaction(
 	ctx context.Context,
 	cred *credential.Credential,

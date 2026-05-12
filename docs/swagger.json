@@ -66,6 +66,58 @@
                 }
             }
         },
+        "/api/v1/auth/specialist/login": {
+            "post": {
+                "description": "Authenticate a specialist with email and password. Returns access and refresh tokens.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Login as specialist",
+                "parameters": [
+                    {
+                        "description": "Login payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_login_adapters_inbound_http_handler.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_login_adapters_inbound_http_handler.LoginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_login_adapters_inbound_http_handler.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials or locked account",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_login_adapters_inbound_http_handler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Infrastructure failure",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_login_adapters_inbound_http_handler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/specialists": {
             "post": {
                 "description": "Registers a new healthcare specialist on the platform. The specialist starts with pending status and goes through license validation.",
@@ -213,6 +265,66 @@
         }
     },
     "definitions": {
+        "internal_modules_auth_features_login_adapters_inbound_http_handler.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_auth_features_login_adapters_inbound_http_handler.LoginRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "device_info": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_auth_features_login_adapters_inbound_http_handler.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "role": {
+                    "type": "string"
+                },
+                "subject_id": {
+                    "type": "string"
+                },
+                "token_pair": {
+                    "$ref": "#/definitions/internal_modules_auth_features_login_adapters_inbound_http_handler.TokenPairResponse"
+                }
+            }
+        },
+        "internal_modules_auth_features_login_adapters_inbound_http_handler.TokenPairResponse": {
+            "type": "object",
+            "properties": {
+                "access_expires_at": {
+                    "type": "string"
+                },
+                "access_token": {
+                    "type": "string"
+                },
+                "refresh_expires_at": {
+                    "type": "string"
+                },
+                "refresh_token": {
+                    "type": "string"
+                },
+                "token_type": {
+                    "type": "string"
+                }
+            }
+        },
         "internal_modules_auth_features_set-password_adapters_inbound_http_handler.ErrorResponse": {
             "type": "object",
             "properties": {
