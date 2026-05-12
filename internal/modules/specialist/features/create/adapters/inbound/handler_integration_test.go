@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
-	postgrestest "github.com/lgustavopalmieri/healing-specialist/internal/commom/tests/database/postgresql"
+	postgrestest "github.com/lgustavopalmieri/healing-specialist/internal/commom/tests/database/postgresql/specialist"
 	sqstest "github.com/lgustavopalmieri/healing-specialist/internal/commom/tests/event/sqs"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
 	createdb "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/adapters/outbound/database"
@@ -23,7 +23,14 @@ import (
 	vldb "github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/event_listeners/validate_license/adapters/outbound/database"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/event_listeners/validate_license/adapters/outbound/external"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/features/create/event_listeners/validate_license/listener"
+	platformsns "github.com/lgustavopalmieri/healing-specialist/internal/platform/sns"
 	platformsqs "github.com/lgustavopalmieri/healing-specialist/internal/platform/sqs"
+)
+
+const (
+	testPrefix              = "specialist"
+	consumerValidateLicense = "specialist-validate-license"
+	consumerUpdateDataRepos = "specialist-update-data-repos"
 )
 
 var (
@@ -34,9 +41,13 @@ var (
 func TestMain(m *testing.M) {
 	pgHelper.RunTestMainWithoutExit(m)
 	sqsHelper.SharedContainer = sqstest.SetupLocalStackContainer(&testing.T{})
-	urls, client := sqsHelper.SharedContainer.EnsureQueues(&testing.T{}, "specialist")
-	sqsHelper.SQSClient = client
+
+	urls, sqsClient := sqsHelper.SharedContainer.EnsureQueues(&testing.T{}, testPrefix)
+	sqsHelper.SQSClient = sqsClient
 	sqsHelper.QueueURLs = urls
+
+	sqsHelper.SNSClient = sqsHelper.SharedContainer.CreateSNSClient(&testing.T{})
+	sqsHelper.TopicARNs = sqsHelper.SharedContainer.EnsureTopicsAndSubscriptions(&testing.T{}, sqsHelper.SNSClient, sqsHelper.SQSClient, testPrefix, urls)
 
 	code := m.Run()
 
@@ -120,11 +131,11 @@ func TestValidateLicenseHandler_Integration(t *testing.T) {
 			licenseServer := setupMockLicenseServer(tt.licenseValid)
 			defer licenseServer.Close()
 
-			producer := platformsqs.NewSQSProducer(sqsHelper.SQSClient, sqsHelper.QueueURLs)
+			producer := platformsns.NewSNSProducer(sqsHelper.SNSClient, sqsHelper.TopicARNs)
 
 			handler := setupHandler(db, licenseServer.URL, producer)
 
-			createdQueueURL := sqsHelper.QueueURLs[application.SpecialistCreatedEventName]
+			createdQueueURL := sqsHelper.QueueURLs[consumerValidateLicense]
 
 			consumer := platformsqs.NewSQSConsumer(
 				sqsHelper.SQSClient,
@@ -146,7 +157,9 @@ func TestValidateLicenseHandler_Integration(t *testing.T) {
 				LicenseNumber: specialist.LicenseNumber,
 				Specialty:     specialist.Specialty,
 			}
-			sqsHelper.SharedContainer.ProduceEvent(t, sqsHelper.SQSClient, createdQueueURL, payload)
+
+			err := producer.Dispatch(context.Background(), event.NewEvent(application.SpecialistCreatedEventName, payload))
+			require.NoError(t, err)
 
 			time.Sleep(5 * time.Second)
 
@@ -156,7 +169,7 @@ func TestValidateLicenseHandler_Integration(t *testing.T) {
 			assert.Equal(t, tt.expectStatus, updated.Status)
 
 			if tt.expectEvent {
-				updatedQueueURL := sqsHelper.QueueURLs["specialist.updated"]
+				updatedQueueURL := sqsHelper.QueueURLs[consumerUpdateDataRepos]
 				eventData := sqsHelper.SharedContainer.ConsumeEvent(
 					t,
 					sqsHelper.SQSClient,

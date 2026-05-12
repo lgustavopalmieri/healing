@@ -8,6 +8,217 @@
     },
     "basePath": "/",
     "paths": {
+        "/api/v1/auth/logout": {
+            "post": {
+                "description": "Invalidates the refresh token and blacklists the current access token. Requires authentication.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Logout and revoke session",
+                "parameters": [
+                    {
+                        "description": "Logout payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_logout_adapters_inbound_http_handler.LogoutRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Invalid payload",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_logout_adapters_inbound_http_handler.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_logout_adapters_inbound_http_handler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Infrastructure failure",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_logout_adapters_inbound_http_handler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/refresh": {
+            "post": {
+                "description": "Exchange a valid refresh token for a new access/refresh token pair. The old refresh token is invalidated.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Refresh access token",
+                "parameters": [
+                    {
+                        "description": "Refresh token payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_refresh-token_adapters_inbound_http_handler.RefreshTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_refresh-token_adapters_inbound_http_handler.RefreshTokenResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_refresh-token_adapters_inbound_http_handler.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or expired refresh token",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_refresh-token_adapters_inbound_http_handler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Infrastructure failure",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_refresh-token_adapters_inbound_http_handler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/set-password": {
+            "post": {
+                "description": "Consumes a single-use set-password token, activates the credential, and returns access/refresh tokens. The token is issued during onboarding and can be used only once.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Set initial password for a pending credential",
+                "parameters": [
+                    {
+                        "description": "Set-password payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_set-password_adapters_inbound_http_handler.SetPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_set-password_adapters_inbound_http_handler.SetPasswordResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload or weak password",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_set-password_adapters_inbound_http_handler.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid or already used token",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_set-password_adapters_inbound_http_handler.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Credential not in pending state",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_set-password_adapters_inbound_http_handler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Infrastructure failure",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_set-password_adapters_inbound_http_handler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/specialist/login": {
+            "post": {
+                "description": "Authenticate a specialist with email and password. Returns access and refresh tokens.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Login as specialist",
+                "parameters": [
+                    {
+                        "description": "Login payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_login_adapters_inbound_http_handler.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_login_adapters_inbound_http_handler.LoginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_login_adapters_inbound_http_handler.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials or locked account",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_login_adapters_inbound_http_handler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Infrastructure failure",
+                        "schema": {
+                            "$ref": "#/definitions/internal_modules_auth_features_login_adapters_inbound_http_handler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/specialists": {
             "post": {
                 "description": "Registers a new healthcare specialist on the platform. The specialist starts with pending status and goes through license validation.",
@@ -28,7 +239,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/httphandler.CreateSpecialistRequest"
+                            "$ref": "#/definitions/internal_modules_specialist_features_create_adapters_inbound_http_handler.CreateSpecialistRequest"
                         }
                     }
                 ],
@@ -74,7 +285,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/httphandler.SearchSpecialistsRequest"
+                            "$ref": "#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.SearchSpecialistsRequest"
                         }
                     }
                 ],
@@ -82,7 +293,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httphandler.SearchSpecialistsResponse"
+                            "$ref": "#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.SearchSpecialistsResponse"
                         }
                     },
                     "400": {
@@ -127,7 +338,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/httphandler.UpdateSpecialistRequest"
+                            "$ref": "#/definitions/internal_modules_specialist_features_update_adapters_inbound_http_handler.UpdateSpecialistRequest"
                         }
                     }
                 ],
@@ -155,7 +366,195 @@
         }
     },
     "definitions": {
-        "httphandler.CreateSpecialistRequest": {
+        "internal_modules_auth_features_login_adapters_inbound_http_handler.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_auth_features_login_adapters_inbound_http_handler.LoginRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "device_info": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_auth_features_login_adapters_inbound_http_handler.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "role": {
+                    "type": "string"
+                },
+                "subject_id": {
+                    "type": "string"
+                },
+                "token_pair": {
+                    "$ref": "#/definitions/internal_modules_auth_features_login_adapters_inbound_http_handler.TokenPairResponse"
+                }
+            }
+        },
+        "internal_modules_auth_features_login_adapters_inbound_http_handler.TokenPairResponse": {
+            "type": "object",
+            "properties": {
+                "access_expires_at": {
+                    "type": "string"
+                },
+                "access_token": {
+                    "type": "string"
+                },
+                "refresh_expires_at": {
+                    "type": "string"
+                },
+                "refresh_token": {
+                    "type": "string"
+                },
+                "token_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_auth_features_logout_adapters_inbound_http_handler.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_auth_features_logout_adapters_inbound_http_handler.LogoutRequest": {
+            "type": "object",
+            "required": [
+                "refresh_token"
+            ],
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_auth_features_refresh-token_adapters_inbound_http_handler.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_auth_features_refresh-token_adapters_inbound_http_handler.RefreshTokenRequest": {
+            "type": "object",
+            "required": [
+                "refresh_token"
+            ],
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_auth_features_refresh-token_adapters_inbound_http_handler.RefreshTokenResponse": {
+            "type": "object",
+            "properties": {
+                "role": {
+                    "type": "string"
+                },
+                "subject_id": {
+                    "type": "string"
+                },
+                "token_pair": {
+                    "$ref": "#/definitions/internal_modules_auth_features_refresh-token_adapters_inbound_http_handler.TokenPairResponse"
+                }
+            }
+        },
+        "internal_modules_auth_features_refresh-token_adapters_inbound_http_handler.TokenPairResponse": {
+            "type": "object",
+            "properties": {
+                "access_expires_at": {
+                    "type": "string"
+                },
+                "access_token": {
+                    "type": "string"
+                },
+                "refresh_expires_at": {
+                    "type": "string"
+                },
+                "refresh_token": {
+                    "type": "string"
+                },
+                "token_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_auth_features_set-password_adapters_inbound_http_handler.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_auth_features_set-password_adapters_inbound_http_handler.SetPasswordRequest": {
+            "type": "object",
+            "properties": {
+                "device_info": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_auth_features_set-password_adapters_inbound_http_handler.SetPasswordResponse": {
+            "type": "object",
+            "properties": {
+                "role": {
+                    "type": "string"
+                },
+                "subject_id": {
+                    "type": "string"
+                },
+                "token_pair": {
+                    "$ref": "#/definitions/internal_modules_auth_features_set-password_adapters_inbound_http_handler.TokenPairResponse"
+                }
+            }
+        },
+        "internal_modules_auth_features_set-password_adapters_inbound_http_handler.TokenPairResponse": {
+            "type": "object",
+            "properties": {
+                "access_expires_at": {
+                    "type": "string"
+                },
+                "access_token": {
+                    "type": "string"
+                },
+                "refresh_expires_at": {
+                    "type": "string"
+                },
+                "refresh_token": {
+                    "type": "string"
+                },
+                "token_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_specialist_features_create_adapters_inbound_http_handler.CreateSpecialistRequest": {
             "type": "object",
             "properties": {
                 "agreed_to_share": {
@@ -183,126 +582,6 @@
                     "type": "string"
                 },
                 "specialty": {
-                    "type": "string"
-                }
-            }
-        },
-        "httphandler.FilterRequest": {
-            "type": "object",
-            "properties": {
-                "field": {
-                    "type": "string"
-                },
-                "value": {
-                    "type": "string"
-                }
-            }
-        },
-        "httphandler.PaginationResponse": {
-            "type": "object",
-            "properties": {
-                "has_next_page": {
-                    "type": "boolean"
-                },
-                "has_previous_page": {
-                    "type": "boolean"
-                },
-                "next_cursor": {
-                    "type": "string"
-                },
-                "previous_cursor": {
-                    "type": "string"
-                },
-                "total_items_in_page": {
-                    "type": "integer"
-                }
-            }
-        },
-        "httphandler.SearchSpecialistsRequest": {
-            "type": "object",
-            "properties": {
-                "cursor": {
-                    "type": "string"
-                },
-                "direction": {
-                    "type": "string"
-                },
-                "filters": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/httphandler.FilterRequest"
-                    }
-                },
-                "page_size": {
-                    "type": "integer"
-                },
-                "search_term": {
-                    "type": "string"
-                },
-                "sort": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/httphandler.SortRequest"
-                    }
-                }
-            }
-        },
-        "httphandler.SearchSpecialistsResponse": {
-            "type": "object",
-            "properties": {
-                "pagination": {
-                    "$ref": "#/definitions/httphandler.PaginationResponse"
-                },
-                "specialists": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.SpecialistResponse"
-                    }
-                }
-            }
-        },
-        "httphandler.SortRequest": {
-            "type": "object",
-            "properties": {
-                "field": {
-                    "type": "string"
-                },
-                "order": {
-                    "type": "string"
-                }
-            }
-        },
-        "httphandler.UpdateSpecialistRequest": {
-            "type": "object",
-            "properties": {
-                "agreed_to_share": {
-                    "type": "boolean"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "keywords": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "license_number": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "phone": {
-                    "type": "string"
-                },
-                "specialty": {
-                    "type": "string"
-                },
-                "status": {
                     "type": "string"
                 }
             }
@@ -366,6 +645,91 @@
             "type": "object",
             "properties": {
                 "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_specialist_features_search_adapters_inbound_http_handler.FilterRequest": {
+            "type": "object",
+            "properties": {
+                "field": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_specialist_features_search_adapters_inbound_http_handler.PaginationResponse": {
+            "type": "object",
+            "properties": {
+                "has_next_page": {
+                    "type": "boolean"
+                },
+                "has_previous_page": {
+                    "type": "boolean"
+                },
+                "next_cursor": {
+                    "type": "string"
+                },
+                "previous_cursor": {
+                    "type": "string"
+                },
+                "total_items_in_page": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_modules_specialist_features_search_adapters_inbound_http_handler.SearchSpecialistsRequest": {
+            "type": "object",
+            "properties": {
+                "cursor": {
+                    "type": "string"
+                },
+                "direction": {
+                    "type": "string"
+                },
+                "filters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.FilterRequest"
+                    }
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "search_term": {
+                    "type": "string"
+                },
+                "sort": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.SortRequest"
+                    }
+                }
+            }
+        },
+        "internal_modules_specialist_features_search_adapters_inbound_http_handler.SearchSpecialistsResponse": {
+            "type": "object",
+            "properties": {
+                "pagination": {
+                    "$ref": "#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.PaginationResponse"
+                },
+                "specialists": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_modules_specialist_features_search_adapters_inbound_http_handler.SpecialistResponse"
+                    }
+                }
+            }
+        },
+        "internal_modules_specialist_features_search_adapters_inbound_http_handler.SortRequest": {
+            "type": "object",
+            "properties": {
+                "field": {
+                    "type": "string"
+                },
+                "order": {
                     "type": "string"
                 }
             }
@@ -468,6 +832,41 @@
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_modules_specialist_features_update_adapters_inbound_http_handler.UpdateSpecialistRequest": {
+            "type": "object",
+            "properties": {
+                "agreed_to_share": {
+                    "type": "boolean"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "keywords": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "license_number": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "specialty": {
+                    "type": "string"
+                },
+                "status": {
                     "type": "string"
                 }
             }

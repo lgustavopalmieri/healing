@@ -6,9 +6,14 @@ import (
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain"
 	"github.com/lgustavopalmieri/healing-specialist/internal/modules/specialist/domain/update"
+	"github.com/lgustavopalmieri/healing-specialist/pkg/healing-auth/claims"
 )
 
 func (c *UpdateSpecialistUseCase) Execute(ctx context.Context, input UpdateSpecialistDTO) (*domain.Specialist, error) {
+	if err := c.validateOwnership(ctx, input.ID); err != nil {
+		return nil, err
+	}
+
 	existing, err := c.repository.FindByID(ctx, input.ID)
 	if err != nil {
 		return nil, ErrSpecialistNotFound
@@ -39,6 +44,17 @@ func (c *UpdateSpecialistUseCase) Execute(ctx context.Context, input UpdateSpeci
 	c.publishSpecialistUpdatedEvent(ctx, saved)
 
 	return saved, nil
+}
+
+func (c *UpdateSpecialistUseCase) validateOwnership(ctx context.Context, resourceID string) error {
+	userClaims, ok := claims.FromContext(ctx)
+	if !ok || userClaims == nil {
+		return ErrForbiddenNotOwner
+	}
+	if userClaims.Subject != resourceID {
+		return ErrForbiddenNotOwner
+	}
+	return nil
 }
 
 func (c *UpdateSpecialistUseCase) publishSpecialistUpdatedEvent(ctx context.Context, specialist *domain.Specialist) {

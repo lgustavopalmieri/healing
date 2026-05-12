@@ -12,29 +12,47 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 )
 
-type QueueDefinition struct {
-	EventName         string
-	Suffix            string
-	DLQSuffix         string
+type ConsumerQueueDefinition struct {
+	ConsumerName      string
+	SubscribesToEvent string
 	MaxReceiveCount   int
 	VisibilityTimeout int
 	RetentionPeriod   int
 }
 
-func DefaultQueueDefinitions() []QueueDefinition {
-	return []QueueDefinition{
+func DefaultConsumerQueueDefinitions() []ConsumerQueueDefinition {
+	return []ConsumerQueueDefinition{
 		{
-			EventName:         "specialist.created",
-			Suffix:            "created",
-			DLQSuffix:         "created-dlq",
+			ConsumerName:      "specialist-validate-license",
+			SubscribesToEvent: "specialist.created",
 			MaxReceiveCount:   3,
 			VisibilityTimeout: 30,
 			RetentionPeriod:   1209600,
 		},
 		{
-			EventName:         "specialist.updated",
-			Suffix:            "updated",
-			DLQSuffix:         "updated-dlq",
+			ConsumerName:      "specialist-register-credential",
+			SubscribesToEvent: "specialist.created",
+			MaxReceiveCount:   3,
+			VisibilityTimeout: 30,
+			RetentionPeriod:   1209600,
+		},
+		{
+			ConsumerName:      "specialist-update-data-repos",
+			SubscribesToEvent: "specialist.updated",
+			MaxReceiveCount:   3,
+			VisibilityTimeout: 30,
+			RetentionPeriod:   1209600,
+		},
+		{
+			ConsumerName:      "specialist-send-welcome-email",
+			SubscribesToEvent: "specialist.created",
+			MaxReceiveCount:   3,
+			VisibilityTimeout: 30,
+			RetentionPeriod:   1209600,
+		},
+		{
+			ConsumerName:      "auth-send-credentials-email",
+			SubscribesToEvent: "auth.credential.pending",
 			MaxReceiveCount:   3,
 			VisibilityTimeout: 30,
 			RetentionPeriod:   1209600,
@@ -42,41 +60,43 @@ func DefaultQueueDefinitions() []QueueDefinition {
 	}
 }
 
-func queueName(prefix, suffix string) string {
-	return prefix + "-" + suffix + ".fifo"
+func queueName(prefix, consumerName string) string {
+	return fmt.Sprintf("%s-%s.fifo", prefix, consumerName)
 }
 
-// EnsureQueues creates all queues idempotently and returns a map of eventName -> queueURL.
-// Safe to call from multiple pods simultaneously.
-func EnsureQueues(ctx context.Context, client *sqs.Client, prefix string, definitions []QueueDefinition) (map[string]string, error) {
+func dlqName(prefix, consumerName string) string {
+	return fmt.Sprintf("%s-%s-dlq.fifo", prefix, consumerName)
+}
+
+func EnsureConsumerQueues(ctx context.Context, client *sqs.Client, prefix string, definitions []ConsumerQueueDefinition) (map[string]string, error) {
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
 	urls := make(map[string]string)
 
 	for _, def := range definitions {
-		dlqName := queueName(prefix, def.DLQSuffix)
-		dlqURL, err := createFIFOQueue(ctx, client, dlqName, def.VisibilityTimeout, def.RetentionPeriod)
+		dlq := dlqName(prefix, def.ConsumerName)
+		dlqURL, err := createFIFOQueue(ctx, client, dlq, def.VisibilityTimeout, def.RetentionPeriod)
 		if err != nil {
-			return nil, fmt.Errorf("failed to ensure DLQ %s: %w", dlqName, err)
+			return nil, fmt.Errorf("failed to ensure DLQ %s: %w", dlq, err)
 		}
-		log.Printf("DLQ ready: %s", dlqName)
+		log.Printf("DLQ ready: %s", dlq)
 
 		dlqArn, err := getQueueArn(ctx, client, dlqURL)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get DLQ ARN for %s: %w", dlqName, err)
+			return nil, fmt.Errorf("failed to get DLQ ARN for %s: %w", dlq, err)
 		}
 
-		mainName := queueName(prefix, def.Suffix)
+		main := queueName(prefix, def.ConsumerName)
 		redrivePolicy := fmt.Sprintf(`{"deadLetterTargetArn":"%s","maxReceiveCount":"%d"}`, dlqArn, def.MaxReceiveCount)
 
-		mainURL, err := createFIFOQueueWithRedrive(ctx, client, mainName, def.VisibilityTimeout, def.RetentionPeriod, redrivePolicy)
+		mainURL, err := createFIFOQueueWithRedrive(ctx, client, main, def.VisibilityTimeout, def.RetentionPeriod, redrivePolicy)
 		if err != nil {
-			return nil, fmt.Errorf("failed to ensure queue %s: %w", mainName, err)
+			return nil, fmt.Errorf("failed to ensure queue %s: %w", main, err)
 		}
-		log.Printf("Queue ready: %s", mainName)
+		log.Printf("Queue ready: %s", main)
 
-		urls[def.EventName] = mainURL
+		urls[def.ConsumerName] = mainURL
 	}
 
 	return urls, nil
@@ -131,9 +151,8 @@ func getQueueArn(ctx context.Context, client *sqs.Client, queueURL string) (stri
 	return arn, nil
 }
 
-// ResolveQueueURL gets the URL for an existing queue by prefix and suffix.
-func ResolveQueueURL(ctx context.Context, client *sqs.Client, prefix, suffix string) (string, error) {
-	name := queueName(prefix, suffix)
+func ResolveQueueURL(ctx context.Context, client *sqs.Client, prefix, consumerName string) (string, error) {
+	name := queueName(prefix, consumerName)
 	out, err := client.GetQueueUrl(ctx, &sqs.GetQueueUrlInput{
 		QueueName: aws.String(name),
 	})
@@ -143,7 +162,6 @@ func ResolveQueueURL(ctx context.Context, client *sqs.Client, prefix, suffix str
 	return *out.QueueUrl, nil
 }
 
-// EventSuffix extracts the suffix from an event name (e.g. "specialist.created" -> "created").
 func EventSuffix(eventName string) string {
 	parts := strings.Split(eventName, ".")
 	if len(parts) < 2 {

@@ -5,9 +5,14 @@ import "time"
 type Config struct {
 	Server     ServerConfig
 	Database   DatabaseConfig
+	AuthDB     DatabaseConfig
+	Redis      RedisConfig
+	Auth       AuthConfig
 	SQS        SQSConfig
+	SNS        SNSConfig
 	OpenSearch OpenSearchConfig
 	External   ExternalConfig
+	Email      EmailConfig
 	Otel       OtelConfig
 }
 
@@ -45,6 +50,12 @@ type SQSConfig struct {
 	Endpoint    string
 }
 
+type SNSConfig struct {
+	Region      string
+	Endpoint    string
+	TopicPrefix string
+}
+
 type OpenSearchConfig struct {
 	Addresses   []string
 	Region      string
@@ -53,4 +64,35 @@ type OpenSearchConfig struct {
 
 type ExternalConfig struct {
 	LicenseBaseURL string
+}
+
+type EmailConfig struct {
+	SMTPHost    string
+	SMTPPort    int
+	FromAddress string
+	FromName    string
+}
+
+type AuthConfig struct {
+	PrivateKeyPath     string
+	PublicKeyPath      string
+	CurrentKeyID       string
+	AccessTokenTTL     time.Duration
+	RefreshTokenTTL    time.Duration
+	SetPasswordTTL     time.Duration
+	ResetPasswordTTL   time.Duration
+	SetPasswordBaseURL string
+	Issuer             string
+	Audience           string
+	BcryptCost         int
+	PasswordMinLength  int
+}
+
+type RedisConfig struct {
+	Host         string
+	Port         int
+	Password     string
+	DB           int
+	PoolSize     int
+	MinIdleConns int
 }

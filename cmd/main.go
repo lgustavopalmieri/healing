@@ -5,11 +5,15 @@ import (
 	"log"
 	"os"
 
-	"github.com/lgustavopalmieri/healing-specialist/cmd/server/bootstrap"
+	"github.com/lgustavopalmieri/healing-specialist/cmd/server/bootstrap/auth"
+	"github.com/lgustavopalmieri/healing-specialist/cmd/server/bootstrap/infra"
+	"github.com/lgustavopalmieri/healing-specialist/cmd/server/bootstrap/specialist"
 	"github.com/lgustavopalmieri/healing-specialist/cmd/server/config"
 	_ "github.com/lgustavopalmieri/healing-specialist/docs"
 	"github.com/lgustavopalmieri/healing-specialist/internal/platform/server"
 	"github.com/lgustavopalmieri/healing-specialist/internal/platform/telemetry"
+	authgrpc "github.com/lgustavopalmieri/healing-specialist/pkg/healing-auth/middleware/grpc"
+	authhttp "github.com/lgustavopalmieri/healing-specialist/pkg/healing-auth/middleware/http"
 	"google.golang.org/grpc"
 )
 
@@ -35,25 +39,49 @@ func run() error {
 
 	ctx := context.Background()
 
-	otelProvider, err := bootstrap.InitOtel(ctx, cfg)
+	otelProvider, err := infra.InitOtel(ctx, cfg)
 	if err != nil {
 		return err
 	}
 
-	db, err := bootstrap.InitDatabase(cfg)
+	db, err := infra.InitDatabase(cfg)
 	if err != nil {
 		return err
 	}
 
-	osFactory, err := bootstrap.InitOpenSearch(cfg)
+	osFactory, err := infra.InitOpenSearch(cfg)
 	if err != nil {
 		return err
 	}
 
-	sqsResources, err := bootstrap.InitSQS(ctx, cfg)
+	sqsResources, err := infra.InitSQS(ctx, cfg)
 	if err != nil {
 		return err
 	}
+
+	snsResources, err := infra.InitSNS(ctx, cfg, sqsResources)
+	if err != nil {
+		return err
+	}
+
+	authDB, err := infra.InitAuthDatabase(cfg)
+	if err != nil {
+		return err
+	}
+
+	redisClient, err := infra.InitRedis(ctx, cfg)
+	if err != nil {
+		return err
+	}
+
+	signer, keyring, err := auth.InitTokenService(cfg)
+	if err != nil {
+		return err
+	}
+
+	authMiddleware := auth.InitMiddleware(keyring, redisClient, cfg.Auth.Issuer, cfg.Auth.Audience)
+
+	emailSender := infra.InitEmailSender(cfg)
 
 	serviceName := cfg.Otel.ServiceName
 	grpcMetrics := telemetry.NewGRPCMetrics(serviceName)
@@ -62,7 +90,10 @@ func run() error {
 		Port:              cfg.Server.GRPCPort,
 		MaxConnections:    cfg.Server.MaxConnections,
 		ConnectionTimeout: cfg.Server.ConnectionTimeout,
-		Interceptors:      []grpc.UnaryServerInterceptor{grpcMetrics.UnaryServerInterceptor()},
+		Interceptors: []grpc.UnaryServerInterceptor{
+			grpcMetrics.UnaryServerInterceptor(),
+			authgrpc.UnaryInterceptor(authMiddleware.ValidateTokenUseCase, authMiddleware.Enforcer, authMiddleware.RoutePolicy),
+		},
 	})
 	if err != nil {
 		return err
@@ -74,21 +105,48 @@ func run() error {
 		Port: cfg.Server.HTTPPort,
 	})
 	httpServer.Engine.Use(httpMetrics.Middleware())
+	httpServer.Engine.Use(authhttp.Middleware(authMiddleware.ValidateTokenUseCase, authMiddleware.Enforcer, authMiddleware.RoutePolicy))
 
-	serviceDeps := bootstrap.ServiceDependencies{
+	specialistLogger := telemetry.NewSlogLogger("healing-specialist")
+	specialist.RegisterGRPCServices(grpcServer, specialist.ServiceDependencies{
 		DB:             db,
 		OSFactory:      osFactory,
-		EventPublisher: sqsResources.Producer,
-		Logger:         telemetry.NewSlogLogger("healing-specialist"),
-	}
-
-	bootstrap.RegisterServices(grpcServer, serviceDeps)
-	bootstrap.RegisterHTTPServices(httpServer, serviceDeps)
-
-	bootstrap.InitSQSConsumers(ctx, bootstrap.SQSConsumerDependencies{
+		EventPublisher: snsResources.Producer,
+		Logger:         specialistLogger,
+	})
+	specialist.RegisterHTTPServices(httpServer, specialist.ServiceDependencies{
 		DB:             db,
 		OSFactory:      osFactory,
-		EventPublisher: sqsResources.Producer,
+		EventPublisher: snsResources.Producer,
+		Logger:         specialistLogger,
+	})
+
+	authLogger := telemetry.NewSlogLogger("healing-auth")
+	auth.RegisterHTTPServices(httpServer, auth.HTTPDependencies{
+		AuthDB:         authDB,
+		RedisClient:    redisClient,
+		Signer:         signer,
+		Keyring:        keyring,
+		EventPublisher: snsResources.Producer,
+		Logger:         authLogger,
+		Config:         cfg,
+	})
+
+	specialist.InitSQSConsumers(ctx, specialist.SQSConsumerDependencies{
+		DB:             db,
+		OSFactory:      osFactory,
+		EventPublisher: snsResources.Producer,
+		EmailSender:    emailSender,
+		SQS:            sqsResources,
+		Config:         cfg,
+	})
+
+	auth.InitSQSConsumers(ctx, auth.SQSConsumerDependencies{
+		AuthDB:         authDB,
+		RedisClient:    redisClient,
+		Signer:         signer,
+		EventPublisher: snsResources.Producer,
+		EmailSender:    emailSender,
 		SQS:            sqsResources,
 		Config:         cfg,
 	})
@@ -121,7 +179,7 @@ func run() error {
 		}
 	}()
 
-	shutdownManager := bootstrap.NewShutdownManager(cfg.Server.ShutdownTimeout)
+	shutdownManager := infra.NewShutdownManager(cfg.Server.ShutdownTimeout)
 	shutdownManager.Wait()
 
 	log.Println("Initiating graceful shutdown...")
@@ -139,7 +197,12 @@ func run() error {
 		}
 	}
 
-	if err := shutdownManager.Shutdown(grpcServer, db); err != nil {
+	if err := shutdownManager.Shutdown(infra.ShutdownResources{
+		GRPCServer:  grpcServer,
+		DB:          db,
+		AuthDB:      authDB,
+		RedisClient: redisClient,
+	}); err != nil {
 		log.Printf("Shutdown error: %v", err)
 		os.Exit(1)
 	}

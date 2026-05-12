@@ -1,6 +1,93 @@
-version: '3.8'
-
 services:
+  postgres-specialist:
+    image: postgres:16-alpine
+    container_name: healing-specialist-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: healing_specialist
+      POSTGRES_USER: healing_specialist
+      POSTGRES_PASSWORD: healing_specialist
+    volumes:
+      - postgres-specialist-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healing_specialist"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-auth:
+    image: postgres:16-alpine
+    container_name: healing-auth-postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: healing_auth
+      POSTGRES_USER: healing_auth
+      POSTGRES_PASSWORD: healing_auth
+    volumes:
+      - postgres-auth-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healing_auth"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: healing-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  opensearch:
+    image: opensearchproject/opensearch:2.11.0
+    container_name: healing-opensearch
+    ports:
+      - "9200:9200"
+    environment:
+      - discovery.type=single-node
+      - plugins.security.disabled=true
+      - OPENSEARCH_JAVA_OPTS=-Xms256m -Xmx256m
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  localstack:
+    image: localstack/localstack:3.8
+    container_name: healing-localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=sns,sqs
+      - DEFAULT_REGION=us-east-1
+      - DEBUG=0
+    volumes:
+      - localstack-data:/var/lib/localstack
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: healing-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
   healing-specialist:
     build:
       context: .
@@ -13,4 +100,24 @@ services:
       - ${ENV_FILE:-.env}
     environment:
       - APP_ENV=${APP_ENV:-development}
+    depends_on:
+      postgres-specialist:
+        condition: service_healthy
+      postgres-auth:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      opensearch:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    volumes:
+      - ./keys:/etc/healing/keys:ro
     restart: unless-stopped
+
+volumes:
+  postgres-specialist-data:
+  postgres-auth-data:
+  redis-data:
+  opensearch-data:
+  localstack-data:

@@ -1,4 +1,4 @@
-.PHONY: run up down es-up es-down es-logs es-health
+.PHONY: run up down test auth-keys
 
 run:
 	@APP_ENV=development go run ./cmd
@@ -9,5 +9,18 @@ up:
 
 down:
 	@docker-compose down -v 2>/dev/null || true
+
+test:
+	@go test -race -timeout 600s ./...
+
+auth-keys:
+	@mkdir -p keys
+	@echo "*.pem" > keys/.gitignore
+	@echo "!.gitignore" >> keys/.gitignore
+	@openssl genpkey -algorithm RSA -out keys/auth-private.pem -pkeyopt rsa_keygen_bits:2048
+	@openssl rsa -pubout -in keys/auth-private.pem -out keys/auth-public.pem
+	@chmod 600 keys/auth-private.pem
+	@chmod 644 keys/auth-public.pem
+	@echo "Auth keys generated at keys/"
 
 
