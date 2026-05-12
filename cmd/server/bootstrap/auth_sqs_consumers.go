@@ -8,9 +8,15 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	"github.com/lgustavopalmieri/healing-specialist/cmd/server/config"
+	"github.com/lgustavopalmieri/healing-specialist/internal/commom/email"
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
 	createspecialistsqs "github.com/lgustavopalmieri/healing-specialist/internal/modules/auth/features/register-credential/event_listeners/create_specialist_credential/adapters/inbound/sqs"
+	sendcredentialssqs "github.com/lgustavopalmieri/healing-specialist/internal/modules/auth/features/register-credential/event_listeners/send_credentials_email/adapters/inbound/sqs"
 	tokenissuer "github.com/lgustavopalmieri/healing-specialist/internal/platform/tokenissuer"
+)
+
+const (
+	ConsumerSendCredentialsEmail = "auth-send-credentials-email"
 )
 
 type AuthSQSConsumerDependencies struct {
@@ -18,6 +24,7 @@ type AuthSQSConsumerDependencies struct {
 	RedisClient    *redis.Client
 	Signer         *tokenissuer.Signer
 	EventPublisher event.EventDispatcher
+	EmailSender    email.EmailSender
 	SQS            *SQSResources
 	Config         *config.Config
 }
@@ -33,6 +40,13 @@ func InitAuthSQSConsumers(ctx context.Context, deps AuthSQSConsumerDependencies)
 		SQSClient:            deps.SQS.Client,
 		SpecialistCreatedURL: deps.SQS.QueueURLs[ConsumerRegisterCredential],
 		SetPasswordTTL:       deps.Config.Auth.SetPasswordTTL,
+	})
+
+	sendcredentialssqs.NewSendCredentialsEmailSQSManager(ctx, sendcredentialssqs.ManagerDependencies{
+		EmailSender:          deps.EmailSender,
+		SQSClient:            deps.SQS.Client,
+		CredentialPendingURL: deps.SQS.QueueURLs[ConsumerSendCredentialsEmail],
+		SetPasswordURL:       deps.Config.Auth.SetPasswordBaseURL,
 	})
 
 	log.Println("Auth SQS consumers started")

@@ -1,32 +1,42 @@
-// Package listener contains the event listener responsible for emailing
-// the set-password link to a user whose credential was just created in
-// pending state.
-//
-// Flow (not yet implemented):
-//
-//  1. Consumes the `auth.credential.pending` event published by
-//     create_specialist_credential after inserting the credential row and
-//     generating the set-password token.
-//  2. Calls an email delivery service (SES, SendGrid, or equivalent), passing:
-//     - recipient email (from payload)
-//     - set-password deep link containing the token (from payload)
-//     - localized template identifier based on role
-//  3. Records an audit log entry on both success and failure.
-//  4. Failures surface as handler errors so the SQS consumer keeps the
-//     message invisible until the retry window expires and eventually
-//     routes it to the DLQ.
-//
-// The placeholder lives at:
-//
-//	internal/modules/auth/features/register-credential/event_listeners/send_credentials_email/
-//	├── listener/
-//	│   ├── handler.go            <- this file
-//	│   ├── new_handler.go
-//	│   ├── interface.go          <- EmailDelivery contract
-//	│   ├── dto.go                <- mirror of AuthCredentialPending payload
-//	│   ├── constants.go
-//	│   └── mocks/
-//	└── adapters/
-//	    ├── inbound/sqs/manager.go
-//	    └── outbound/email/       <- SES or SendGrid gateway
 package listener
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+
+	"github.com/lgustavopalmieri/healing-specialist/internal/commom/email"
+	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
+)
+
+func (h *SendCredentialsEmailHandler) Handle(ctx context.Context, evt event.Event) error {
+	raw, ok := evt.Payload.([]byte)
+	if !ok {
+		return ErrInvalidEventPayload
+	}
+
+	var payload CredentialPendingPayload
+	if err := json.Unmarshal(raw, &payload); err != nil {
+		return fmt.Errorf("%s: %w", ErrUnmarshalEventPayloadMessage, err)
+	}
+
+	link := h.setPasswordURL + "?token=" + payload.SetPasswordToken
+
+	msg := email.Message{
+		To: email.Recipient{
+			Email: payload.Email,
+		},
+		Template: SetPasswordEmailTemplate,
+		Data: map[string]any{
+			"link": link,
+			"role": payload.Role,
+		},
+		Locale: DefaultLocale,
+	}
+
+	if err := h.emailSender.Send(ctx, msg); err != nil {
+		return fmt.Errorf("%s: %w", ErrSendEmailMessage, err)
+	}
+
+	return nil
+}

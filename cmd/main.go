@@ -134,6 +134,7 @@ func run() error {
 		RedisClient:    redisClient,
 		Signer:         signer,
 		EventPublisher: snsResources.Producer,
+		EmailSender:    emailSender,
 		SQS:            sqsResources,
 		Config:         cfg,
 	})

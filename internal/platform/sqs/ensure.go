@@ -50,6 +50,13 @@ func DefaultConsumerQueueDefinitions() []ConsumerQueueDefinition {
 			VisibilityTimeout: 30,
 			RetentionPeriod:   1209600,
 		},
+		{
+			ConsumerName:      "auth-send-credentials-email",
+			SubscribesToEvent: "auth.credential.pending",
+			MaxReceiveCount:   3,
+			VisibilityTimeout: 30,
+			RetentionPeriod:   1209600,
+		},
 	}
 }
 

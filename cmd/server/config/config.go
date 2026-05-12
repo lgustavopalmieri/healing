@@ -74,17 +74,18 @@ type EmailConfig struct {
 }
 
 type AuthConfig struct {
-	PrivateKeyPath    string
-	PublicKeyPath     string
-	CurrentKeyID      string
-	AccessTokenTTL    time.Duration
-	RefreshTokenTTL   time.Duration
-	SetPasswordTTL    time.Duration
-	ResetPasswordTTL  time.Duration
-	Issuer            string
-	Audience          string
-	BcryptCost        int
-	PasswordMinLength int
+	PrivateKeyPath     string
+	PublicKeyPath      string
+	CurrentKeyID       string
+	AccessTokenTTL     time.Duration
+	RefreshTokenTTL    time.Duration
+	SetPasswordTTL     time.Duration
+	ResetPasswordTTL   time.Duration
+	SetPasswordBaseURL string
+	Issuer             string
+	Audience           string
+	BcryptCost         int
+	PasswordMinLength  int
 }
 
 type RedisConfig struct {
