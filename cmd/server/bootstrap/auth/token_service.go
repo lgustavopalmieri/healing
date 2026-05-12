@@ -1,4 +1,4 @@
-package bootstrap
+package auth
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"github.com/lgustavopalmieri/healing-specialist/internal/platform/tokenissuer"
 )
 
-func InitAuthTokenService(cfg *config.Config) (*tokenissuer.Signer, *tokenissuer.Keyring, error) {
+func InitTokenService(cfg *config.Config) (*tokenissuer.Signer, *tokenissuer.Keyring, error) {
 	privKey, err := tokenissuer.LoadPrivateKey(cfg.Auth.PrivateKeyPath)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to load auth private key: %w", err)

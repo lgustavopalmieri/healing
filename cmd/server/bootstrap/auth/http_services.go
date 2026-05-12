@@ -1,4 +1,4 @@
-package bootstrap
+package auth
 
 import (
 	"database/sql"
@@ -23,7 +23,7 @@ import (
 	tokenissuer "github.com/lgustavopalmieri/healing-specialist/internal/platform/tokenissuer"
 )
 
-type AuthHTTPDependencies struct {
+type HTTPDependencies struct {
 	AuthDB         *sql.DB
 	RedisClient    *redis.Client
 	Signer         *tokenissuer.Signer
@@ -33,7 +33,7 @@ type AuthHTTPDependencies struct {
 	Config         *config.Config
 }
 
-func RegisterAuthHTTPServices(httpServer *server.HTTPServer, deps AuthHTTPDependencies) {
+func RegisterHTTPServices(httpServer *server.HTTPServer, deps HTTPDependencies) {
 	log.Println("🔧 Registering Auth HTTP services...")
 
 	api := httpServer.Engine.Group("/api/v1")

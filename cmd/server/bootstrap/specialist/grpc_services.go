@@ -1,4 +1,4 @@
-package bootstrap
+package specialist
 
 import (
 	"database/sql"
@@ -24,7 +24,7 @@ type ServiceDependencies struct {
 	Logger         observability.Logger
 }
 
-func RegisterServices(grpcServer *server.GRPCServer, deps ServiceDependencies) {
+func RegisterGRPCServices(grpcServer *server.GRPCServer, deps ServiceDependencies) {
 	log.Println("🔧 Registering gRPC services...")
 	specialistCreateService := creategrpc.NewSpecialistCreateService(creategrpc.Dependencies{
 		DB:             deps.DB,

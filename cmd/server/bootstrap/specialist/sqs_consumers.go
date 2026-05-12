@@ -1,10 +1,11 @@
-package bootstrap
+package specialist
 
 import (
 	"context"
 	"database/sql"
 	"log"
 
+	"github.com/lgustavopalmieri/healing-specialist/cmd/server/bootstrap/infra"
 	"github.com/lgustavopalmieri/healing-specialist/cmd/server/config"
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/email"
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
@@ -16,10 +17,9 @@ import (
 )
 
 const (
-	ConsumerValidateLicense    = "specialist-validate-license"
-	ConsumerUpdateDataRepos    = "specialist-update-data-repos"
-	ConsumerRegisterCredential = "specialist-register-credential"
-	ConsumerSendWelcomeEmail   = "specialist-send-welcome-email"
+	ConsumerValidateLicense  = "specialist-validate-license"
+	ConsumerUpdateDataRepos  = "specialist-update-data-repos"
+	ConsumerSendWelcomeEmail = "specialist-send-welcome-email"
 )
 
 type SQSConsumerDependencies struct {
@@ -27,7 +27,7 @@ type SQSConsumerDependencies struct {
 	OSFactory      *platformOS.Factory
 	EventPublisher event.EventDispatcher
 	EmailSender    email.EmailSender
-	SQS            *SQSResources
+	SQS            *infra.SQSResources
 	Config         *config.Config
 }
 

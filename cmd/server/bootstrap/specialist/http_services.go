@@ -1,4 +1,4 @@
-package bootstrap
+package specialist
 
 import (
 	"log"

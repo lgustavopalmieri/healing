@@ -1,4 +1,4 @@
-package bootstrap
+package infra
 
 import (
 	"fmt"

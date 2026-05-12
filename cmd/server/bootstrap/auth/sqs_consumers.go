@@ -1,4 +1,4 @@
-package bootstrap
+package auth
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/redis/go-redis/v9"
 
+	"github.com/lgustavopalmieri/healing-specialist/cmd/server/bootstrap/infra"
 	"github.com/lgustavopalmieri/healing-specialist/cmd/server/config"
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/email"
 	"github.com/lgustavopalmieri/healing-specialist/internal/commom/event"
@@ -16,20 +17,21 @@ import (
 )
 
 const (
+	ConsumerRegisterCredential   = "specialist-register-credential"
 	ConsumerSendCredentialsEmail = "auth-send-credentials-email"
 )
 
-type AuthSQSConsumerDependencies struct {
+type SQSConsumerDependencies struct {
 	AuthDB         *sql.DB
 	RedisClient    *redis.Client
 	Signer         *tokenissuer.Signer
 	EventPublisher event.EventDispatcher
 	EmailSender    email.EmailSender
-	SQS            *SQSResources
+	SQS            *infra.SQSResources
 	Config         *config.Config
 }
 
-func InitAuthSQSConsumers(ctx context.Context, deps AuthSQSConsumerDependencies) {
+func InitSQSConsumers(ctx context.Context, deps SQSConsumerDependencies) {
 	log.Println("Starting Auth SQS consumers...")
 
 	createspecialistsqs.NewCreateSpecialistCredentialSQSManager(ctx, createspecialistsqs.ManagerDependencies{
